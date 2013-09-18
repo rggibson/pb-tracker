@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<script type="text/javascript">
+  document.getElementById("nav-signup").setAttribute("class", "active");
+</script>
+
+<form method="post" class="form-signin">
+  <h2 class="form-signin-heading">Sign up</h2>
+  <input type="text" class="form-control" name="username" 
+	 placeholder="username" value="{{username}}" autofocus>
+  <span class="error">{{user_error}}</span>
+  <input type="password" class="form-control" name="password" 
+	 placeholder="password" value="{{password}}">
+  <span class="error">{{pass_error}}</span>
+  <input type="password" class="form-control" name="verify" 
+	 placeholder="retype password" value="{{verify}}">
+  <span class="error">{{ver_error}}</span>
+  <input type="text" class="form-control" name="email" 
+	 placeholder="email (optional)" value="{{email}}">
+  <span class="error">{{email_error}}</span>
+
+  <button class="btn btn-lg btn-primary btn-block" 
+	  type="submit">Register</button>
+</form>
+<center>
+  <p class="lead">Already signed up?  Then <a href="/login">log in</a>.
+</center>
+
+{% endblock %}

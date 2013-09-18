@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<script type="text/javascript">
+  document.getElementById("nav-username").setAttribute("class", "active");
+</script>
+<h1>{{username}}</h1>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Game</th>
+      <th>Category</th>
+      <th>Personal Best</th>
+    </tr>
+  </thead>
+  {% for pb in pblist %}
+  <tr>
+    <td>{{pb['game']}}</td>
+    <td>{{pb['category']}}</td>
+    <td>{{pb['time']}}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}

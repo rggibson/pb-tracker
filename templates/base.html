@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="author" content="Richard 'rggibson' Gibson"/>
+  <meta name="description" content="Web app for tracking speedrunning 
+				    personal bests"/>
+  <meta name="keywords" content="Speedrun, PB, Personal Best, 
+				 Best Known Time"/>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+
+  <!-- Bootstrap recommended meta tag for IE compatibility -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!-- Bootstrap mobile first -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" type="text/css" 
+	href="/static/css/bootstrap.min.css" />
+  <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+
+  <!-- TODO: Add favicon -->
+
+  <title>PB Tracker</title>
+
+  <!-- TODO: Add Google Analytics support -->
+
+</head>
+
+
+<body>
+
+  <!-- Fixed navbar -->
+  <div class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+	<button type="button" class="navbar-toggle" data-toggle="collapse" 
+		data-target=".navbar-collapse">
+	  <span class="icon-bar"></span>
+	  <span class="icon-bar"></span>
+	  <span class="icon-bar"></span>
+	</button>
+	<a class="navbar-brand" href="/">PB Tracker</a>
+      </div>
+      <div class="navbar-collapse collapse">
+	<ul class="nav navbar-nav">
+	  <li id="nav-home"><a href="/">Home</a></li>
+	  <li id="nav-runners"><a href="#">Runners</a></li>
+	  <li id="nav-games"><a href="#">Games</a></li>
+	  {% if user %}
+	  <li id="nav-submit"><a href="/submit">Submit run</a></li>
+	  {% endif %}
+	</ul>
+	<ul class="nav navbar-nav navbar-right">
+	  {% if user %}
+	  <li id="nav-username">
+	    <a href="/runner/{{user.username}}">{{user.username}}</a>
+	  </li>
+	  <li id="nav-logout"><a href="/logout">Log out</a></li>
+	  {% else %}
+	  <li id="nav-signup"><a href="/signup">Sign up</a></li>
+	  <li id="nav-login"><a href="/login">Log in</a></li>
+	  {% endif %}
+	</ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    {% block content %}
+    {% endblock %}
+
+    <footer>
+      <center>
+	<p>&copy; Copyright 2013 PB Tracker</p>
+      </center>
+    </footer>
+  </div>
+
+  <!-- Bootstrap js requires jquery -->
+  <script src="static/js/jquery-2.0.3.min.js"></script>
+  <script src="static/js/bootstrap.min.js"></script>
+
+</body>
+
+</html>
