@@ -14,7 +14,7 @@ class GamePage(handler.Handler):
         run = q.get()
         if not run:
             self.error(404)
-            self.render("404.html")
+            self.render( "404.html", user=user )
             return
 
         rundict = self.get_rundict( game_code )

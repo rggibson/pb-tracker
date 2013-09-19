@@ -15,7 +15,7 @@ class RunnerPage(handler.Handler):
         runner = q.get()
         if not runner:
             self.error(404)
-            self.render("404.html")
+            self.render("404.html", user=user)
             return
 
         pblist = self.get_pblist(username)
