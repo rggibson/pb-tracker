@@ -7,6 +7,7 @@ import submit
 import runnerpage
 import gamepage
 import handler
+import games
 
 DEBUG = True
 
@@ -22,6 +23,7 @@ app = webapp2.WSGIApplication( [ ('/', front.Front),
                                  ('/login', login.Login),
                                  ('/logout', logout.Logout),
                                  ('/submit', submit.Submit),
+                                 ('/games', games.Games),
                                  ('/runner/' + MY_RE, runnerpage.RunnerPage),
                                  ('/game/' + MY_RE, gamepage.GamePage),
                                  ('/' + r'.*', Error)],

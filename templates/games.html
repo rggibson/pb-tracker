@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<script type="text/javascript">
+  document.getElementById("nav-games").setAttribute("class", "active");
+</script>
+
+<div class="row">
+  <div class="list-group col-lg-6 col-lg-offset-3">
+    {% for gamedict in gamelist %}
+    <a href="/game/{{gamedict['game_code']}}" class="list-group-item">
+      <span class="badge">{{gamedict['num_pbs']}}</span>
+      {{gamedict['game']}}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

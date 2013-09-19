@@ -6,6 +6,8 @@ import runners
 import runs
 import logging
 
+from operator import itemgetter
+
 from google.appengine.api import memcache
 from google.appengine.ext import db
 
@@ -99,8 +101,8 @@ class Handler(webapp2.RequestHandler):
         if memcache.set( key, pblist ):
             logging.info("Updated pblist for " + username + " in memcache")
         else:
-            logging.warning("Failed to set pblist for " + username 
-                            + " in memcache")
+            logging.error("Failed to update pblist for " + username 
+                          + " in memcache")
 
     def get_rundict_memkey( self, game_code ):
         return game_code + ":rundict"
@@ -139,10 +141,10 @@ class Handler(webapp2.RequestHandler):
                     runlist = [ item ]
                 rundict[ run.category ] = runlist
 
-            # For each category, sort the runlist by time
+            # For each category, sort the runlist by seconds
             for category, runlist in rundict.iteritems():
-                sorted_runlist = sorted( runlist, key=lambda k: k['seconds'] )
-                rundict[ category ] = sorted_runlist
+                runlist.sort( key=itemgetter('seconds') )
+                rundict[ category ] = runlist
 
             if memcache.set( key, rundict ):
                 logging.info("Set rundict in memcache for " + game_code)
@@ -158,5 +160,46 @@ class Handler(webapp2.RequestHandler):
         if memcache.set( key, rundict ):
             logging.info("Updated rundict for " + game_code + " in memcache")
         else:
-            logging.warning("Failed to set rundict for " + game_code 
-                            + " in memcache")
+            logging.error("Failed to update rundict for " + game_code 
+                          + " in memcache")
+
+    def get_gamelist_memkey( self ):
+        return "gamelist"
+
+    def get_gamelist( self ):
+        key = self.get_gamelist_memkey( )
+        gamelist = memcache.get( key )
+        if gamelist is None:
+            # Build the gamelist, which is a list of dictionaries where each
+            # dict gives the game, game_code and number of pbs for that game.
+            # The list is sorted by numbers of pbs for the game
+            gamelist = [ ]
+            q = db.Query( runs.Runs, projection=['game'], distinct=True )
+            q.ancestor( runs.key() )
+            for run in q.run( limit=10000 ):
+                q2 = db.Query( runs.Runs, projection=('username', 'category'),
+                               distinct=True )
+                q2.ancestor( runs.key() )
+                q2.filter('game =', run.game)
+                num_pbs = q2.count( limit=1000 )
+                gamelist.append( 
+                    dict( 
+                        game = run.game,
+                        game_code = util.get_game_or_category_code( run.game ),
+                        num_pbs = num_pbs ) )
+            gamelist.sort( key=itemgetter('game') )
+            gamelist.sort( key=itemgetter('num_pbs'), reverse=True )
+            if memcache.set( key, gamelist ):
+                logging.info("Set gamelist in memcache")
+            else:
+                logging.warning("Failed to set new gamelist in memcache")
+        else:
+            logging.info("Got gamelist from memcache")
+        return gamelist
+
+    def update_cache_gamelist(self, gamelist):
+        key = self.get_gamelist_memkey( )
+        if memcache.set( key, gamelist ):
+            logging.info("Updated gamelist in memcache")
+        else:
+            logging.error("Failed to update gamelist in memcache")

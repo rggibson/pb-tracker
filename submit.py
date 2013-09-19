@@ -4,6 +4,8 @@ import util
 import logging
 import runs
 
+from operator import itemgetter
+
 class Submit(handler.Handler):
     def get(self):
         user = self.get_user()
@@ -98,11 +100,8 @@ class Submit(handler.Handler):
                                  category = category,
                                  seconds = seconds, 
                                  time = time ) )
-            # Hopefully this sorts by game, then breaks ties by category
-            # (both sorts are done alphabetically, of course)
-            sorted_pblist = sorted( pblist, key=lambda k: 
-                                    ( k['game'], k['category'] ) )
-            self.update_cache_pblist( user.username, sorted_pblist )
+            pblist.sort( key=itemgetter('game','category') )
+            self.update_cache_pblist( user.username, pblist )
                      
         # Update rundict in memcache, if necessary
         rundict = self.get_rundict( game_code )
@@ -117,10 +116,7 @@ class Submit(handler.Handler):
                         # Yes, we need to update
                         rundict[ category ][ i ][ 'seconds' ] = seconds
                         rundict[ category ][ i ][ 'time' ] = time
-                        sorted_runlist = (
-                            sorted( rundict[ category ],
-                                    key=lambda k: k['seconds'] ) )
-                        rundict[ category ] = sorted_runlist
+                        rundict[ category ].sort( key=itemgetter('seconds') )
                         self.update_cache_rundict( game_code, rundict )
                     break
         if not found_runner:
@@ -133,8 +129,31 @@ class Submit(handler.Handler):
                 runlist.append( item )
             else:
                 runlist = [ item ]
-            sorted_runlist = sorted( runlist, key=lambda k: k['seconds'] )
-            rundict[ category ] = sorted_runlist
+            runlist.sort( key=itemgetter('seconds') )
+            rundict[ category ] = runlist
             self.update_cache_rundict( game_code, rundict )            
-                               
+
+        # Update gamelist in memcache if necessary
+        gamelist = self.get_gamelist( )
+        found_game = False
+        for gamedict in gamelist:
+            if( gamedict['game'] == game ):
+                found_game = True
+                # Update num_pbs if this is the first run for this username,
+                # game, category combination.  Note that we already did this
+                # check when updating pblist, so just reuse that result
+                if not found_time:
+                    gamedict['num_pbs'] = gamedict['num_pbs'] + 1
+                    gamelist.sort( key=itemgetter('game') )
+                    gamelist.sort( key=itemgetter('num_pbs'), reverse=True )
+                    self.update_cache_gamelist( gamelist )
+                break
+        if not found_game:
+            # This game wasn't found in the gamelist, so add it
+            gamelist.append( dict( game = game, game_code = game_code,
+                                   num_pbs = 1 ) )
+            gamelist.sort( key=itemgetter('game') )
+            gamelist.sort( key=itemgetter('num_pbs'), reverse=True )
+            self.update_cache_gamelist( gamelist )
+
         self.redirect( "/runner/" + user.username )
