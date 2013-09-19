@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<script type="text/javascript">
+  document.getElementById("nav-games").setAttribute("class", "active");
+</script>
+
+<h1>{{game}}</h1>
+{% for category, runlist in rundict.iteritems() %}
+<h2>{{category}}</h2>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Runner</th>
+      <th>Personal Best</th>
+    </tr>
+  </thead>
+  {% for run in runlist %}
+  <tr>
+    <td><a href="/runner/{{run['username']}}">{{run['username']}}</td>
+    <td>{{run['time']}}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endfor %}
+
+{% endblock %}

@@ -37,7 +37,8 @@ class Handler(webapp2.RequestHandler):
         if cookie_val:
             user_id = util.check_secure_val(cookie_val)
             if user_id:
-                return runners.Runners.get_by_id(long(user_id))
+                return runners.Runners.get_by_id(long(user_id), 
+                                                 parent=runners.key())
 
     def set_return_url(self, url):
         cookie = 'return_url=' + url + ';Path=/'
@@ -73,17 +74,17 @@ class Handler(webapp2.RequestHandler):
             q.order('-datetime_created')
             for run in q.run( limit = 1000 ):
                 # For each unique game, category pair, get the fastest run
-                q2 = runs.Runs.all()
+                q2 = db.Query(runs.Runs, projection=('game_code', 'time'))
+                q2.ancestor(runs.key())
                 q2.filter('username =', username)
                 q2.filter('game =', run.game)
                 q2.filter('category =', run.category)
                 q2.order('time')
                 pb = q2.get()
                 pblist.append( 
-                    dict( game = pb.game, category = pb.category,
-                          seconds = pb.time,
+                    dict( game = run.game, game_code = pb.game_code,
+                          category = run.category, seconds = pb.time,
                           time = util.seconds_to_timestr( pb.time ) ) )
-            logging.info("Created pblist for " + username)
             if memcache.set( key, pblist ):
                 logging.info("Set pblist in memcache for " + username)
             else:
@@ -99,4 +100,63 @@ class Handler(webapp2.RequestHandler):
             logging.info("Updated pblist for " + username + " in memcache")
         else:
             logging.warning("Failed to set pblist for " + username 
+                            + " in memcache")
+
+    def get_rundict_memkey( self, game_code ):
+        return game_code + ":rundict"
+
+    def get_rundict(self, game_code):
+        key = self.get_rundict_memkey( game_code )
+        rundict = memcache.get( key )
+        if rundict is None:
+            # Not in memcache, so construct the runs and store it in memcache
+            # Rundict is a dictionary[category] of lists of dictionaries
+            rundict = dict( )
+            # Use a projection query to get all of the unique 
+            # username, category pairs
+            q = db.Query(runs.Runs, projection=('username', 'category'), 
+                         distinct=True)
+            q.ancestor(runs.key())
+            q.filter('game_code =', game_code)
+            for run in q.run( limit = 1000 ):
+                # For each unique username, category pair, get that users
+                # fastest run for the category
+                q2 = db.Query(runs.Runs, projection=['time'])
+                q2.ancestor(runs.key())
+                q2.filter('game_code =', game_code)
+                q2.filter('category =', run.category)
+                q2.filter('username =', run.username)
+                q2.order('time')
+                pb = q2.get()
+                # Append the (user, time) to the category's list
+                item = dict( username = run.username,
+                             seconds = pb.time,
+                             time = util.seconds_to_timestr( pb.time ) )
+                runlist = rundict.get( run.category )
+                if runlist:
+                    runlist.append( item )
+                else:
+                    runlist = [ item ]
+                rundict[ run.category ] = runlist
+
+            # For each category, sort the runlist by time
+            for category, runlist in rundict.iteritems():
+                sorted_runlist = sorted( runlist, key=lambda k: k['seconds'] )
+                rundict[ category ] = sorted_runlist
+
+            if memcache.set( key, rundict ):
+                logging.info("Set rundict in memcache for " + game_code)
+            else:
+                logging.warning("Failed to set new rundict for " + game_code
+                                + " in memcache")
+        else:
+            logging.info("Got rundict for " + game_code + " from memcache")
+        return rundict
+
+    def update_cache_rundict(self, game_code, rundict):
+        key = self.get_rundict_memkey( game_code )
+        if memcache.set( key, rundict ):
+            logging.info("Updated rundict for " + game_code + " in memcache")
+        else:
+            logging.warning("Failed to set rundict for " + game_code 
                             + " in memcache")

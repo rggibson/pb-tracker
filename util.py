@@ -2,12 +2,13 @@ import hmac
 import hashlib
 import random
 from string import letters
-
-SECRET = 'redred11'
+import logging
+import re
+import secret
 
 # Hashing utility functions
 def hash_str(s):
-    return hmac.new(SECRET, s).hexdigest()
+    return hmac.new(secret.SECRET, s).hexdigest()
     
 def make_secure_val(s):
     return "{0}|{1}".format(s, hash_str(s))
@@ -32,7 +33,11 @@ def valid_pw(name, pw, h):
     if len(parts) > 1:
         return h == make_pw_hash(name, pw, parts[1])
 
-# Time string utility functions
+# Game, time string utility functions
+def get_game_or_category_code( game_or_category ):
+    # Substitute all sets of consecutive nonalphanumeric characters with a dash
+    return re.sub( '[^a-zA-Z0-9]+', '-', game_or_category ).lower()
+
 def seconds_to_timestr( seconds ):
     secs = seconds
     mins = secs / 60
@@ -40,11 +45,14 @@ def seconds_to_timestr( seconds ):
     hours = mins / 60
     mins = mins % 60
 
+    hours_str = ''
     if( hours > 0 ):
-        timestr = str(hours) + ':' + str(mins) + ':' + str(secs)
-    elif( mins > 0 ):
-        timestr = str(mins) + ':' + str(secs)
-    else:
-        timestr = '00:' + str(secs)
+        hours_str = str(hours) + ':'
+    mins_str = str(mins) + ':'
+    if( mins < 10 and hours > 0 ):
+        mins_str = "0" + mins_str
+    secs_str = str(secs)
+    if( secs < 10 ):
+        secs_str = "0" + secs_str
 
-    return timestr
+    return hours_str + mins_str + secs_str
