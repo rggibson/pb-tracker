@@ -56,3 +56,34 @@ def seconds_to_timestr( seconds ):
         secs_str = "0" + secs_str
 
     return hours_str + mins_str + secs_str
+
+def timestr_to_seconds( time ):
+    parts = time.split(':')
+
+    if( len( parts ) > 3 ):
+        return (None, "too many colons")
+
+    try:
+        seconds = int( parts[ -1 ] )
+    except ValueError:
+        return (None, "bad seconds value [" + parts[ -1 ] + "]")
+    if( seconds < 0 or seconds >= 60 ):
+        return (None, "seconds must be between 00 and 59")
+    if( len( parts ) > 1 ):
+        try:
+            mins = int( parts[ -2 ] )
+        except ValueError:
+            return (None, "bad minutes value [" + parts[ -2 ] + "]")
+        if( mins < 0 or mins >= 60 ):
+            return (None, "minutes must be between 00 and 59")
+        seconds += 60 * mins
+        if( len( parts ) > 2 ):
+            try:
+                hours = int( parts[ 0 ] )
+            except ValueError:
+                return (None, "bad hours value [" + parts[ 0 ] + "]")
+            if( hours < 0 ):
+                return (None, "hours must be nonnegative")
+            seconds += 3600 * hours
+
+    return (seconds, "")

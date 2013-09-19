@@ -9,7 +9,7 @@ class Runs(db.Model):
     game_code = db.StringProperty(required = True)
     category = db.StringProperty(required = True)
     category_code = db.StringProperty(required = True)
-    time = db.IntegerProperty(required = True) # Stored in seconds
+    seconds = db.IntegerProperty(required = True)
     datetime_created = db.DateTimeProperty(auto_now_add = True)
     console = db.StringProperty(required = False)
     version = db.StringProperty(required = False)

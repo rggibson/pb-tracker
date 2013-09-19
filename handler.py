@@ -74,17 +74,17 @@ class Handler(webapp2.RequestHandler):
             q.order('-datetime_created')
             for run in q.run( limit = 1000 ):
                 # For each unique game, category pair, get the fastest run
-                q2 = db.Query(runs.Runs, projection=('game_code', 'time'))
+                q2 = db.Query(runs.Runs, projection=('game_code', 'seconds'))
                 q2.ancestor(runs.key())
                 q2.filter('username =', username)
                 q2.filter('game =', run.game)
                 q2.filter('category =', run.category)
-                q2.order('time')
+                q2.order('seconds')
                 pb = q2.get()
                 pblist.append( 
                     dict( game = run.game, game_code = pb.game_code,
-                          category = run.category, seconds = pb.time,
-                          time = util.seconds_to_timestr( pb.time ) ) )
+                          category = run.category, seconds = pb.seconds,
+                          time = util.seconds_to_timestr( pb.seconds ) ) )
             if memcache.set( key, pblist ):
                 logging.info("Set pblist in memcache for " + username)
             else:
@@ -121,17 +121,17 @@ class Handler(webapp2.RequestHandler):
             for run in q.run( limit = 1000 ):
                 # For each unique username, category pair, get that users
                 # fastest run for the category
-                q2 = db.Query(runs.Runs, projection=['time'])
+                q2 = db.Query(runs.Runs, projection=['seconds'])
                 q2.ancestor(runs.key())
                 q2.filter('game_code =', game_code)
                 q2.filter('category =', run.category)
                 q2.filter('username =', run.username)
-                q2.order('time')
+                q2.order('seconds')
                 pb = q2.get()
                 # Append the (user, time) to the category's list
                 item = dict( username = run.username,
-                             seconds = pb.time,
-                             time = util.seconds_to_timestr( pb.time ) )
+                             seconds = pb.seconds,
+                             time = util.seconds_to_timestr( pb.seconds ) )
                 runlist = rundict.get( run.category )
                 if runlist:
                     runlist.append( item )

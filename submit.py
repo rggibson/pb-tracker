@@ -27,7 +27,7 @@ class Submit(handler.Handler):
         time = self.request.get('time')
 
         params = dict( user = user, game = game, category = category, 
-                       time = time, time_error = "Invalid time" )
+                       time = time )
 
         # Make sure the game doesn't already exist under a similar name
         game_code = util.get_game_or_category_code( game )
@@ -38,7 +38,6 @@ class Submit(handler.Handler):
             params['game_error'] = "Game already exists under " + run.game
             params['game_error'] += " (case sensitive)." 
             params['game_error'] += "  Hit submit again to confirm."
-            params['time_error'] = ''
             params['game'] = run.game
             self.render("submit.html", **params)
             return
@@ -53,47 +52,17 @@ class Submit(handler.Handler):
             params['category_error'] = "Category already exists under " 
             params['category_error'] += run.category + " (case sensitive)." 
             params['category_error'] += "  Hit submit again to confirm."
-            params['time_error'] = ''
             params['category'] = run.category
             self.render("submit.html", **params)
             return
 
         # Parse the time into seconds, ensure it is valid
-        parts = time.split(':')
-        if( len( parts ) > 3 ):
+        (seconds, time_error) = util.timestr_to_seconds( time )
+        if not seconds:
+            params['time_error'] = "Invalid time: " + time_error
             self.render("submit.html", **params)
             return
-        try:
-            seconds = int( parts[ -1 ] )
-        except ValueError:
-            self.render("submit.html", **params)
-            return
-        if( seconds < 0 or seconds >= 60 ):
-            params['time_error'] = "Invalid time: seconds out of range"
-            self.render("submit.html", **params)
-            return
-        if( len( parts ) > 1 ):
-            try:
-                minutes = int( parts[ -2 ] )
-            except ValueError:
-                self.render("submit.html", **params)
-                return
-            if( minutes < 0 or minutes >= 60 ):
-                params['time_error'] = "Invalid time: minutes out of range"
-                self.render("submit.html", **params)
-                return
-            seconds += 60 * minutes;
-            if( len( parts ) > 2 ):
-                try:
-                    hours = int( parts[ 0 ] )
-                except ValueError:
-                    self.render("submit.html", **params)
-                    return
-                if( hours < 0 ):
-                    params['time_error'] = "Invalid time: hours out of range"
-                    self.render("submit.html", **params)
-                    return
-                seconds += 3600 * hours
+        time = util.seconds_to_timestr( seconds ) # Enforce standard format
 
         # Add a new run to the database
         run = runs.Runs( username = user.username,
@@ -101,7 +70,7 @@ class Submit(handler.Handler):
                          game_code = game_code,
                          category = category,
                          category_code = category_code,
-                         time = seconds,
+                         seconds = seconds,
                          parent = runs.key())
         run.put()
         logging.info("Put new run for runner " + user.username
@@ -118,16 +87,17 @@ class Submit(handler.Handler):
                 if( pb['seconds'] > seconds ):
                     # Yes we do need to update
                     pblist[ i ][ 'seconds' ] = seconds
-                    pblist[ i ][ 'time' ] = util.seconds_to_timestr( seconds )
+                    pblist[ i ][ 'time' ] = time
                     self.update_cache_pblist( user.username, pblist )
                 break
         if not found_time:
             # No run for this username, game, category combination.
             # So, add the run to this username's pblist and update memcache
-            pblist.append( dict( game = game, game_code = game_code,
+            pblist.append( dict( game = game, 
+                                 game_code = game_code,
                                  category = category,
                                  seconds = seconds, 
-                                 time = util.seconds_to_timestr( seconds ) ) )
+                                 time = time ) )
             # Hopefully this sorts by game, then breaks ties by category
             # (both sorts are done alphabetically, of course)
             sorted_pblist = sorted( pblist, key=lambda k: 
@@ -146,8 +116,7 @@ class Submit(handler.Handler):
                     if( run[ 'seconds' ] > seconds ):
                         # Yes, we need to update
                         rundict[ category ][ i ][ 'seconds' ] = seconds
-                        rundict[ category ][ i ][ 'time' ] = (
-                            util.seconds_to_timestr( seconds ) )
+                        rundict[ category ][ i ][ 'time' ] = time
                         sorted_runlist = (
                             sorted( rundict[ category ],
                                     key=lambda k: k['seconds'] ) )
@@ -159,7 +128,7 @@ class Submit(handler.Handler):
             # So, add the run to this game's rundict and update memcache
             item = dict( username = user.username,
                          seconds = seconds,
-                         time = util.seconds_to_timestr( seconds ) )
+                         time = time )
             if runlist:
                 runlist.append( item )
             else:
