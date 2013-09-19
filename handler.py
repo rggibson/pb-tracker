@@ -203,3 +203,42 @@ class Handler(webapp2.RequestHandler):
             logging.info("Updated gamelist in memcache")
         else:
             logging.error("Failed to update gamelist in memcache")
+
+    def get_runnerlist_memkey( self ):
+        return "runnerlist"
+
+    def get_runnerlist( self ):
+        key = self.get_runnerlist_memkey( )
+        runnerlist = memcache.get( key )
+        if runnerlist is None:
+            # Build the runnerlist, which is a list of dictionaries where each
+            # dict gives the username and number of pbs for that user.
+            # The list is sorted by numbers of pbs for the user.
+            runnerlist = [ ]
+            q = db.Query( runners.Runners, projection=['username'] )
+            q.ancestor( runners.key() )
+            for runner in q.run( limit=100000 ):
+                q2 = db.Query( runs.Runs, 
+                               projection=('game', 'category'),
+                               distinct=True )
+                q2.ancestor( runs.key() )
+                q2.filter('username =', runner.username)
+                num_pbs = q2.count( limit=1000 )
+                runnerlist.append( 
+                    dict( username = runner.username, num_pbs = num_pbs ) )
+            runnerlist.sort( key=itemgetter('username') )
+            runnerlist.sort( key=itemgetter('num_pbs'), reverse=True )
+            if memcache.set( key, runnerlist ):
+                logging.info("Set runnerlist in memcache")
+            else:
+                logging.warning("Failed to set new runnerlist in memcache")
+        else:
+            logging.info("Got runnerlist from memcache")
+        return runnerlist
+
+    def update_cache_runnerlist(self, runnerlist):
+        key = self.get_runnerlist_memkey( )
+        if memcache.set( key, runnerlist ):
+            logging.info("Updated runnerlist in memcache")
+        else:
+            logging.error("Failed to update runnerlist in memcache")

@@ -34,7 +34,8 @@ class Signup(handler.Handler):
         valid = True
 
         if not valid_username(username):
-            params['user_error'] = "Username must be between 1 and 20 characters."
+            params['user_error'] = ( "Username must be between " 
+                                     + "1 and 20 characters." )
             valid = False
         else:
             # Check if username already exists
@@ -45,7 +46,8 @@ class Signup(handler.Handler):
                 valid = False
         
         if not valid_password(password):
-            params['pass_error'] = "Password must be between 3 and 20 characters."
+            params['pass_error'] = ( "Password must be between "
+                                     + "3 and 20 characters." )
             valid = False
 
         if password != verify:
@@ -67,6 +69,16 @@ class Signup(handler.Handler):
                                      email = email,
                                      parent = runners.key())
             runner.put()
+
+            # Update runnerlist in memcache.  Note that this puts the runner
+            # at the end of the list, rather than in alphabetical order among
+            # those runners with 0 pbs.  The runner will be sorted properly
+            # if the memcache gets flushed, which is good enough
+            runnerlist = self.get_runnerlist( )
+            runnerlist.append( dict( username = username, num_pbs = 0 ) )
+            self.update_cache_runnerlist( runnerlist )
+
+            # Login and gogo
             runner_id = runner.key().id()
             self.login(runner_id)
             self.goto_return_url()

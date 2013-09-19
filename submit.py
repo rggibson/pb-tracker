@@ -6,6 +6,8 @@ import runs
 
 from operator import itemgetter
 
+from google.appengine.ext import db
+
 class Submit(handler.Handler):
     def get(self):
         user = self.get_user()
@@ -140,8 +142,10 @@ class Submit(handler.Handler):
             if( gamedict['game'] == game ):
                 found_game = True
                 # Update num_pbs if this is the first run for this username,
-                # game, category combination.  Note that we already did this
-                # check when updating pblist, so just reuse that result
+                # game, category combination.  
+                # TODO: Fix this to not rely on pblist memcache update,
+                # since if memcache was flushed, found_time will report true
+                # even when this is the first run for this combination
                 if not found_time:
                     gamedict['num_pbs'] = gamedict['num_pbs'] + 1
                     gamelist.sort( key=itemgetter('game') )
@@ -155,5 +159,29 @@ class Submit(handler.Handler):
             gamelist.sort( key=itemgetter('game') )
             gamelist.sort( key=itemgetter('num_pbs'), reverse=True )
             self.update_cache_gamelist( gamelist )
+
+        # Update runnerlist in memcache if necessary
+        runnerlist = self.get_runnerlist( )
+        found_runner = False
+        for runnerdict in runnerlist:
+            if( runnerdict['username'] == user.username ):
+                found_runner = True
+                # Update num_pbs if this is the first run for this username,
+                # game, category combination.
+                q = db.Query( runs.Runs, projection=[] )
+                q.ancestor( runs.key() )
+                q.filter('username =', user.username)
+                q.filter('game =', game)
+                q.filter('category =', category)
+                count = q.count( limit=2 )
+                if( count == 1 ):
+                    # This was the first run, so update runnerlist
+                    runnerdict['num_pbs'] = runnerdict['num_pbs'] + 1
+                    runnerlist.sort( key=itemgetter('username') )
+                    runnerlist.sort( key=itemgetter('num_pbs'), reverse=True )
+                    self.update_cache_runnerlist( runnerlist )
+                break
+        if not found_runner:
+            logging.error("Failed to find " + user.username + " in runnerlist")
 
         self.redirect( "/runner/" + user.username )

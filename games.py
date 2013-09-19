@@ -1,5 +1,4 @@
 import handler
-import runs
 
 class Games( handler.Handler ):
     def get( self ):
