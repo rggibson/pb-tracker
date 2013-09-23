@@ -135,6 +135,25 @@ class Submit(handler.Handler):
             rundict[ category ] = runlist
             self.update_cache_rundict( game_code, rundict )            
 
+        # Check whether this is the first run for this username, game,
+        # category combination.  This will be used in the gamelist and 
+        # runnerlist updates.
+        q = db.Query( runs.Runs, projection=[] )
+        q.ancestor( runs.key() )
+        q.filter('username =', user.username)
+        q.filter('game =', game)
+        q.filter('category =', category)
+        count = q.count( limit=2 )
+        if( count == 1 ):
+            new_combo = True
+        elif( count == 2 ):
+            new_combo = False
+        else:
+            logging.error("Unexpected count [" + str(count) 
+                          + "] for number of runs for "
+                          + user.username + ", " + game + ", " + category)
+            new_combo = False
+
         # Update gamelist in memcache if necessary
         gamelist = self.get_gamelist( )
         found_game = False
@@ -143,11 +162,15 @@ class Submit(handler.Handler):
                 found_game = True
                 # Update num_pbs if this is the first run for this username,
                 # game, category combination.  
-                # TODO: Fix this to not rely on pblist memcache update,
-                # since if memcache was flushed, found_time will report true
-                # even when this is the first run for this combination
-                if not found_time:
-                    gamedict['num_pbs'] = gamedict['num_pbs'] + 1
+                if new_combo:
+                    # We may have a stale number for pbs, so recount
+                    q = db.Query( runs.Runs, 
+                                  projection=('username', 'category'),
+                                  distinct=True )
+                    q.ancestor( runs.key() )
+                    q.filter( 'game =', game )
+                    num_pbs = q.count( limit=1000 )
+                    gamedict['num_pbs'] = num_pbs
                     gamelist.sort( key=itemgetter('game') )
                     gamelist.sort( key=itemgetter('num_pbs'), reverse=True )
                     self.update_cache_gamelist( gamelist )
@@ -168,15 +191,14 @@ class Submit(handler.Handler):
                 found_runner = True
                 # Update num_pbs if this is the first run for this username,
                 # game, category combination.
-                q = db.Query( runs.Runs, projection=[] )
-                q.ancestor( runs.key() )
-                q.filter('username =', user.username)
-                q.filter('game =', game)
-                q.filter('category =', category)
-                count = q.count( limit=2 )
-                if( count == 1 ):
-                    # This was the first run, so update runnerlist
-                    runnerdict['num_pbs'] = runnerdict['num_pbs'] + 1
+                if( new_combo ):
+                    # Memcache could be stale, so recalculate num_pbs
+                    q = db.Query( runs.Runs, projection=('game', 'category'),
+                                  distinct = True )
+                    q.ancestor( runs.key() )
+                    q.filter( 'username =', user.username )
+                    num_pbs = q.count( limit=1000 )
+                    runnerdict['num_pbs'] = num_pbs
                     runnerlist.sort( key=itemgetter('username') )
                     runnerlist.sort( key=itemgetter('num_pbs'), reverse=True )
                     self.update_cache_runnerlist( runnerlist )
