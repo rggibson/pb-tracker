@@ -10,7 +10,9 @@
   <div class="list-group col-lg-6 col-lg-offset-3">
     {% for gamedict in gamelist %}
     <a href="/game/{{gamedict['game_code']}}" class="list-group-item">
-      <span class="badge">{{gamedict['num_pbs']}}</span>
+      <span class="badge">{{gamedict['num_pbs']}}
+	{% if gamedict['num_pbs'] >= 1000 %}+{% endif %}
+      </span>
       {{gamedict['game']}}
     </a>
     {% endfor %}
