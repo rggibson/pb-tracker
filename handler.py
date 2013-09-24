@@ -70,13 +70,15 @@ class Handler(webapp2.RequestHandler):
                          distinct=True)
             q.ancestor(runs.key())
             q.filter('username =', username)
-            # Hopefully this sorts by game first, breaking ties by category
+            # Hopefully this sorts by game first, breaking ties by category and
+            # then date created
             q.order('game')
             q.order('category')
             q.order('-datetime_created')
             for run in q.run( limit = 1000 ):
                 # For each unique game, category pair, get the fastest run
-                q2 = db.Query(runs.Runs, projection=('game_code', 'seconds'))
+                q2 = db.Query(runs.Runs, 
+                              projection=('game_code', 'seconds', 'video'))
                 q2.ancestor(runs.key())
                 q2.filter('username =', username)
                 q2.filter('game =', run.game)
@@ -86,7 +88,8 @@ class Handler(webapp2.RequestHandler):
                 pblist.append( 
                     dict( game = run.game, game_code = pb.game_code,
                           category = run.category, seconds = pb.seconds,
-                          time = util.seconds_to_timestr( pb.seconds ) ) )
+                          time = util.seconds_to_timestr( pb.seconds ),
+                          video = pb.video ) )
             if memcache.set( key, pblist ):
                 logging.info("Set pblist in memcache for " + username)
             else:
@@ -123,7 +126,7 @@ class Handler(webapp2.RequestHandler):
             for run in q.run( limit = 1000 ):
                 # For each unique username, category pair, get that users
                 # fastest run for the category
-                q2 = db.Query(runs.Runs, projection=['seconds'])
+                q2 = db.Query(runs.Runs, projection=('seconds', 'video'))
                 q2.ancestor(runs.key())
                 q2.filter('game_code =', game_code)
                 q2.filter('category =', run.category)
@@ -133,7 +136,8 @@ class Handler(webapp2.RequestHandler):
                 # Append the (user, time) to the category's list
                 item = dict( username = run.username,
                              seconds = pb.seconds,
-                             time = util.seconds_to_timestr( pb.seconds ) )
+                             time = util.seconds_to_timestr( pb.seconds ),
+                             video = pb.video )
                 runlist = rundict.get( run.category )
                 if runlist:
                     runlist.append( item )

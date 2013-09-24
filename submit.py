@@ -29,9 +29,10 @@ class Submit(handler.Handler):
         game = self.request.get('game')
         category = self.request.get('category')
         time = self.request.get('time')
+        video = self.request.get('video')
 
         params = dict( user = user, game = game, category = category, 
-                       time = time )
+                       time = time, video = video )
 
         # Make sure the game doesn't already exist under a similar name
         game_code = util.get_game_or_category_code( game )
@@ -75,7 +76,14 @@ class Submit(handler.Handler):
                          category = category,
                          category_code = category_code,
                          seconds = seconds,
-                         parent = runs.key())
+                         parent = runs.key() )
+        if video:
+            try:
+                run.video = video
+            except db.BadValueError:
+                params['video_error'] = "Invalid video URL"
+                self.render("submit.html", **params)
+                return                
         run.put()
         logging.info("Put new run for runner " + user.username
                      + ", game = " + game + ", category = " + category 
@@ -92,6 +100,7 @@ class Submit(handler.Handler):
                     # Yes we do need to update
                     pblist[ i ][ 'seconds' ] = seconds
                     pblist[ i ][ 'time' ] = time
+                    pblist[ i ][ 'video' ] = video
                     self.update_cache_pblist( user.username, pblist )
                 break
         if not found_time:
@@ -101,7 +110,8 @@ class Submit(handler.Handler):
                                  game_code = game_code,
                                  category = category,
                                  seconds = seconds, 
-                                 time = time ) )
+                                 time = time,
+                                 video = video ) )
             pblist.sort( key=itemgetter('game','category') )
             self.update_cache_pblist( user.username, pblist )
                      
@@ -118,6 +128,7 @@ class Submit(handler.Handler):
                         # Yes, we need to update
                         rundict[ category ][ i ][ 'seconds' ] = seconds
                         rundict[ category ][ i ][ 'time' ] = time
+                        rundict[ category ][ i ][ 'video' ] = video
                         rundict[ category ].sort( key=itemgetter('seconds') )
                         self.update_cache_rundict( game_code, rundict )
                     break
@@ -126,7 +137,8 @@ class Submit(handler.Handler):
             # So, add the run to this game's rundict and update memcache
             item = dict( username = user.username,
                          seconds = seconds,
-                         time = time )
+                         time = time,
+                         video = video )
             if runlist:
                 runlist.append( item )
             else:
@@ -136,8 +148,8 @@ class Submit(handler.Handler):
             self.update_cache_rundict( game_code, rundict )            
 
         # Check whether this is the first run for this username, game,
-        # category combination.  This will be used in the gamelist and 
-        # runnerlist updates.
+        # category combination.  This will determine whether we need to check
+        # for gamelist and runnerlist updates.
         q = db.Query( runs.Runs, projection=[] )
         q.ancestor( runs.key() )
         q.filter('username =', user.username)
@@ -154,15 +166,13 @@ class Submit(handler.Handler):
                           + user.username + ", " + game + ", " + category)
             new_combo = False
 
-        # Update gamelist in memcache if necessary
-        gamelist = self.get_gamelist( )
-        found_game = False
-        for gamedict in gamelist:
-            if( gamedict['game'] == game ):
-                found_game = True
-                # Update num_pbs if this is the first run for this username,
-                # game, category combination.  
-                if new_combo:
+        if new_combo:
+            # Update gamelist in memcache if necessary
+            gamelist = self.get_gamelist( )
+            found_game = False
+            for gamedict in gamelist:
+                if( gamedict['game'] == game ):
+                    found_game = True
                     # We may have a stale number for pbs, so recount
                     q = db.Query( runs.Runs, 
                                   projection=('username', 'category'),
@@ -174,24 +184,21 @@ class Submit(handler.Handler):
                     gamelist.sort( key=itemgetter('game') )
                     gamelist.sort( key=itemgetter('num_pbs'), reverse=True )
                     self.update_cache_gamelist( gamelist )
-                break
-        if not found_game:
-            # This game wasn't found in the gamelist, so add it
-            gamelist.append( dict( game = game, game_code = game_code,
-                                   num_pbs = 1 ) )
-            gamelist.sort( key=itemgetter('game') )
-            gamelist.sort( key=itemgetter('num_pbs'), reverse=True )
-            self.update_cache_gamelist( gamelist )
+                    break
+            if not found_game:
+                # This game wasn't found in the gamelist, so add it
+                gamelist.append( dict( game = game, game_code = game_code,
+                                       num_pbs = 1 ) )
+                gamelist.sort( key=itemgetter('game') )
+                gamelist.sort( key=itemgetter('num_pbs'), reverse=True )
+                self.update_cache_gamelist( gamelist )
 
-        # Update runnerlist in memcache if necessary
-        runnerlist = self.get_runnerlist( )
-        found_runner = False
-        for runnerdict in runnerlist:
-            if( runnerdict['username'] == user.username ):
-                found_runner = True
-                # Update num_pbs if this is the first run for this username,
-                # game, category combination.
-                if( new_combo ):
+            # Update runnerlist in memcache if necessary
+            runnerlist = self.get_runnerlist( )
+            found_runner = False
+            for runnerdict in runnerlist:
+                if( runnerdict['username'] == user.username ):
+                    found_runner = True
                     # Memcache could be stale, so recalculate num_pbs
                     q = db.Query( runs.Runs, projection=('game', 'category'),
                                   distinct = True )
@@ -202,8 +209,10 @@ class Submit(handler.Handler):
                     runnerlist.sort( key=itemgetter('username') )
                     runnerlist.sort( key=itemgetter('num_pbs'), reverse=True )
                     self.update_cache_runnerlist( runnerlist )
-                break
-        if not found_runner:
-            logging.error("Failed to find " + user.username + " in runnerlist")
+                    break
+            if not found_runner:
+                logging.error("Failed to find " + user.username 
+                              + " in runnerlist")
 
+        # All done with submission
         self.redirect( "/runner/" + user.username )

@@ -19,7 +19,9 @@
   <tr>
     <td><a href="/game/{{pb['game_code']}}">{{pb['game']}}</td>
     <td>{{pb['category']}}</td>
-    <td>{{pb['time']}}</td>
+    <td>{% if pb['video'] %}<a href="{{pb['video']}}">{% endif %}
+	{{pb['time']}}{% if pb['video'] %}</a>{% endif %}
+    </td>
   </tr>
   {% endfor %}
 </table>

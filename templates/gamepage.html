@@ -19,7 +19,9 @@
   {% for run in runlist %}
   <tr>
     <td><a href="/runner/{{run['username']}}">{{run['username']}}</td>
-    <td>{{run['time']}}</td>
+    <td>{% if run['video'] %}<a href="{{run['video']}}">{% endif %}
+	{{run['time']}}{% if run['video'] %}</a>{% endif %}
+    </td>
   </tr>
   {% endfor %}
 </table>
