@@ -62,7 +62,10 @@ class Handler(webapp2.RequestHandler):
         key = self.get_pblist_memkey( username )
         pblist = memcache.get( key )
         if pblist is None:
-            # Not in memcache, so construct the pblist and store it in memcache
+            # Not in memcache, so construct the pblist and store in memcache.
+            # pblist is a list of dictionaries with 3 indices, 'game', 
+            # 'game_code' and 'infolist'.  The infolist is another list of 
+            # dictionaries containing all the info for each pb of the game.
             pblist = [ ]
             # Use a projection query to get all of the unique game, category
             # pairs
@@ -70,11 +73,10 @@ class Handler(webapp2.RequestHandler):
                          distinct=True)
             q.ancestor(runs.key())
             q.filter('username =', username)
-            # Hopefully this sorts by game first, breaking ties by category and
-            # then date created
             q.order('game')
             q.order('category')
-            q.order('-datetime_created')
+            q.order('-datetime_created') # Grab the last 1000 game, categories
+            cur_game_code = None
             for run in q.run( limit = 1000 ):
                 # For each unique game, category pair, get the fastest run
                 q2 = db.Query(runs.Runs, 
@@ -84,12 +86,20 @@ class Handler(webapp2.RequestHandler):
                 q2.filter('game =', run.game)
                 q2.filter('category =', run.category)
                 q2.order('seconds')
-                pb = q2.get()
-                pblist.append( 
-                    dict( game = run.game, game_code = pb.game_code,
-                          category = run.category, seconds = pb.seconds,
-                          time = util.seconds_to_timestr( pb.seconds ),
-                          video = pb.video ) )
+                q2.order('datetime_created') # Break ties by getting oldest run
+                pb_run = q2.get()
+
+                # Add the fastest run to the pblist
+                if pb_run.game_code != cur_game_code:
+                    # New game
+                    pb = dict( game = run.game, game_code = pb_run.game_code,
+                               infolist = [ ] )
+                    pblist.append( pb )
+                    cur_game_code = pb_run.game_code
+                info = dict( category = run.category, seconds = pb_run.seconds,
+                             time = util.seconds_to_timestr( pb_run.seconds ),
+                             video = pb_run.video )
+                pb['infolist'].append( info )
             if memcache.set( key, pblist ):
                 logging.info("Set pblist in memcache for " + username)
             else:

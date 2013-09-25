@@ -7,23 +7,42 @@
 </script>
 
 <h1>{{username}}</h1>
-<table class="table table-striped">
+<table class="table">
   <thead>
     <tr>
+      <th></th>
       <th>Game</th>
       <th>Category</th>
       <th>Personal Best</th>
     </tr>
   </thead>
-  {% for pb in pblist %}
-  <tr>
-    <td><a href="/game/{{pb['game_code']}}">{{pb['game']}}</td>
-    <td>{{pb['category']}}</td>
-    <td>{% if pb['video'] %}<a href="{{pb['video']}}">{% endif %}
-	{{pb['time']}}{% if pb['video'] %}</a>{% endif %}
-    </td>
-  </tr>
-  {% endfor %}
+  <tbody>
+    {% for pb in pblist %}
+    <tr>
+      <td rowspan="{{pb['infolist']|length}}">
+	<a href="/game/{{pb['game_code']}}">
+	  <img src="/static/boxart/{{pb['game_code']}}.jpg" alt="?"
+	       class="img-responsive" style="max-height: 100px;">
+	</a>
+      </td>
+      <td rowspan="{{pb['infolist']|length}}">
+	<a href="/game/{{pb['game_code']}}">
+	  {{pb['game']}}
+	</a>
+      </td>
+      {% for info in pb['infolist'] %}
+      {% if not loop.first %}
+    <tr>
+      {% endif %}
+      <td>{{info['category']}}</td>
+      <td>
+	{% if info['video'] %}<a href="{{info['video']}}">{% endif %}
+	  {{info['time']}}{% if info['video'] %}</a>{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+    {% endfor %}
+  </tbody>
 </table>
 
 {% endblock %}

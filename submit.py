@@ -92,27 +92,41 @@ class Submit(handler.Handler):
         # Update pblist in memcache, if necessary
         pblist = self.get_pblist( user.username )
         found_time = False
-        for i in range( len(pblist) ):
-            pb = pblist[ i ]
-            if( pb['game'] == game and pb['category'] == category ):
-                found_time = True
-                if( pb['seconds'] > seconds ):
-                    # Yes we do need to update
-                    pblist[ i ][ 'seconds' ] = seconds
-                    pblist[ i ][ 'time' ] = time
-                    pblist[ i ][ 'video' ] = video
+        for pb in pblist:
+            if( pb['game'] == game ):
+                for info in pb['infolist']:
+                    if( info['category'] == category ):
+                        found_time = True
+                        if( info['seconds'] > seconds ):
+                            # Yes we do need to update
+                            info[ 'seconds' ] = seconds
+                            info[ 'time' ] = time
+                            info[ 'video' ] = video
+                            self.update_cache_pblist( user.username, pblist )
+                    break
+                if not found_time:
+                    # User has run this game, but not this cateogry.
+                    # Add the run to the pblist and update memcache.
+                    info = dict( category = category,
+                                 seconds = seconds,
+                                 time = time,
+                                 video = video )
+                    pb['infolist'].append( info )
+                    pb['infolist'].sort( key=itemgetter('category') )
                     self.update_cache_pblist( user.username, pblist )
+                    found_time = True
                 break
         if not found_time:
-            # No run for this username, game, category combination.
+            # No run for this username, game combination.
             # So, add the run to this username's pblist and update memcache
             pblist.append( dict( game = game, 
                                  game_code = game_code,
-                                 category = category,
-                                 seconds = seconds, 
-                                 time = time,
-                                 video = video ) )
-            pblist.sort( key=itemgetter('game','category') )
+                                 infolist = [ dict( category = category,
+                                                    seconds = seconds, 
+                                                    time = time,
+                                                    video = video ) ] 
+                                 ) )
+            pblist.sort( key=itemgetter('game') )
             self.update_cache_pblist( user.username, pblist )
                      
         # Update rundict in memcache, if necessary
