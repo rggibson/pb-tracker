@@ -19,5 +19,5 @@ class GamePage(handler.Handler):
 
         rundict = self.get_rundict( game_code )
         
-        self.render("gamepage.html", user=user, game=run.game, 
-                    rundict=rundict )
+        self.render( "gamepage.html", user=user, game=run.game, 
+                     game_code=game_code, rundict=rundict )
