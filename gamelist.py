@@ -1,6 +1,6 @@
 import handler
 
-class Games( handler.Handler ):
+class GameList( handler.Handler ):
     def get( self ):
         user = self.get_user()
 
