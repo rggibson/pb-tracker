@@ -13,10 +13,23 @@
       <span class="badge">{{gamedict['num_pbs']}}
 	{% if gamedict['num_pbs'] >= 1000 %}+{% endif %}
       </span>
+      <img id="img-{{gamedict['game_code']}}" alt="" class="img-responsive" 
+	   style="max-height: 22px; float: left; margin-right: 5px;"
+	   src="/static/boxart/__blank__.png">
       {{gamedict['game']}}
     </a>
     {% endfor %}
   </div>
 </div>
+
+<!-- Add game images when they exist -->
+<script src="/static/js/util.js"></script>
+<script type="text/javascript">
+  {% for gamedict in gamelist %}
+  set_img_if_exists( "img-{{gamedict['game_code']}}", 
+                     "{{gamedict['game_code']}}" );
+  {% endfor %}
+</script>
+
 
 {% endblock %}

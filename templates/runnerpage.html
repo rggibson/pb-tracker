@@ -21,8 +21,8 @@
     <tr>
       <td rowspan="{{pb['infolist']|length}}">
 	<a href="/game/{{pb['game_code']}}">
-	  <img src="/static/boxart/{{pb['game_code']}}.jpg" alt=""
-	       class="img-responsive" style="max-height: 100px;">
+	  <img id="img-{{pb['game_code']}}" alt="" class="img-responsive" 
+	       style="max-height: 100px;">
 	</a>
       </td>
       <td rowspan="{{pb['infolist']|length}}">
@@ -44,5 +44,13 @@
     {% endfor %}
   </tbody>
 </table>
+
+<!-- Add game images when they exist -->
+<script src="/static/js/util.js"></script>
+<script type="text/javascript">
+  {% for pb in pblist %}
+  set_img_if_exists( "img-{{pb['game_code']}}", "{{pb['game_code']}}" );
+  {% endfor %}
+</script>
 
 {% endblock %}
