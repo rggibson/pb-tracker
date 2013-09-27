@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<script type="text/javascript">
+  document.getElementById("nav-runners").setAttribute("class", "active");
+</script>
+
+<h1>{{username}}</h1>
+<a href="/runner/{{username}}">View PBs</a>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>Game</th>
+      <th>Category</th>
+      <th>Time</th>
+      <th>Date</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for run in runlist %}
+    <tr>
+      <td>
+	<img src="/static/boxart/__blank__.png" alt="" 
+	     class="img-responsive img-{{run['game_code']}}" 
+	     style="max-height: 22px;">
+      </td>
+      <td>{{run['game']}}</td>
+      <td>{{run['category']}}</td>
+      <td>
+	{% if run['video'] %}<a href="{{run['video']}}">{% endif %}
+	  {{run['time']}}{% if run['video'] %}</a>{% endif %}      
+      </td>
+      <td>{{run['date']}}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+
+<!-- TODO: Figure out how to add game images when they exist by tag class
+     rather than by ID.  If this is impossible, will have to throw the 
+     javascript in the for loop.  Yuck. -->
+
+{% endblock %}

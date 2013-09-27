@@ -91,19 +91,19 @@ class Submit(handler.Handler):
                           + game_model.game + " in database." )
 
         # Add a new run to the database
-        run = runs.Runs( username = user.username,
+        new_run = runs.Runs( username = user.username,
                          game_code = game_code,
                          category = category,
                          seconds = seconds,
                          parent = runs.key() )
         if video:
             try:
-                run.video = video
+                new_run.video = video
             except db.BadValueError:
                 params['video_error'] = "Invalid video URL"
                 self.render( "submit.html", **params )
                 return                
-        run.put( )
+        new_run.put( )
         logging.debug( "Put new run for runner " + user.username
                        + ", game = " + game + ", category = " + category 
                        + ", time = " + time)
@@ -226,26 +226,38 @@ class Submit(handler.Handler):
                 self.update_cache_gamelist( gamelist )
 
             # Update runnerlist in memcache if necessary
-            runnerlist = self.get_runnerlist( )
-            found_runner = False
-            for runnerdict in runnerlist:
-                if( runnerdict['username'] == user.username ):
-                    found_runner = True
-                    # Memcache could be stale, so recalculate num_pbs
-                    q = db.Query( runs.Runs, 
-                                  projection=('game_code', 'category'),
-                                  distinct = True )
-                    q.ancestor( runs.key() )
-                    q.filter( 'username =', user.username )
-                    num_pbs = q.count( limit=1000 )
-                    runnerdict['num_pbs'] = num_pbs
-                    runnerlist.sort( key=itemgetter('username') )
-                    runnerlist.sort( key=itemgetter('num_pbs'), reverse=True )
-                    self.update_cache_runnerlist( runnerlist )
-                    break
-            if not found_runner:
-                logging.error( "Failed to find " + user.username 
-                               + " in runnerlist" )
+            ( runnerlist, fresh ) = self.get_runnerlist( )
+            if not fresh:
+                found_runner = False
+                for runnerdict in runnerlist:
+                    if( runnerdict['username'] == user.username ):
+                        found_runner = True
+                        # Memcache could be stale, so recalculate num_pbs
+                        q = db.Query( runs.Runs, 
+                                      projection=('game_code', 'category'),
+                                      distinct = True )
+                        q.ancestor( runs.key() )
+                        q.filter( 'username =', user.username )
+                        num_pbs = q.count( limit=1000 )
+                        runnerdict['num_pbs'] = num_pbs
+                        runnerlist.sort( key=itemgetter('username') )
+                        runnerlist.sort( key=itemgetter('num_pbs'), 
+                                         reverse=True )
+                        self.update_cache_runnerlist( runnerlist )
+                        break
+                if not found_runner:
+                    logging.error( "Failed to find " + user.username 
+                                   + " in runnerlist" )
+
+        # Update runlist for runner in memcache
+        ( runlist, fresh ) = self.get_runlist_for_runner( user.username )
+        if not fresh:
+            runlist.append( dict( game = game, game_code = game_code,
+                                  category = category, time = time, 
+                                  date = new_run.datetime_created.strftime(
+                                      "%a %b %d %H:%M:%S %Y" ),
+                                  video = video ) )
+            self.update_cache_runlist_for_runner( user.username, runlist )
 
         # All done with submission
         self.redirect( "/runner/" + user.username )

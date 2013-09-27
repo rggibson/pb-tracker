@@ -70,13 +70,20 @@ class Signup(handler.Handler):
                                      parent = runners.key())
             runner.put()
 
+            # Update runner exists in memcache
+            self.update_cache_runner_exists( username, True )
+
             # Update runnerlist in memcache.  Note that this puts the runner
             # at the end of the list, rather than in alphabetical order among
             # those runners with 0 pbs.  The runner will be sorted properly
             # if the memcache gets flushed, which is good enough
-            runnerlist = self.get_runnerlist( )
-            runnerlist.append( dict( username = username, num_pbs = 0 ) )
-            self.update_cache_runnerlist( runnerlist )
+            ( runnerlist, fresh ) = self.get_runnerlist( )
+            if not fresh:
+                runnerlist.append( dict( username = username, num_pbs = 0 ) )
+                self.update_cache_runnerlist( runnerlist )
+
+            # Update runs for runner in memcache
+            self.update_cache_runlist_for_runner( username, [ ] )
 
             # Login and gogo
             runner_id = runner.key().id()

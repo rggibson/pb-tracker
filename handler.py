@@ -56,6 +56,41 @@ class Handler(webapp2.RequestHandler):
             self.redirect("/")
 
     # Memcache / Datastore functions
+    def runner_exists_memkey( self, username ):
+        return username + ":runner"
+
+    def runner_exists( self, username ):
+        key = self.runner_exists_memkey( username )
+        runner_does_exist = memcache.get( key )
+        if runner_does_exist is None:
+            # Not in memcache, so check the database
+            q = db.Query( runners.Runners, keys_only=True )
+            q.filter( 'username =', username )
+            runner = q.get( )
+            if runner:
+                runner_does_exist = True
+            else:
+                runner_does_exist = False
+            if memcache.set( key, runner_does_exist ):
+                logging.debug( "Set runner exists in memcache for " 
+                               + username )
+            else:
+                logging.warning( "Failed to set runner exists for "
+                                 + username + " in memcache" )
+        else:
+            logging.debug( "Got runner exists for " + username 
+                           + " in memcache" )
+        return runner_does_exist
+
+    def update_cache_runner_exists( self, username, runner_exists ):
+        key = self.runner_exists_memkey( username )
+        if memcache.set( key, runner_exists ):
+            logging.debug( "Updated runner exists for " + username 
+                          + " in memcache" )
+        else:
+            logging.error( "Failed to update runner exists for " + username 
+                           + " in memcache" )
+
     def get_game_memkey( self, game_code ):
         return game_code + ":game"
 
@@ -75,7 +110,7 @@ class Handler(webapp2.RequestHandler):
                     logging.warning( "Failed to set game for game_code " 
                                      + game_code + " in memcache" )
         else:
-            logging.debug( "Got game for game_code" + game_code 
+            logging.debug( "Got game for game_code " + game_code 
                           + " from memcache" )
         return game
 
@@ -258,6 +293,7 @@ class Handler(webapp2.RequestHandler):
 
     def get_runnerlist( self ):
         key = self.get_runnerlist_memkey( )
+        fresh = True
         runnerlist = memcache.get( key )
         if runnerlist is None:
             # Build the runnerlist, which is a list of dictionaries where each
@@ -283,7 +319,8 @@ class Handler(webapp2.RequestHandler):
                 logging.warning( "Failed to set new runnerlist in memcache" )
         else:
             logging.debug( "Got runnerlist from memcache" )
-        return runnerlist
+            fresh = False
+        return ( runnerlist, fresh )
 
     def update_cache_runnerlist( self, runnerlist ):
         key = self.get_runnerlist_memkey( )
@@ -291,3 +328,47 @@ class Handler(webapp2.RequestHandler):
             logging.debug( "Updated runnerlist in memcache" )
         else:
             logging.error( "Failed to update runnerlist in memcache" )
+
+    def get_runlist_for_runner_memkey( self, username ):
+        return username + ":runlist_for_runner"
+
+    def get_runlist_for_runner( self, username ):
+        key = self.get_runlist_for_runner_memkey( username )
+        runlist = memcache.get( key )
+        fresh = True
+        if runlist is None:
+            # Not in memcache, so construct the runlist and store in memcache.
+            runlist = [ ]
+            q = runs.Runs.all( )
+            q.ancestor( runs.key() )
+            q.filter( 'username =', username )
+            q.order( '-datetime_created' )
+            for run in q.run( limit = 1000 ):
+                runlist.append( dict( game = self.get_game( run.game_code ),
+                                      game_code = run.game_code,
+                                      category = run.category,
+                                      time = util.
+                                      seconds_to_timestr( run.seconds ),
+                                      date = run.datetime_created.strftime( 
+                                          "%a %b %d %H:%M:%S %Y" ),
+                                      video = run.video ) )
+            if memcache.set( key, runlist ):
+                logging.debug( "Set runlist for runner in memcache for " 
+                               + username )
+            else:
+                logging.warning( "Failed to set new runlist for runner " 
+                                 + username + " in memcache" )
+        else:
+            fresh = False
+            logging.debug( "Got runlist for runner " + username 
+                           + " from memcache" )
+        return ( runlist, fresh )
+
+    def update_cache_runlist_for_runner( self, username, runlist ):
+        key = self.get_runlist_for_runner_memkey( username )
+        if memcache.set( key, runlist ):
+            logging.debug( "Updated runlist for runner " + username 
+                           + " in memcache" )
+        else:
+            logging.error( "Failed to update runlist for runner " + username 
+                           + " in memcache" )

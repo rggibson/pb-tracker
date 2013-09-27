@@ -28,5 +28,5 @@ app = webapp2.WSGIApplication( [ ('/', front.Front),
                                  ('/runners', runnerlist.RunnerList),
                                  ('/runner/' + MY_RE, runnerpage.RunnerPage),
                                  ('/game/' + MY_RE, gamepage.GamePage),
-                                 ('/' + r'.*', Error)],
+                                 ('/' + r'.*', Error) ],
                                debug=DEBUG)
