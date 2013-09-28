@@ -21,10 +21,11 @@ class Signup(handler.Handler):
         self.render("signup.html")
 
     def post(self):
-        username = self.request.get('username')
-        password = self.request.get('password')
-        verify = self.request.get('verify')
-        email = self.request.get('email')
+        username = self.request.get( 'username' )
+        password = self.request.get( 'password' )
+        verify = self.request.get( 'verify' )
+        email = self.request.get( 'email' )
+        username_code = util.get_code( username )
 
         params = dict( username = username,
                        password = password,
@@ -33,15 +34,13 @@ class Signup(handler.Handler):
 
         valid = True
 
-        if not valid_username(username):
+        if not valid_username( username ):
             params['user_error'] = ( "Username must be between " 
                                      + "1 and 20 characters." )
             valid = False
         else:
             # Check if username already exists
-            q = runners.Runners.all()
-            q.filter('username =', username)
-            if q.get():
+            if self.get_username( username_code ):
                 params['user_error'] = "That user already exists."
                 valid = False
         
@@ -63,15 +62,16 @@ class Signup(handler.Handler):
 
         else:
             # Add a runner to the database
-            runner = runners.Runners(username = username, 
-                                     password = util.make_pw_hash(username, 
-                                                                  password), 
-                                     email = email,
-                                     parent = runners.key())
-            runner.put()
+            runner = runners.Runners( username = username, 
+                                      password = util.make_pw_hash( username, 
+                                                                    password),
+                                      email = email,
+                                      parent = runners.key(),
+                                      key_name = username_code )
+            runner.put( )
 
-            # Update runner exists in memcache
-            self.update_cache_runner_exists( username, True )
+            # Update username in memcache
+            self.update_cache_username( username_code, username )
 
             # Update runnerlist in memcache.  Note that this puts the runner
             # at the end of the list, rather than in alphabetical order among
@@ -79,13 +79,14 @@ class Signup(handler.Handler):
             # if the memcache gets flushed, which is good enough
             ( runnerlist, fresh ) = self.get_runnerlist( )
             if not fresh:
-                runnerlist.append( dict( username = username, num_pbs = 0 ) )
+                runnerlist.append( dict( username = username, 
+                                         username_code = username_code,
+                                         num_pbs = 0 ) )
                 self.update_cache_runnerlist( runnerlist )
 
             # Update runs for runner in memcache
             self.update_cache_runlist_for_runner( username, [ ] )
 
             # Login and gogo
-            runner_id = runner.key().id()
-            self.login(runner_id)
-            self.goto_return_url()
+            self.login( username_code )
+            self.goto_return_url( )

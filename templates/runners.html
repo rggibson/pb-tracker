@@ -9,7 +9,7 @@
 <div class="row">
   <div class="list-group col-lg-6 col-lg-offset-3">
     {% for runnerdict in runnerlist %}
-    <a href="/runner/{{runnerdict['username']}}" class="list-group-item">
+    <a href="/runner/{{runnerdict['username_code']}}" class="list-group-item">
       <span class="badge">{{runnerdict['num_pbs']}}
 	{% if runnerdict['num_pbs'] >= 1000 %}+{% endif %}
       </span>

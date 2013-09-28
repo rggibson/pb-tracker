@@ -35,13 +35,13 @@ class Handler(webapp2.RequestHandler):
                                              (str(user_id)))
         self.response.headers.add_header('Set-Cookie', cookie)
 
-    def get_user(self):
+    def get_user( self ):
         cookie_val = self.request.cookies.get('user_id')
         if cookie_val:
-            user_id = util.check_secure_val(cookie_val)
-            if user_id:
-                return runners.Runners.get_by_id(long(user_id), 
-                                                 parent=runners.key())
+            username_code = util.check_secure_val( cookie_val )
+            if username_code:
+                return runners.Runners.get_by_key_name( username_code, 
+                                                        parent=runners.key() )
 
     def set_return_url(self, url):
         cookie = 'return_url=' + url + ';Path=/'
@@ -56,72 +56,67 @@ class Handler(webapp2.RequestHandler):
             self.redirect("/")
 
     # Memcache / Datastore functions
-    def runner_exists_memkey( self, username ):
-        return username + ":runner"
+    def get_username_memkey( self, username_code ):
+        return username_code + ":username"
 
-    def runner_exists( self, username ):
-        key = self.runner_exists_memkey( username )
-        runner_does_exist = memcache.get( key )
-        if runner_does_exist is None:
+    def get_username( self, username_code ):
+        key = self.get_username_memkey( username_code )
+        username = memcache.get( key )
+        if username is None:
             # Not in memcache, so check the database
-            q = db.Query( runners.Runners, keys_only=True )
-            q.filter( 'username =', username )
-            runner = q.get( )
+            runner = runners.Runners.get_by_key_name( username_code,
+                                                      parent=runners.key() )
             if runner:
-                runner_does_exist = True
-            else:
-                runner_does_exist = False
-            if memcache.set( key, runner_does_exist ):
-                logging.debug( "Set runner exists in memcache for " 
-                               + username )
-            else:
-                logging.warning( "Failed to set runner exists for "
-                                 + username + " in memcache" )
+                username = runner.username
+                if memcache.set( key, username ):
+                    logging.debug( "Set username in memcache for " 
+                                   + username )
+                else:
+                    logging.warning( "Failed to set username for "
+                                     + username + " in memcache" )
         else:
-            logging.debug( "Got runner exists for " + username 
+            logging.debug( "Got username for " + username 
                            + " in memcache" )
-        return runner_does_exist
+        return username
 
-    def update_cache_runner_exists( self, username, runner_exists ):
-        key = self.runner_exists_memkey( username )
-        if memcache.set( key, runner_exists ):
-            logging.debug( "Updated runner exists for " + username 
+    def update_cache_username( self, username_code, username ):
+        key = self.get_username_memkey( username_code )
+        if memcache.set( key, username ):
+            logging.debug( "Updated username for " + username 
                           + " in memcache" )
         else:
-            logging.error( "Failed to update runner exists for " + username 
+            logging.error( "Failed to update username for " + username 
                            + " in memcache" )
 
-    def get_game_memkey( self, game_code ):
-        return game_code + ":game"
+    def get_game_model_memkey( self, game_code ):
+        return game_code + ":game_model"
 
-    def get_game( self, game_code ):
-        key = self.get_game_memkey( game_code )
-        game = memcache.get( key )
-        if game is None:
-            # Not in memcache, so get the game string from datastore
+    def get_game_model( self, game_code ):
+        key = self.get_game_model_memkey( game_code )
+        game_model = memcache.get( key )
+        if game_model is None:
+            # Not in memcache, so get the game from datastore
             game_model = games.Games.get_by_key_name( game_code,
                                                       parent=games.key() )
-            if game_model:
-                game = game_model.game
-                if memcache.set( key, game ):
-                    logging.debug( "Set game in memcache for game_code " 
-                                  + game_code )
-                else:
-                    logging.warning( "Failed to set game for game_code " 
-                                     + game_code + " in memcache" )
+            if memcache.set( key, game_model ):
+                logging.debug( "Set game_model in memcache for game_code " 
+                               + game_code )
+            else:
+                logging.warning( "Failed to set game_model for game_code " 
+                                 + game_code + " in memcache" )
         else:
-            logging.debug( "Got game for game_code " + game_code 
+            logging.debug( "Got game_model for game_code " + game_code 
                           + " from memcache" )
-        return game
+        return game_model
 
-    def update_cache_game( self, game_code, game ):
-        key = self.get_game_memkey( game_code )
-        if memcache.set( key, game ):
-            logging.debug( "Updated game for game_code " + game_code 
+    def update_cache_game_model( self, game_code, game_model ):
+        key = self.get_game_model_memkey( game_code )
+        if memcache.set( key, game_model ):
+            logging.debug( "Updated game_model for game_code " + game_code 
                           + " in memcache" )
         else:
-            logging.error( "Failed to update game for game_code " + game_code 
-                           + " in memcache" )
+            logging.error( "Failed to update game_model for game_code " 
+                           + game_code + " in memcache" )
 
     def get_pblist_memkey( self, username ):
         return username + ":pblist"
@@ -160,11 +155,16 @@ class Handler(webapp2.RequestHandler):
                 # Add the fastest run to the pblist
                 if run.game_code != cur_game_code:
                     # New game
-                    pb = dict( game = self.get_game( run.game_code ), 
-                               game_code = run.game_code,
-                               infolist = [ ] )
-                    pblist.append( pb )
-                    cur_game_code = run.game_code
+                    game_model = self.get_game_model( run.game_code )
+                    if game_model:
+                        pb = dict( game = game_model.game, 
+                                   game_code = run.game_code,
+                                   infolist = [ ] )
+                        pblist.append( pb )
+                        cur_game_code = run.game_code
+                    else:
+                        logging.error( "Could not find game model for "
+                                       + "game_code " + run.game_code )
                 info = dict( category = run.category, seconds = pb_run.seconds,
                              time = util.seconds_to_timestr( pb_run.seconds ),
                              video = pb_run.video )
@@ -253,6 +253,7 @@ class Handler(webapp2.RequestHandler):
     def get_gamelist( self ):
         key = self.get_gamelist_memkey( )
         gamelist = memcache.get( key )
+        fresh = True
         if gamelist is None:
             # Build the gamelist, which is a list of dictionaries where each
             # dict gives the game, game_code and number of pbs for that game.
@@ -266,11 +267,16 @@ class Handler(webapp2.RequestHandler):
                 q2.ancestor( runs.key() )
                 q2.filter('game_code =', run.game_code)
                 num_pbs = q2.count( limit=1000 )
-                gamelist.append( 
-                    dict( 
-                        game = self.get_game( run.game_code ),
-                        game_code = run.game_code,
-                        num_pbs = num_pbs ) )
+                game_model = self.get_game_model( run.game_code )
+                if game_model:
+                    gamelist.append( 
+                        dict( 
+                            game = game_model.game,
+                            game_code = run.game_code,
+                            num_pbs = num_pbs ) )
+                else:
+                    logging.error( "Could not find game_model for game_code "
+                                   + run.game_code )
             gamelist.sort( key=itemgetter('game_code') )
             gamelist.sort( key=itemgetter('num_pbs'), reverse=True )
             if memcache.set( key, gamelist ):
@@ -278,8 +284,9 @@ class Handler(webapp2.RequestHandler):
             else:
                 logging.warning( "Failed to set new gamelist in memcache" )
         else:
+            fresh = False
             logging.debug( "Got gamelist from memcache" )
-        return gamelist
+        return ( gamelist, fresh )
 
     def update_cache_gamelist( self, gamelist ):
         key = self.get_gamelist_memkey( )
@@ -311,7 +318,9 @@ class Handler(webapp2.RequestHandler):
                 q2.filter('username =', runner.username)
                 num_pbs = q2.count( limit=1000 )
                 runnerlist.append( 
-                    dict( username = runner.username, num_pbs = num_pbs ) )
+                    dict( username = runner.username, 
+                          username_code = util.get_code( runner.username ),
+                          num_pbs = num_pbs ) )
             runnerlist.sort( key=itemgetter('num_pbs'), reverse=True )
             if memcache.set( key, runnerlist ):
                 logging.debug( "Set runnerlist in memcache" )
@@ -344,14 +353,19 @@ class Handler(webapp2.RequestHandler):
             q.filter( 'username =', username )
             q.order( '-datetime_created' )
             for run in q.run( limit = 1000 ):
-                runlist.append( dict( game = self.get_game( run.game_code ),
-                                      game_code = run.game_code,
-                                      category = run.category,
-                                      time = util.
-                                      seconds_to_timestr( run.seconds ),
-                                      date = run.datetime_created.strftime( 
-                                          "%a %b %d %H:%M:%S %Y" ),
-                                      video = run.video ) )
+                game_model = self.get_game_model( run.game_code )
+                if game_model:
+                    runlist.append( dict( game = game_model.game,
+                                          game_code = run.game_code,
+                                          category = run.category,
+                                          time = util.
+                                          seconds_to_timestr( run.seconds ),
+                                          date = run.datetime_created.strftime(
+                                              "%a %b %d %H:%M:%S %Y" ),
+                                          video = run.video ) )
+                else:
+                    logging.error( "Could not get game_model for game_code "
+                                   + run.game_code )
             if memcache.set( key, runlist ):
                 logging.debug( "Set runlist for runner in memcache for " 
                                + username )

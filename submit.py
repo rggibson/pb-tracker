@@ -10,21 +10,18 @@ from operator import itemgetter
 from google.appengine.ext import db
 
 class Submit(handler.Handler):
-    def get(self):
-        user = self.get_user()
-
-        # TODO: Figure out how to autocomplete game, category inputs using
-        # <input class="ui-autocomplete-input"> or something similar
+    def get( self ):
+        user = self.get_user( )
 
         if not user:
-            self.redirect("/")
+            self.redirect( "/" )
         else:
-            self.render("submit.html", user=user)
+            self.render( "submit.html", user=user )
 
-    def post(self):
-        user = self.get_user()
+    def post( self ):
+        user = self.get_user( )
         if not user:
-            self.redirect("/")
+            self.redirect( "/" )
             return
 
         game = self.request.get('game')
@@ -36,9 +33,8 @@ class Submit(handler.Handler):
                        time = time, video = video )
 
         # Make sure the game doesn't already exist under a similar name
-        game_code = util.get_game_or_category_code( game )
-        game_model = games.Games.get_by_key_name( game_code, 
-                                                  parent=games.key() )
+        game_code = util.get_code( game )
+        game_model = self.get_game_model( game_code )
         if game_model and game != game_model.game:
             params['game_error'] = ( "Game already exists under [" 
                                      + game_model.game + "] (case sensitive). "
@@ -48,11 +44,11 @@ class Submit(handler.Handler):
             return
 
         # Make sure the category doesn't already exist under a similar name
-        category_code = util.get_game_or_category_code( category )
+        category_code = util.get_code( category )
         category_found = False
         if game_model:
             for c in game_model.categories:
-                if category_code == util.get_game_or_category_code( c ):
+                if category_code == util.get_code( c ):
                     category_found = True
                     if category != c:
                         params['category_error'] = ( "Category already exists "
@@ -66,10 +62,10 @@ class Submit(handler.Handler):
                 break
 
         # Parse the time into seconds, ensure it is valid
-        (seconds, time_error) = util.timestr_to_seconds( time )
+        ( seconds, time_error ) = util.timestr_to_seconds( time )
         if not seconds:
             params['time_error'] = "Invalid time: " + time_error
-            self.render("submit.html", **params)
+            self.render( "submit.html", **params )
             return
         time = util.seconds_to_timestr( seconds ) # Enforce standard format
 
@@ -82,7 +78,7 @@ class Submit(handler.Handler):
             game_model.put( )
             logging.warning( "Put new game " + game_model.game + " with "
                              + " category " + category + " in database." )
-            self.update_cache_game( game_code, game )
+            self.update_cache_game_model( game_code, game_model )
         elif not category_found:
             # Add a new category for this game in the database
             game_model.categories.append( category )
@@ -92,10 +88,10 @@ class Submit(handler.Handler):
 
         # Add a new run to the database
         new_run = runs.Runs( username = user.username,
-                         game_code = game_code,
-                         category = category,
-                         seconds = seconds,
-                         parent = runs.key() )
+                             game_code = game_code,
+                             category = category,
+                             seconds = seconds,
+                             parent = runs.key() )
         if video:
             try:
                 new_run.video = video
@@ -182,7 +178,7 @@ class Submit(handler.Handler):
         # Check whether this is the first run for this username, game,
         # category combination.  This will determine whether we need to check
         # for gamelist and runnerlist updates.
-        q = db.Query( runs.Runs, projection=[] )
+        q = db.Query( runs.Runs, keys_only=True )
         q.ancestor( runs.key() )
         q.filter( 'username =', user.username )
         q.filter( 'game_code =', game_code )
@@ -200,30 +196,32 @@ class Submit(handler.Handler):
 
         if new_combo:
             # Update gamelist in memcache if necessary
-            gamelist = self.get_gamelist( )
-            found_game = False
-            for gamedict in gamelist:
-                if( gamedict['game_code'] == game_code ):
-                    found_game = True
-                    # We may have a stale number for pbs, so recount
-                    q = db.Query( runs.Runs, 
-                                  projection=('username', 'category'),
-                                  distinct=True )
-                    q.ancestor( runs.key() )
-                    q.filter( 'game_code =', game_code )
-                    num_pbs = q.count( limit=1000 )
-                    gamedict['num_pbs'] = num_pbs
-                    gamelist.sort( key=itemgetter('game_code') )
+            ( gamelist, fresh ) = self.get_gamelist( )
+            if not fresh:
+                found_game = False
+                for gamedict in gamelist:
+                    if( gamedict['game_code'] == game_code ):
+                        found_game = True
+                        # We may have a stale number for pbs, so recount
+                        q = db.Query( runs.Runs, 
+                                      projection=('username', 'category'),
+                                      distinct=True )
+                        q.ancestor( runs.key() )
+                        q.filter( 'game_code =', game_code )
+                        num_pbs = q.count( limit=1000 )
+                        gamedict['num_pbs'] = num_pbs
+                        gamelist.sort( key=itemgetter('game_code') )
+                        gamelist.sort( key=itemgetter('num_pbs'), 
+                                       reverse=True )
+                        self.update_cache_gamelist( gamelist )
+                        break
+                if not found_game:
+                    # This game wasn't found in the gamelist, so add it
+                    gamelist.append( dict( game = game, game_code = game_code,
+                                           num_pbs = 1 ) )
+                    gamelist.sort( key=itemgetter('game') )
                     gamelist.sort( key=itemgetter('num_pbs'), reverse=True )
                     self.update_cache_gamelist( gamelist )
-                    break
-            if not found_game:
-                # This game wasn't found in the gamelist, so add it
-                gamelist.append( dict( game = game, game_code = game_code,
-                                       num_pbs = 1 ) )
-                gamelist.sort( key=itemgetter('game') )
-                gamelist.sort( key=itemgetter('num_pbs'), reverse=True )
-                self.update_cache_gamelist( gamelist )
 
             # Update runnerlist in memcache if necessary
             ( runnerlist, fresh ) = self.get_runnerlist( )
@@ -260,4 +258,4 @@ class Submit(handler.Handler):
             self.update_cache_runlist_for_runner( user.username, runlist )
 
         # All done with submission
-        self.redirect( "/runner/" + user.username )
+        self.redirect( "/runner/" + util.get_code( user.username ) )

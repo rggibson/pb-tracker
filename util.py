@@ -11,11 +11,11 @@ def hash_str(s):
     return hmac.new(secret.SECRET, s).hexdigest()
     
 def make_secure_val(s):
-    return "{0}|{1}".format(s, hash_str(s))
+    return "{0}|{1}".format( s, hash_str(s) )
 
 def check_secure_val(h):
     val = h.split('|')[0]
-    if h == make_secure_val(val):
+    if h == make_secure_val( val ):
         return val
 
 # Hasing functions with salt
@@ -34,9 +34,9 @@ def valid_pw(name, pw, h):
         return h == make_pw_hash(name, pw, parts[1])
 
 # Game, time string utility functions
-def get_game_or_category_code( game_or_category ):
+def get_code( string ):
     # Substitute all sets of consecutive nonalphanumeric characters with a dash
-    return re.sub( '[^a-zA-Z0-9]+', '-', game_or_category ).lower()
+    return re.sub( '[^a-zA-Z0-9]+', '-', string ).lower()
 
 def seconds_to_timestr( seconds ):
     secs = seconds
