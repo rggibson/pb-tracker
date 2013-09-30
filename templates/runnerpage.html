@@ -3,11 +3,19 @@
 {% block content %}
 
 <script type="text/javascript">
-  document.getElementById("nav-runners").setAttribute("class", "active");
+  document.getElementById("nav-"
+  + {% if user.username == username %}"username"{% else %}"runners"{% endif %}
+  ).setAttribute("class", "active");
 </script>
 
 <h1>{{username}}</h1>
-<a href="/runner/{{username_code}}?q=view-all">View all runs</a>
+<a href="/runner/{{username_code}}?q=view-all">
+  {% if user.username == username %}
+  View / edit runs
+  {% else %}
+  View all runs
+  {% endif %}
+</a>
 <table class="table">
   <thead>
     <tr>
@@ -23,7 +31,7 @@
       <td rowspan="{{pb['infolist']|length}}">
 	<a href="/game/{{pb['game_code']}}">
 	  <img id="img-{{pb['game_code']}}" alt="" class="img-responsive" 
-	       style="max-height: 100px;">
+	       style="max-height: 50px;">
 	</a>
       </td>
       <td rowspan="{{pb['infolist']|length}}">

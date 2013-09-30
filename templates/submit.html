@@ -3,7 +3,9 @@
 {% block content %}
 
 <script type="text/javascript">
-  document.getElementById("nav-submit").setAttribute("class", "active");
+  document.getElementById("nav-" + 
+  {% if run_id %}"username"{% else %}"submit"{% endif %})
+  .setAttribute("class", "active");
 </script>
 
 <form method="post" class="form-horizontal" role="form">
@@ -42,7 +44,9 @@
   </div>
   <div class="form-group">
     <div class="col-lg-offset-2 col-lg-4">
-      <button class="btn btn-lg btn-primary" type="submit">Submit</button>
+      <button class="btn btn-lg btn-primary" type="submit">
+	{% if run_id %}Save changes{% else %}Submit{% endif %}
+      </button>
     </div>
   </div>
 </form>

@@ -132,40 +132,37 @@ class Handler(webapp2.RequestHandler):
             pblist = [ ]
             # Use a projection query to get all of the unique game, category
             # pairs
-            q = db.Query( runs.Runs, projection=('game_code', 'category'), 
+            q = db.Query( runs.Runs, projection=('game', 'category'), 
                           distinct=True )
             q.ancestor( runs.key() )
             q.filter( 'username =', username )
-            q.order( 'game_code' )
+            q.order( 'game' )
             q.order( 'category' )
-            q.order( '-datetime_created' ) # Grab the last 1000 game,categories
-            cur_game_code = None
+            q.order( '-datetime_created' )# Grab the last 1000 game,categories
+            cur_game = None
             for run in q.run( limit = 1000 ):
                 # For each unique game, category pair, get the fastest run
                 q2 = db.Query(runs.Runs, 
                               projection=('seconds', 'video'))
-                q2.ancestor(runs.key())
+                q2.ancestor( runs.key() )
                 q2.filter('username =', username)
-                q2.filter('game_code =', run.game_code)
+                q2.filter('game =', run.game)
                 q2.filter('category =', run.category)
                 q2.order('seconds')
-                q2.order('datetime_created') # Break ties by getting oldest run
+                q2.order('datetime_created')# Break ties by getting oldest run
                 pb_run = q2.get()
 
                 # Add the fastest run to the pblist
-                if run.game_code != cur_game_code:
+                if run.game != cur_game:
                     # New game
-                    game_model = self.get_game_model( run.game_code )
-                    if game_model:
-                        pb = dict( game = game_model.game, 
-                                   game_code = run.game_code,
-                                   infolist = [ ] )
-                        pblist.append( pb )
-                        cur_game_code = run.game_code
-                    else:
-                        logging.error( "Could not find game model for "
-                                       + "game_code " + run.game_code )
-                info = dict( category = run.category, seconds = pb_run.seconds,
+                    pb = dict( game = run.game, 
+                               game_code = util.get_code( run.game ),
+                               infolist = [ ] )
+                    pblist.append( pb )
+                    cur_game = run.game
+
+                info = dict( category = run.category, 
+                             seconds = pb_run.seconds,
                              time = util.seconds_to_timestr( pb_run.seconds ),
                              video = pb_run.video )
                 pb['infolist'].append( info )
@@ -186,11 +183,11 @@ class Handler(webapp2.RequestHandler):
             logging.error( "Failed to update pblist for " + username 
                            + " in memcache" )
 
-    def get_rundict_memkey( self, game_code ):
-        return game_code + ":rundict"
+    def get_rundict_memkey( self, game ):
+        return game + ":rundict"
 
-    def get_rundict(self, game_code):
-        key = self.get_rundict_memkey( game_code )
+    def get_rundict( self, game ):
+        key = self.get_rundict_memkey( game )
         rundict = memcache.get( key )
         if rundict is None:
             # Not in memcache, so construct the runs and store it in memcache
@@ -201,19 +198,21 @@ class Handler(webapp2.RequestHandler):
             q = db.Query( runs.Runs, projection=('username', 'category'), 
                           distinct=True )
             q.ancestor( runs.key() )
-            q.filter( 'game_code =', game_code )
+            q.filter( 'game =', game )
             for run in q.run( limit = 1000 ):
                 # For each unique username, category pair, get that users
                 # fastest run for the category
                 q2 = db.Query( runs.Runs, projection=('seconds', 'video') )
                 q2.ancestor( runs.key() )
-                q2.filter( 'game_code =', game_code )
+                q2.filter( 'game =', game )
                 q2.filter( 'category =', run.category )
                 q2.filter( 'username =', run.username )
                 q2.order( 'seconds' )
+                q2.order( 'datetime_created' )
                 pb = q2.get( )
                 # Append the (user, time) to the category's list
                 item = dict( username = run.username,
+                             username_code = util.get_code( run.username ),
                              seconds = pb.seconds,
                              time = util.seconds_to_timestr( pb.seconds ),
                              video = pb.video )
@@ -230,21 +229,20 @@ class Handler(webapp2.RequestHandler):
                 rundict[ category ] = runlist
 
             if memcache.set( key, rundict ):
-                logging.debug( "Set rundict in memcache for " + game_code )
+                logging.debug( "Set rundict in memcache for " + game )
             else:
-                logging.warning( "Failed to set new rundict for " + game_code
+                logging.warning( "Failed to set new rundict for " + game
                                  + " in memcache" )
         else:
-            logging.debug( "Got rundict for " + game_code + " from memcache" )
+            logging.debug( "Got rundict for " + game + " from memcache" )
         return rundict
 
-    def update_cache_rundict( self, game_code, rundict ):
-        key = self.get_rundict_memkey( game_code )
+    def update_cache_rundict( self, game, rundict ):
+        key = self.get_rundict_memkey( game )
         if memcache.set( key, rundict ):
-            logging.debug( "Updated rundict for " + game_code 
-                           + " in memcache" )
+            logging.debug( "Updated rundict for " + game + " in memcache" )
         else:
-            logging.error( "Failed to update rundict for " + game_code 
+            logging.error( "Failed to update rundict for " + game 
                            + " in memcache" )
 
     def get_gamelist_memkey( self ):
@@ -259,24 +257,17 @@ class Handler(webapp2.RequestHandler):
             # dict gives the game, game_code and number of pbs for that game.
             # The list is sorted by numbers of pbs for the game
             gamelist = [ ]
-            q = db.Query( runs.Runs, projection=['game_code'], distinct=True )
+            q = db.Query( runs.Runs, projection=['game'], distinct=True )
             q.ancestor( runs.key() )
             for run in q.run( limit=10000 ):
                 q2 = db.Query( runs.Runs, projection=('username', 'category'),
                                distinct=True )
                 q2.ancestor( runs.key() )
-                q2.filter('game_code =', run.game_code)
+                q2.filter( 'game =', run.game )
                 num_pbs = q2.count( limit=1000 )
-                game_model = self.get_game_model( run.game_code )
-                if game_model:
-                    gamelist.append( 
-                        dict( 
-                            game = game_model.game,
-                            game_code = run.game_code,
-                            num_pbs = num_pbs ) )
-                else:
-                    logging.error( "Could not find game_model for game_code "
-                                   + run.game_code )
+                gamelist.append( dict( game = run.game,
+                                       game_code = util.get_code( run.game ),
+                                       num_pbs = num_pbs ) )
             gamelist.sort( key=itemgetter('game_code') )
             gamelist.sort( key=itemgetter('num_pbs'), reverse=True )
             if memcache.set( key, gamelist ):
@@ -312,7 +303,7 @@ class Handler(webapp2.RequestHandler):
             q.order( 'username' )
             for runner in q.run( limit=100000 ):
                 q2 = db.Query( runs.Runs, 
-                               projection=('game_code', 'category'),
+                               projection=('game', 'category'),
                                distinct=True )
                 q2.ancestor( runs.key() )
                 q2.filter('username =', runner.username)
@@ -353,19 +344,16 @@ class Handler(webapp2.RequestHandler):
             q.filter( 'username =', username )
             q.order( '-datetime_created' )
             for run in q.run( limit = 1000 ):
-                game_model = self.get_game_model( run.game_code )
-                if game_model:
-                    runlist.append( dict( game = game_model.game,
-                                          game_code = run.game_code,
-                                          category = run.category,
-                                          time = util.
-                                          seconds_to_timestr( run.seconds ),
-                                          date = run.datetime_created.strftime(
-                                              "%a %b %d %H:%M:%S %Y" ),
-                                          video = run.video ) )
-                else:
-                    logging.error( "Could not get game_model for game_code "
-                                   + run.game_code )
+                runlist.append( dict( run_id = str( run.key().id() ),
+                                      game = run.game,
+                                      game_code = util.get_code( run.game ),
+                                      category = run.category,
+                                      time = util.
+                                      seconds_to_timestr( run.seconds ),
+                                      date = run.datetime_created.strftime(
+                                          "%a %b %d %H:%M:%S %Y" ),
+                                      video = run.video ) )
+
             if memcache.set( key, runlist ):
                 logging.debug( "Set runlist for runner in memcache for " 
                                + username )

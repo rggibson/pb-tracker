@@ -3,7 +3,9 @@
 {% block content %}
 
 <script type="text/javascript">
-  document.getElementById("nav-runners").setAttribute("class", "active");
+  document.getElementById("nav-"
+  + {% if user.username == username %}"username"{% else %}"runners"{% endif %}
+  ).setAttribute("class", "active");
 </script>
 
 <h1>{{username}}</h1>
@@ -16,6 +18,7 @@
       <th>Category</th>
       <th>Time</th>
       <th>Date</th>
+      {% if user.username == username %}<th></th>{% endif %}
     </tr>
   </thead>
   <tbody>
@@ -33,6 +36,9 @@
 	  {{run['time']}}{% if run['video'] %}</a>{% endif %}      
       </td>
       <td>{{run['date']}}</td>
+      {% if user.username == username %}
+      <td><a href="/submit?edit={{run['run_id']}}">edit</td>
+      {% endif %}
     </tr>
     {% endfor %}
   </tbody>

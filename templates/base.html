@@ -54,7 +54,7 @@
 	<ul class="nav navbar-nav navbar-right">
 	  {% if user %}
 	  <li id="nav-username">
-	    <a href="/runner/{{user.username}}">{{user.username}}</a>
+	    <a href="/runner/{{user.key().name()}}">{{user.username}}</a>
 	  </li>
 	  <li id="nav-logout"><a href="/logout">Log out</a></li>
 	  {% else %}

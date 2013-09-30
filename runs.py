@@ -5,7 +5,7 @@ def key(name = 'default'):
 
 class Runs(db.Model):
     username = db.StringProperty(required = True)
-    game_code = db.StringProperty(required = True)
+    game = db.StringProperty(required = True)
     category = db.StringProperty(required = True)
     seconds = db.IntegerProperty(required = True)
     datetime_created = db.DateTimeProperty(auto_now_add = True)

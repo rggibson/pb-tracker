@@ -11,13 +11,13 @@ class GamePage( handler.Handler ):
         self.set_return_url( '/game/' + game_code )
 
         # Make sure this game exists
-        game = self.get_game( game_code )
-        if not game:
+        game_model = self.get_game_model( game_code )
+        if not game_model:
             self.error( 404 )
             self.render( "404.html", user=user )
             return
 
-        rundict = self.get_rundict( game_code )
-        
-        self.render( "gamepage.html", user=user, game=game, 
+        rundict = self.get_rundict( game_model.game )
+
+        self.render( "gamepage.html", user=user, game=game_model.game, 
                      game_code=game_code, rundict=rundict )
