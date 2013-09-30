@@ -211,8 +211,10 @@ class Submit( handler.Handler ):
                             q.order( 'datetime_created' )
                             pb_run = q.get( )
                             if pb_run:
-                                info[ 'seconds' ] = pb_run.seconds
-                                info[ 'video' ] = pb_run.video
+                                info['seconds'] = pb_run.seconds
+                                info['time'] = util.seconds_to_timestr( 
+                                    pb_run.seconds )
+                                info['video'] = pb_run.video
                             else:
                                 # No other runs for game, category combo
                                 del pb[ 'infolist' ][ j ]
@@ -230,7 +232,7 @@ class Submit( handler.Handler ):
         for i, run in enumerate( runlist ):
             if( run[ 'username' ] == user.username ):
                 if( run[ 'seconds' ] == old_run[ 'seconds' ] ):
-                    # Yes, we need replace 
+                    # Yes, we need replace
                     q = db.Query( runs.Runs, projection=('seconds', 'video') )
                     q.ancestor( runs.key() )
                     q.filter( 'game =', old_run[ 'game' ] )
@@ -241,6 +243,8 @@ class Submit( handler.Handler ):
                     pb_run = q.get( )
                     if pb_run:
                         run[ 'seconds' ] = pb_run.seconds
+                        run[ 'time' ] = util.seconds_to_timestr( 
+                            pb_run.seconds )
                         run[ 'video' ] = pb_run.video
                     else:
                         # No other run for game, category combo
