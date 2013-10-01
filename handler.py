@@ -118,6 +118,36 @@ class Handler(webapp2.RequestHandler):
             logging.error( "Failed to update game_model for game_code " 
                            + game_code + " in memcache" )
 
+    def get_run_by_id_memkey( self, run_id ):
+        return str( run_id ) + ":run"
+
+    def get_run_by_id( self, run_id ):
+        key = self.get_run_by_id_memkey( run_id )
+        run = memcache.get( key )
+        if run is None:
+            # Not in memcache, so get the run from database and store in
+            # memcache.
+            run = runs.Runs.get_by_id( long( run_id ), parent=runs.key() )
+            if memcache.set( key, run ):
+                logging.debug( "Set run in memcache for run_id" 
+                               + str( run_id ) )
+            else:
+                logging.warning( "Failed to set new run for run_id" 
+                                 + str( run_id ) + " in memcache" )
+        else:
+            logging.debug( "Got run with run_id " + str( run_id ) + " from "
+                           + "memcache" )
+        return run
+
+    def update_cache_run_by_id( self, run_id, run ):
+        key = self.get_run_by_id_memkey( run_id )
+        if memcache.set( key, run ):
+            logging.debug( "Updated run for run_id " + str( run_id ) 
+                          + " in memcache" )
+        else:
+            logging.error( "Failed to update run for run_id " 
+                           + str( run_id ) + " in memcache" )
+
     def get_pblist_memkey( self, username ):
         return username + ":pblist"
 

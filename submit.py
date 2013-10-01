@@ -18,7 +18,7 @@ class Submit( runhandler.RunHandler ):
         run_id = self.request.get( 'edit' )
         if run_id:
             # Grab the run to edit
-            run = runs.Runs.get_by_id( long( run_id ), parent=runs.key() )
+            run = self.get_run_by_id( run_id )
             if not run or user.username != run.username:
                 self.error( 404 )
                 self.render( "404.html", user=user )
@@ -130,6 +130,7 @@ class Submit( runhandler.RunHandler ):
         self.update_games( params )
 
         # Update memcache
+        self.update_cache_run_by_id( new_run.key().id(), new_run )
         self.update_pblist_put( params )
         self.update_rundict_put( params )
         self.update_runlist_for_runner_put( params )
@@ -158,7 +159,7 @@ class Submit( runhandler.RunHandler ):
         run_id = params[ 'run_id' ]
 
         # Grab the old run, which we will update to be the new run
-        new_run = runs.Runs.get_by_id( long( run_id ), parent=runs.key() )
+        new_run = self.get_run_by_id( run_id )
         if not new_run or new_run.username != user.username:
             self.error( 404 )
             self.render( "404.html", user=user )
@@ -215,6 +216,7 @@ class Submit( runhandler.RunHandler ):
         self.update_games( params )
 
         # Update memcache with the addition of the replacement run
+        self.update_cache_run_by_id( run_id, new_run )
         self.update_pblist_put( params )
         self.update_rundict_put( params )
         num_runs = self.num_runs( user.username, game, category, 2 )
