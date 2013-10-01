@@ -37,7 +37,8 @@
       </td>
       <td>{{run['date']}}</td>
       {% if user.username == username %}
-      <td><a href="/submit?edit={{run['run_id']}}">edit</td>
+      <td><a href="/submit?edit={{run['run_id']}}">edit</a> | 
+      <a href="/delete/{{run['run_id']}}">delete</a></td>
       {% endif %}
     </tr>
     {% endfor %}

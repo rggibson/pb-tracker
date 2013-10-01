@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<script type="text/javascript">
+  document.getElementById("nav-username").setAttribute("class", "active");
+</script>
+
+<h3>Are you sure you want to delete this run?</h3>
+<table class="table">
+  <thead>
+    <tr>
+      <th></th>
+      <th>Game</th>
+      <th>Category</th>
+      <th>Time</th>
+      <th>Date</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+	<img id="img-{{game_code}}"  alt="" 
+	     class="img-responsive" 
+	     style="max-height: 22px;">
+      </td>
+      <td>{{run.game}}</td>
+      <td>{{run.category}}</td>
+      <td>
+	{% if run.video %}<a href="{{run.video}}">{% endif %}
+	  {{time}}{% if run.video %}</a>{% endif %}      
+      </td>
+      <td>{{run.datetime_created.strftime("%a %b %d %H:%M:%S %Y")}}</td>
+    </tr>
+  </tbody>
+</table>
+
+<form method="post" role="form">
+  <div class="form-group">
+    <div class="row">
+      <div class="col-lg-offset-1">
+	<button class="btn btn-lg btn-primary" type="submit">Delete</button>
+	<a href="/runner/{{username_code}}?q=view-all" 
+	   class="btn btn-lg btn-warning">Cancel</a>
+      </div>
+    </div>
+  </div>
+</form>
+
+<!-- Add game image when it exists -->
+<script src="/static/js/util.js"></script>
+<script type="text/javascript">
+  set_img_if_exists( "img-{{game_code}}", "{{game_code}}" );
+</script>
+
+{% endblock %}

@@ -9,6 +9,7 @@ import gamepage
 import handler
 import gamelist
 import runnerlist
+import deleterun
 
 DEBUG = True
 
@@ -19,6 +20,7 @@ class Error( handler.Handler ):
         self.render( "404.html", user=user )
 
 MY_RE = r'([a-zA-Z0-9_-]+)'
+RUN_RE = r'([0-9]+)'
 app = webapp2.WSGIApplication( [ ('/', front.Front), 
                                  ('/signup', signup.Signup),
                                  ('/login', login.Login),
@@ -28,5 +30,6 @@ app = webapp2.WSGIApplication( [ ('/', front.Front),
                                  ('/runners', runnerlist.RunnerList),
                                  ('/runner/' + MY_RE, runnerpage.RunnerPage),
                                  ('/game/' + MY_RE, gamepage.GamePage),
+                                 ('/delete/' + RUN_RE, deleterun.DeleteRun),
                                  ('/' + r'.*', Error) ],
                                debug=DEBUG)
