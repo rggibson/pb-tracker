@@ -25,8 +25,7 @@
     {% for run in runlist %}
     <tr>
       <td>
-	<img src="/static/boxart/__blank__.png" alt="" 
-	     class="img-responsive img-{{run['game_code']}}" 
+	<img id="img-{{loop.index}}" alt="" class="img-responsive" 
 	     style="max-height: 22px;">
       </td>
       <td>{{run['game']}}</td>
@@ -45,9 +44,12 @@
   </tbody>
 </table>
 
-
-<!-- TODO: Figure out how to add game images when they exist by tag class
-     rather than by ID.  If this is impossible, will have to throw the 
-     javascript in the for loop.  Yuck. -->
+<!-- Add game images when they exist -->
+<script src="/static/js/util.js"></script>
+<script type="text/javascript">
+  {% for run in runlist %}
+  set_img_if_exists( "img-{{loop.index}}", "{{run['game_code']}}" );
+  {% endfor %}
+</script>
 
 {% endblock %}
