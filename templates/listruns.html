@@ -25,10 +25,12 @@
     {% for run in runlist %}
     <tr>
       <td>
-	<img id="img-{{loop.index}}" alt="" class="img-responsive" 
-	     style="max-height: 22px;">
+	<a href="/game/{{run['game_code']}}">
+	  <img id="img-{{loop.index}}" alt="" class="img-responsive" 
+	       style="max-height: 22px;">
+	</a>
       </td>
-      <td>{{run['game']}}</td>
+      <td><a href="/game/{{run['game_code']}}">{{run['game']}}</a></td>
       <td>{{run['category']}}</td>
       <td>
 	{% if run['video'] %}<a href="{{run['video']}}">{% endif %}

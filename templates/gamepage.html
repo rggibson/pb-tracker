@@ -20,15 +20,19 @@
 <table class="table table-striped">
   <thead>
     <tr>
-      <th width="50%">Runner</th>
-      <th width="50%">Personal Best</th>
+      <th width="25%">Runner</th>
+      <th width="25%">Runs</th>
+      <th width="25%">Average Time</th>
+      <th width="25%">Personal Best</th>
     </tr>
   </thead>
   {% for run in runlist %}
   <tr>
     <td><a href="/runner/{{run['username_code']}}">{{run['username']}}</td>
+    <td>{{run['num_runs']}}</td>
+    <td>{{run['avg_time']}}</td>
     <td>{% if run['video'] %}<a href="{{run['video']}}">{% endif %}
-	{{run['time']}}{% if run['video'] %}</a>{% endif %}
+	{{run['pb_time']}}{% if run['video'] %}</a>{% endif %}
     </td>
   </tr>
   {% endfor %}

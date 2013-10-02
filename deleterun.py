@@ -41,7 +41,9 @@ class DeleteRun( runhandler.RunHandler ):
         old_run = dict( game = run.game, category = run.category,
                         seconds = run.seconds )
         self.update_cache_run_by_id( run_id, None )
-        self.update_pblist_delete( user, old_run )
+        ( pblist, fresh ) = self.get_pblist( user.username )
+        if not fresh:
+            self.update_pblist_delete( pblist, user, old_run )
         self.update_rundict_delete( user, old_run )
         num_runs = self.num_runs( user.username, run.game, run.category, 1 )
         if num_runs <= 0:

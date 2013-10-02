@@ -25,6 +25,6 @@ class RunnerPage( handler.Handler ):
                          username_code=username_code, runlist=runlist )
         else:
             # By default, list pbs for this runner
-            pblist = self.get_pblist( username )
+            ( pblist, fresh ) = self.get_pblist( username )
             self.render( "runnerpage.html", user=user, username=username,
                          username_code=username_code, pblist=pblist )

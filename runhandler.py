@@ -40,7 +40,7 @@ class RunHandler( handler.Handler ):
             logging.debug( "Added category " + category + " to game " 
                            + game + " in database." )
 
-    def update_pblist_put( self, params ):
+    def update_pblist_put( self, pblist, params ):
         user = params[ 'user' ]
         game = params[ 'game' ]
         category = params[ 'category' ]
@@ -49,56 +49,77 @@ class RunHandler( handler.Handler ):
         video = params[ 'video' ]
         game_code = params[ 'game_code' ]
 
-        # Update pblist in memcache, if necessary
-        pblist = self.get_pblist( user.username )
-        found_time = False
+        # Update pblist in memcache
         for pb in pblist:
             if( pb['game'] == game ):
                 for info in pb['infolist']:
                     if( info['category'] == category ):
-                        found_time = True
-                        if( info['seconds'] > seconds ):
-                            # Yes we do need to update
-                            info[ 'seconds' ] = seconds
-                            info[ 'time' ] = time
+                        info[ 'num_runs' ] += 1
+                        info[ 'avg_seconds' ] += ( 
+                            1.0 / info[ 'num_runs' ] ) * ( 
+                                seconds - info[ 'avg_seconds' ] )
+                        info[ 'avg_time' ] = util.seconds_to_timestr( 
+                            info[ 'avg_seconds' ] )
+                        if( info['pb_seconds'] > seconds ):
+                            # We need to update pb as well
+                            info[ 'pb_seconds' ] = seconds
+                            info[ 'pb_time' ] = time
                             info[ 'video' ] = video
-                            self.update_cache_pblist( user.username, pblist )
-                        break
-                if not found_time:
-                    # User has run this game, but not this cateogry.
-                    # Add the run to the pblist and update memcache.
-                    info = dict( category = category,
-                                 seconds = seconds,
-                                 time = time,
-                                 video = video )
-                    pb['infolist'].append( info )
-                    pb['infolist'].sort( key=itemgetter('category') )
-                    self.update_cache_pblist( user.username, pblist )
-                    found_time = True
-                break
-        if not found_time:
-            # No run for this username, game combination.
-            # So, add the run to this username's pblist and update memcache
-            pblist.append( dict( game = game, 
-                                 game_code = game_code,
-                                 infolist = [ dict( category = category,
-                                                    seconds = seconds, 
-                                                    time = time,
-                                                    video = video ) ] 
-                                 ) )
-            pblist.sort( key=itemgetter('game') )
-            self.update_cache_pblist( user.username, pblist )
+                        self.update_cache_pblist( user.username, pblist )
+                        return
 
-    def update_pblist_delete( self, user, old_run ):
-        # Replace the old run in the pblist, if necessary
-        pblist = self.get_pblist( user.username )
+                # User has run this game, but not this cateogry.
+                # Add the run to the pblist and update memcache.
+                info = dict( category = category,
+                             pb_seconds = seconds,
+                             pb_time = time,
+                             num_runs = 1,
+                             avg_seconds = seconds,
+                             avg_time = time,
+                             video = video )
+                pb['infolist'].append( info )
+                pb['infolist'].sort( key=itemgetter('category') )
+                self.update_cache_pblist( user.username, pblist )
+                return
+
+        # No run for this username, game combination.
+        # So, add the run to this username's pblist and update memcache
+        pblist.append( dict( game = game, 
+                             game_code = game_code,
+                             infolist = [ dict( category = category,
+                                                pb_seconds = seconds, 
+                                                pb_time = time,
+                                                num_runs = 1,
+                                                avg_seconds = seconds,
+                                                avg_time = time,
+                                                video = video ) ] 
+                         ) )
+        pblist.sort( key=itemgetter('game') )
+        self.update_cache_pblist( user.username, pblist )
+
+    def update_pblist_delete( self, pblist, user, old_run ):
+        # Update pblist with the removal to the old run
         for i, pb in enumerate( pblist ):
-            found_game = False
             if( pb['game'] == old_run['game'] ):
                 for j, info in enumerate( pb['infolist'] ):
                     if( info['category'] == old_run['category'] ):
-                        if( info['seconds'] == old_run['seconds'] ):
-                            # Yes we do need to replace it
+                        # Update avg, num runs
+                        if info['num_runs'] <= 0:
+                            logging.error( "Failed to update pblist due to "
+                                           + "nonpositive num_runs " 
+                                           + str( info['num_runs'] ) )
+                            self.update_cache_pblist( user.username, None )
+                            return
+                        info[ 'avg_seconds' ] -= ( 1.0 * old_run['seconds']
+                                                   / info[ 'num_runs' ] )
+                        info[ 'num_runs' ] -= 1
+                        if( info[ 'num_runs' ] > 0 ):
+                            info[ 'avg_seconds' ] *= 1.0 * ( 
+                                info['num_runs'] + 1 ) / info['num_runs']
+                        info[ 'avg_time' ] = util.seconds_to_timestr( 
+                            info[ 'avg_seconds' ] )
+                        if( info['pb_seconds'] == old_run['seconds'] ):
+                            # We need to replace the pb too
                             q = db.Query( runs.Runs, 
                                           projection=('seconds', 'video') )
                             q.ancestor( runs.key() )
@@ -109,8 +130,8 @@ class RunHandler( handler.Handler ):
                             q.order( 'datetime_created' )
                             pb_run = q.get( )
                             if pb_run:
-                                info['seconds'] = pb_run.seconds
-                                info['time'] = util.seconds_to_timestr( 
+                                info['pb_seconds'] = pb_run.seconds
+                                info['pb_time'] = util.seconds_to_timestr( 
                                     pb_run.seconds )
                                 info['video'] = pb_run.video
                             else:
@@ -118,9 +139,11 @@ class RunHandler( handler.Handler ):
                                 del pb[ 'infolist' ][ j ]
                                 if len( pb[ 'infolist' ] ) <= 0:
                                     del pblist[ i ]
-                            self.update_cache_pblist( user.username, pblist )
-                        break 
+                        self.update_cache_pblist( user.username, pblist )
+                        return
                 break
+        logging.error( "Failed to correctly update pblist" )
+        self.update_cache_pblist( user.username, None )
 
     def update_rundict_put( self, params ):
         user = params[ 'user' ]

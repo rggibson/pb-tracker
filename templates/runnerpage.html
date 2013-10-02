@@ -22,6 +22,8 @@
       <th></th>
       <th>Game</th>
       <th>Category</th>
+      <th>Runs</th>
+      <th>Average Time</th>
       <th>Personal Best</th>
     </tr>
   </thead>
@@ -44,9 +46,11 @@
     <tr>
       {% endif %}
       <td>{{info['category']}}</td>
+      <td>{{info['num_runs']}}</td>
+      <td>{{info['avg_time']}}</td>
       <td>
 	{% if info['video'] %}<a href="{{info['video']}}">{% endif %}
-	  {{info['time']}}{% if info['video'] %}</a>{% endif %}
+	  {{info['pb_time']}}{% if info['video'] %}</a>{% endif %}
       </td>
     </tr>
     {% endfor %}

@@ -154,6 +154,7 @@ class Handler(webapp2.RequestHandler):
     def get_pblist( self, username ):
         key = self.get_pblist_memkey( username )
         pblist = memcache.get( key )
+        fresh = True
         if pblist is None:
             # Not in memcache, so construct the pblist and store in memcache.
             # pblist is a list of dictionaries with 3 indices, 'game', 
@@ -171,18 +172,6 @@ class Handler(webapp2.RequestHandler):
             q.order( '-datetime_created' )# Grab the last 1000 game,categories
             cur_game = None
             for run in q.run( limit = 1000 ):
-                # For each unique game, category pair, get the fastest run
-                q2 = db.Query(runs.Runs, 
-                              projection=('seconds', 'video'))
-                q2.ancestor( runs.key() )
-                q2.filter('username =', username)
-                q2.filter('game =', run.game)
-                q2.filter('category =', run.category)
-                q2.order('seconds')
-                q2.order('datetime_created')# Break ties by getting oldest run
-                pb_run = q2.get()
-
-                # Add the fastest run to the pblist
                 if run.game != cur_game:
                     # New game
                     pb = dict( game = run.game, 
@@ -191,9 +180,32 @@ class Handler(webapp2.RequestHandler):
                     pblist.append( pb )
                     cur_game = run.game
 
+                # For each unique game, category pair, process the runs
+                q2 = db.Query(runs.Runs, 
+                              projection=('seconds', 'video'))
+                q2.ancestor( runs.key() )
+                q2.filter('username =', username)
+                q2.filter('game =', run.game)
+                q2.filter('category =', run.category)
+                q2.order('-datetime_created') # Cut off old runs
+                pb_run = None
+                avg_seconds = 0
+                num_runs = 0
+                for run2 in q2.run( limit = 10000 ):
+                    num_runs += 1
+                    avg_seconds += ( 1.0 / num_runs ) * ( 
+                        run2.seconds - avg_seconds )
+                    if not pb_run or run2.seconds <= pb_run.seconds:
+                        pb_run = run2
+
+                # Add the info to the pblist
                 info = dict( category = run.category, 
-                             seconds = pb_run.seconds,
-                             time = util.seconds_to_timestr( pb_run.seconds ),
+                             pb_seconds = pb_run.seconds,
+                             pb_time = util.seconds_to_timestr( 
+                                 pb_run.seconds ),
+                             num_runs = num_runs,
+                             avg_seconds = avg_seconds,
+                             avg_time = util.seconds_to_timestr( avg_seconds ),
                              video = pb_run.video )
                 pb['infolist'].append( info )
             if memcache.set( key, pblist ):
@@ -202,8 +214,9 @@ class Handler(webapp2.RequestHandler):
                 logging.warning( "Failed to set new pblist for " + username
                                  + " in memcache" )
         else:
+            fresh = False
             logging.debug( "Got pblist for " + username + " from memcache" )
-        return pblist
+        return ( pblist, fresh )
 
     def update_cache_pblist(self, username, pblist):
         key = self.get_pblist_memkey( username )
