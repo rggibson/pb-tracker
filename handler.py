@@ -148,6 +148,62 @@ class Handler(webapp2.RequestHandler):
             logging.error( "Failed to update run for run_id " 
                            + str( run_id ) + " in memcache" )
 
+    def get_runinfo_memkey( self, username, game, category ):
+        return username + ":" + game + ":" + category + ":runinfo"
+
+    def get_runinfo( self, username, game, category ):
+        key = self.get_runinfo_memkey( username, game, category )
+        runinfo = memcache.get( key )
+        fresh = True
+        if runinfo is None:
+            # Not in memcache, so constrcut the runinfo dictionary
+            q = db.Query( runs.Runs, 
+                          projection=('seconds', 'video') )
+            q.ancestor( runs.key() )
+            q.filter('username =', username)
+            q.filter('game =', game)
+            q.filter('category =', category)
+            q.order('-datetime_created') # Cut off old runs
+            pb_run = None
+            avg_seconds = 0
+            num_runs = 0
+            for run in q.run( limit = 10000 ):
+                num_runs += 1
+                avg_seconds += ( 1.0 / num_runs ) * ( 
+                    run.seconds - avg_seconds )
+                if not pb_run or run.seconds <= pb_run.seconds:
+                    pb_run = run
+
+            runinfo = dict( username = username,
+                            username_code = util.get_code( username ),
+                            category = category, 
+                            pb_seconds = 0,
+                            pb_time = "",
+                            num_runs = num_runs,
+                            avg_seconds = avg_seconds,
+                            avg_time = util.seconds_to_timestr( avg_seconds ),
+                            video = "" )
+            if pb_run:
+                runinfo['pb_seconds'] = pb_run.seconds
+                runinfo['pb_time'] = util.seconds_to_timestr( pb_run.seconds )
+                runinfo['video'] = pb_run.video
+                
+            if memcache.set( key, runinfo ):
+                logging.debug( "Set " + key + " in memcache" )
+            else:
+                logging.warning( "Failed to set " + key + " in memcache" )
+        else:
+            fresh = False
+            logging.debug( "Got " + key + " from memcache" )
+        return ( runinfo, fresh )
+            
+    def update_cache_runinfo( self, username, game, category, runinfo ):
+        key = self.get_runinfo_memkey( username, game, category )
+        if memcache.set( key, runinfo ):
+            logging.debug( "Updated " + key + " in memcache" )
+        else:
+            logging.error( "Failed to update " + key + " in memcache" )
+
     def get_pblist_memkey( self, username ):
         return username + ":pblist"
 
@@ -178,36 +234,14 @@ class Handler(webapp2.RequestHandler):
                                game_code = util.get_code( run.game ),
                                infolist = [ ] )
                     pblist.append( pb )
-                    cur_game = run.game
-
-                # For each unique game, category pair, process the runs
-                q2 = db.Query(runs.Runs, 
-                              projection=('seconds', 'video'))
-                q2.ancestor( runs.key() )
-                q2.filter('username =', username)
-                q2.filter('game =', run.game)
-                q2.filter('category =', run.category)
-                q2.order('-datetime_created') # Cut off old runs
-                pb_run = None
-                avg_seconds = 0
-                num_runs = 0
-                for run2 in q2.run( limit = 10000 ):
-                    num_runs += 1
-                    avg_seconds += ( 1.0 / num_runs ) * ( 
-                        run2.seconds - avg_seconds )
-                    if not pb_run or run2.seconds <= pb_run.seconds:
-                        pb_run = run2
+                    cur_game = run.game                
 
                 # Add the info to the pblist
-                info = dict( category = run.category, 
-                             pb_seconds = pb_run.seconds,
-                             pb_time = util.seconds_to_timestr( 
-                                 pb_run.seconds ),
-                             num_runs = num_runs,
-                             avg_seconds = avg_seconds,
-                             avg_time = util.seconds_to_timestr( avg_seconds ),
-                             video = pb_run.video )
+                ( info, runinfo_fresh ) = self.get_runinfo( username, 
+                                                            run.game, 
+                                                            run.category )
                 pb['infolist'].append( info )
+
             if memcache.set( key, pblist ):
                 logging.debug( "Set pblist in memcache for " + username )
             else:
@@ -218,7 +252,7 @@ class Handler(webapp2.RequestHandler):
             logging.debug( "Got pblist for " + username + " from memcache" )
         return ( pblist, fresh )
 
-    def update_cache_pblist(self, username, pblist):
+    def update_cache_pblist( self, username, pblist ):
         key = self.get_pblist_memkey( username )
         if memcache.set( key, pblist ):
             logging.debug( "Updated pblist for " + username + " in memcache" )
@@ -226,67 +260,65 @@ class Handler(webapp2.RequestHandler):
             logging.error( "Failed to update pblist for " + username 
                            + " in memcache" )
 
-    def get_rundict_memkey( self, game ):
-        return game + ":rundict"
+    def get_gamepage_memkey( self, game ):
+        return game + ":gamepage"
 
-    def get_rundict( self, game ):
-        key = self.get_rundict_memkey( game )
-        rundict = memcache.get( key )
-        if rundict is None:
-            # Not in memcache, so construct the runs and store it in memcache
-            # Rundict is a dictionary[category] of lists of dictionaries
-            rundict = dict( )
+    def get_gamepage( self, game ):
+        key = self.get_gamepage_memkey( game )
+        gamepage = memcache.get( key )
+        fresh = True
+        if gamepage is None:
+            # Not in memcache, so construct the gamepage and store it in 
+            # memcache.
+            # Gamepage is a list of dictionaries. These dictionaries have 2
+            # keys, 'category' and 'runlist'.  The runlist is itself a
+            # list of dictionaries with the following keys: 'username',
+            # 'username_code', 'num_runs', 'avg_seconds', 'avg_time',
+            # 'pb_seconds', 'pb_time' and 'video'.
+            gamepage = [ ]
             # Use a projection query to get all of the unique 
             # username, category pairs
             q = db.Query( runs.Runs, projection=('username', 'category'), 
                           distinct=True )
             q.ancestor( runs.key() )
             q.filter( 'game =', game )
+            q.order( 'category' )
+            cur_category = None
             for run in q.run( limit = 1000 ):
-                # For each unique username, category pair, get that users
-                # fastest run for the category
-                q2 = db.Query( runs.Runs, projection=('seconds', 'video') )
-                q2.ancestor( runs.key() )
-                q2.filter( 'game =', game )
-                q2.filter( 'category =', run.category )
-                q2.filter( 'username =', run.username )
-                q2.order( 'seconds' )
-                q2.order( 'datetime_created' )
-                pb = q2.get( )
-                # Append the (user, time) to the category's list
-                item = dict( username = run.username,
-                             username_code = util.get_code( run.username ),
-                             seconds = pb.seconds,
-                             time = util.seconds_to_timestr( pb.seconds ),
-                             video = pb.video )
-                runlist = rundict.get( run.category )
-                if runlist:
-                    runlist.append( item )
-                else:
-                    runlist = [ item ]
-                rundict[ run.category ] = runlist
+                if run.category != cur_category:
+                    # New category
+                    infolist = [ ]
+                    gamepage.append( infolist )
+                    cur_category = run.category
+
+                # Add the info to the gamepage
+                ( info, runinfo_fresh ) = self.get_runinfo( run.username,
+                                                            game,
+                                                            run.category )
+                infolist.append( info )
 
             # For each category, sort the runlist by seconds
-            for category, runlist in rundict.iteritems():
-                runlist.sort( key=itemgetter('seconds') )
-                rundict[ category ] = runlist
+            for runlist in gamepage:
+                runlist.sort( key=itemgetter('pb_seconds') )
+            
+            # Sort the categories by number of runners
+            gamepage.sort( key=len, reverse=True )
 
-            if memcache.set( key, rundict ):
-                logging.debug( "Set rundict in memcache for " + game )
+            if memcache.set( key, gamepage ):
+                logging.debug( "Set " + key + " in memcache" )
             else:
-                logging.warning( "Failed to set new rundict for " + game
-                                 + " in memcache" )
+                logging.warning( "Failed to set " + key + " in memcache" )
         else:
-            logging.debug( "Got rundict for " + game + " from memcache" )
-        return rundict
+            logging.debug( "Got " + key + " from memcache" )
+            fresh = False
+        return ( gamepage, fresh )
 
-    def update_cache_rundict( self, game, rundict ):
-        key = self.get_rundict_memkey( game )
-        if memcache.set( key, rundict ):
-            logging.debug( "Updated rundict for " + game + " in memcache" )
+    def update_cache_gamepage( self, game, gamepage ):
+        key = self.get_gamepage_memkey( game )
+        if memcache.set( key, gamepage ):
+            logging.debug( "Updated " + key + " in memcache" )
         else:
-            logging.error( "Failed to update rundict for " + game 
-                           + " in memcache" )
+            logging.error( "Failed to update " + key + " in memcache" )
 
     def get_gamelist_memkey( self ):
         return "gamelist"

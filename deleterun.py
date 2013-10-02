@@ -41,10 +41,18 @@ class DeleteRun( runhandler.RunHandler ):
         old_run = dict( game = run.game, category = run.category,
                         seconds = run.seconds )
         self.update_cache_run_by_id( run_id, None )
+        # Must update runinfo before pblist and gamepage because pblist and
+        # gamepage rely on accurate runinfo
+        ( runinfo, fresh ) = self.get_runinfo( user.username, run.game,
+                                               run.category )
+        if not fresh:
+            self.update_runinfo_delete( runinfo, user, old_run )
         ( pblist, fresh ) = self.get_pblist( user.username )
         if not fresh:
             self.update_pblist_delete( pblist, user, old_run )
-        self.update_rundict_delete( user, old_run )
+        ( gamepage, fresh ) = self.get_gamepage( run.game )
+        if not fresh:
+            self.update_gamepage_delete( gamepage, user, old_run )
         num_runs = self.num_runs( user.username, run.game, run.category, 1 )
         if num_runs <= 0:
             self.update_gamelist_delete( old_run )

@@ -76,7 +76,7 @@ class Submit( runhandler.RunHandler ):
                         params['category'] = c
                         self.render( "submit.html", **params )
                         return
-                break
+                    break
         params[ 'category_found' ] = category_found
 
         # Parse the time into seconds, ensure it is valid
@@ -131,10 +131,17 @@ class Submit( runhandler.RunHandler ):
 
         # Update memcache
         self.update_cache_run_by_id( new_run.key().id(), new_run )
+        # Must update runinfo before updating pblist, gamepage since these 
+        # both rely on runinfo being up to date
+        ( runinfo, fresh ) = self.get_runinfo( user.username, game, category )
+        if not fresh:
+            self.update_runinfo_put( runinfo, params )
         ( pblist, fresh ) = self.get_pblist( user.username )
         if not fresh:
             self.update_pblist_put( pblist, params )
-        self.update_rundict_put( params )
+        ( gamepage, fresh ) = self.get_gamepage( game )
+        if not fresh:
+            self.update_gamepage_put( gamepage, params )
         self.update_runlist_for_runner_put( params )
                      
         # Check whether this is the first run for this username, game,
@@ -195,14 +202,45 @@ class Submit( runhandler.RunHandler ):
         self.update_games( params )
 
         # Update memcache with the removal of the old run and addition of the
-        # new run
+        # new run.  Here we go...
+
         self.update_cache_run_by_id( run_id, new_run )
+
+        # Must update runinfo before pblist and gamepage as in put_new_run()
+        ( runinfo, fresh ) = self.get_runinfo( user.username, 
+                                               old_run['game'], 
+                                               old_run['category'] )
+        if not fresh:
+            self.update_runinfo_delete( runinfo, user, old_run )
+        if old_run['game'] == game and old_run['category'] == category:
+            if not fresh:
+                self.update_runinfo_put( runinfo, params )
+        else:
+            ( runinfo, fresh ) = self.get_runinfo( user.username,
+                                                   game,
+                                                   category )
+            if not fresh:
+                self.update_runinfo_put( runinfo, params )
+
+        # Update pblist
         ( pblist, fresh ) = self.get_pblist( user.username )
         if not fresh:
             self.update_pblist_delete( pblist, user, old_run )
             self.update_pblist_put( pblist, params )
-        self.update_rundict_delete( user, old_run )
-        self.update_rundict_put( params )
+
+        # Update gamepage
+        ( gamepage, fresh ) = self.get_gamepage( old_run['game'] )
+        if not fresh:
+            self.update_gamepage_delete( gamepage, user, old_run )
+        if old_run['game'] == game:
+            if not fresh:
+                self.update_gamepage_put( gamepage, params )
+        else:
+            ( gamepage, fresh ) = self.get_gamepage( game )
+            if not fresh:
+                self.update_gamepage_put( gamepage, params )
+
+        # Update gamelist and runnerlist
         num_runs = self.num_runs( user.username, old_run[ 'game' ], 
                                   old_run[ 'category' ], 1 )
         if num_runs <= 0:

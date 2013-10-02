@@ -15,8 +15,8 @@
     <h1>{{game}}</h1>
   </div>
 </div>
-{% for category, runlist in rundict.iteritems() %}
-<h2>{{category}}</h2>
+{% for runlist in gamepage %}
+<h2>{{runlist[0]['category']}}</h2>
 <table class="table table-striped">
   <thead>
     <tr>
