@@ -1,6 +1,8 @@
 import games
 import util
 import handler
+import urllib2
+import json
 
 class FixerUpper( handler.Handler ):
     def get( self ):
@@ -11,27 +13,14 @@ class FixerUpper( handler.Handler ):
             self.render( "404.html", user=user )
             return
 
-        self.write( "FixerUpper in progress... " )
+        self.write( "FixerUpper in progress...\n" )
 
-        # Create the list of games
-        gamelist = [ dict( game='Mega Man 2', 
-                           categories=[ 'Any% (Normal)',
-                                        'Any% (Normal) no zips',
-                                        'Any% (Difficult)',
-                                        'Any% (Difficult) no zips' ] ),
-                     dict( game='Rockman 2',
-                           categories=[ 'Any%',
-                                        'Any% no zips' ] ),
-                     dict( game='Mega Man 3',
-                           categories=[ 'Any%',
-                                        '8 Robot Masters',
-                                        '16 Robot Masters',
-                                        '8 Robot Masters (buster only)' ] ),
-                     dict( game='Beavis and Butt-head',
-                           categories=[ 'Any%',
-                                        '100%' ] ) ]
+        # Grab the gamelist
+        j = urllib2.urlopen( '/static/json/import_games.json' ).read( )
+        gamelist = json.loads( j )
 
         # Add the games, overwriting any existing versions in database
+        self.write( "Adding games to database...\n" )
         for g in gamelist:
             game_code = util.get_code( g['game'] )
             game_model = games.Games( game=g['game'],
@@ -41,4 +30,4 @@ class FixerUpper( handler.Handler ):
             game_model.put( )
             self.update_cache_game_model( game_code, game_model )
 
-        self.write( "FixerUpper complete!" )
+        self.write( "FixerUpper complete!\n" )
