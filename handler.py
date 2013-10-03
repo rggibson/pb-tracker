@@ -151,11 +151,10 @@ class Handler(webapp2.RequestHandler):
     def get_runinfo_memkey( self, username, game, category ):
         return username + ":" + game + ":" + category + ":runinfo"
 
-    def get_runinfo( self, username, game, category ):
+    def get_runinfo( self, username, game, category, no_refresh=False ):
         key = self.get_runinfo_memkey( username, game, category )
         runinfo = memcache.get( key )
-        fresh = True
-        if runinfo is None:
+        if runinfo is None and not no_refresh:
             # Not in memcache, so constrcut the runinfo dictionary
             q = db.Query( runs.Runs, 
                           projection=('seconds', 'video') )
@@ -192,10 +191,9 @@ class Handler(webapp2.RequestHandler):
                 logging.debug( "Set " + key + " in memcache" )
             else:
                 logging.warning( "Failed to set " + key + " in memcache" )
-        else:
-            fresh = False
+        elif runinfo:
             logging.debug( "Got " + key + " from memcache" )
-        return ( runinfo, fresh )
+        return runinfo
             
     def update_cache_runinfo( self, username, game, category, runinfo ):
         key = self.get_runinfo_memkey( username, game, category )
@@ -207,11 +205,10 @@ class Handler(webapp2.RequestHandler):
     def get_pblist_memkey( self, username ):
         return username + ":pblist"
 
-    def get_pblist( self, username ):
+    def get_pblist( self, username, no_refresh=False ):
         key = self.get_pblist_memkey( username )
         pblist = memcache.get( key )
-        fresh = True
-        if pblist is None:
+        if pblist is None and not no_refresh:
             # Not in memcache, so construct the pblist and store in memcache.
             # pblist is a list of dictionaries with 3 indices, 'game', 
             # 'game_code' and 'infolist'.  The infolist is another list of 
@@ -237,37 +234,31 @@ class Handler(webapp2.RequestHandler):
                     cur_game = run.game                
 
                 # Add the info to the pblist
-                ( info, runinfo_fresh ) = self.get_runinfo( username, 
-                                                            run.game, 
-                                                            run.category )
+                info = self.get_runinfo( username, run.game, run.category )
                 pb['infolist'].append( info )
 
             if memcache.set( key, pblist ):
-                logging.debug( "Set pblist in memcache for " + username )
+                logging.debug( "Set " + key + " in memcache" )
             else:
-                logging.warning( "Failed to set new pblist for " + username
-                                 + " in memcache" )
-        else:
-            fresh = False
-            logging.debug( "Got pblist for " + username + " from memcache" )
-        return ( pblist, fresh )
+                logging.warning( "Failed to set " + key + " in memcache" )
+        elif pblist:
+            logging.debug( "Got " + key + " from memcache" )
+        return pblist
 
     def update_cache_pblist( self, username, pblist ):
         key = self.get_pblist_memkey( username )
         if memcache.set( key, pblist ):
-            logging.debug( "Updated pblist for " + username + " in memcache" )
+            logging.debug( "Updated " + key + " in memcache" )
         else:
-            logging.error( "Failed to update pblist for " + username 
-                           + " in memcache" )
+            logging.error( "Failed to update " + key + " in memcache" )
 
     def get_gamepage_memkey( self, game ):
         return game + ":gamepage"
 
-    def get_gamepage( self, game ):
+    def get_gamepage( self, game, no_refresh=False ):
         key = self.get_gamepage_memkey( game )
         gamepage = memcache.get( key )
-        fresh = True
-        if gamepage is None:
+        if gamepage is None and not no_refresh:
             # Not in memcache, so construct the gamepage and store it in 
             # memcache.
             # Gamepage is a list of dictionaries. These dictionaries have 2
@@ -292,9 +283,7 @@ class Handler(webapp2.RequestHandler):
                     cur_category = run.category
 
                 # Add the info to the gamepage
-                ( info, runinfo_fresh ) = self.get_runinfo( run.username,
-                                                            game,
-                                                            run.category )
+                info = self.get_runinfo( run.username, game, run.category )
                 infolist.append( info )
 
             # For each category, sort the runlist by seconds
@@ -308,10 +297,9 @@ class Handler(webapp2.RequestHandler):
                 logging.debug( "Set " + key + " in memcache" )
             else:
                 logging.warning( "Failed to set " + key + " in memcache" )
-        else:
+        elif gamepage:
             logging.debug( "Got " + key + " from memcache" )
-            fresh = False
-        return ( gamepage, fresh )
+        return gamepage
 
     def update_cache_gamepage( self, game, gamepage ):
         key = self.get_gamepage_memkey( game )
@@ -323,11 +311,10 @@ class Handler(webapp2.RequestHandler):
     def get_gamelist_memkey( self ):
         return "gamelist"
 
-    def get_gamelist( self ):
+    def get_gamelist( self, no_refresh=False ):
         key = self.get_gamelist_memkey( )
         gamelist = memcache.get( key )
-        fresh = True
-        if gamelist is None:
+        if gamelist is None and not no_refresh:
             # Build the gamelist, which is a list of dictionaries where each
             # dict gives the game, game_code and number of pbs for that game.
             # The list is sorted by numbers of pbs for the game
@@ -349,10 +336,9 @@ class Handler(webapp2.RequestHandler):
                 logging.debug( "Set gamelist in memcache" )
             else:
                 logging.warning( "Failed to set new gamelist in memcache" )
-        else:
-            fresh = False
+        elif gamelist:
             logging.debug( "Got gamelist from memcache" )
-        return ( gamelist, fresh )
+        return gamelist
 
     def update_cache_gamelist( self, gamelist ):
         key = self.get_gamelist_memkey( )
@@ -364,11 +350,10 @@ class Handler(webapp2.RequestHandler):
     def get_runnerlist_memkey( self ):
         return "runnerlist"
 
-    def get_runnerlist( self ):
+    def get_runnerlist( self, no_refresh=False ):
         key = self.get_runnerlist_memkey( )
-        fresh = True
         runnerlist = memcache.get( key )
-        if runnerlist is None:
+        if runnerlist is None and not no_refresh:
             # Build the runnerlist, which is a list of dictionaries where each
             # dict gives the username and number of pbs for that user.
             # The list is sorted by numbers of pbs for the user.
@@ -392,10 +377,9 @@ class Handler(webapp2.RequestHandler):
                 logging.debug( "Set runnerlist in memcache" )
             else:
                 logging.warning( "Failed to set new runnerlist in memcache" )
-        else:
+        elif runnerlist:
             logging.debug( "Got runnerlist from memcache" )
-            fresh = False
-        return ( runnerlist, fresh )
+        return runnerlist
 
     def update_cache_runnerlist( self, runnerlist ):
         key = self.get_runnerlist_memkey( )
@@ -407,11 +391,10 @@ class Handler(webapp2.RequestHandler):
     def get_runlist_for_runner_memkey( self, username ):
         return username + ":runlist_for_runner"
 
-    def get_runlist_for_runner( self, username ):
+    def get_runlist_for_runner( self, username, no_refresh=False ):
         key = self.get_runlist_for_runner_memkey( username )
         runlist = memcache.get( key )
-        fresh = True
-        if runlist is None:
+        if runlist is None and not no_refresh:
             # Not in memcache, so construct the runlist and store in memcache.
             runlist = [ ]
             q = runs.Runs.all( )
@@ -430,22 +413,16 @@ class Handler(webapp2.RequestHandler):
                                       video = run.video ) )
 
             if memcache.set( key, runlist ):
-                logging.debug( "Set runlist for runner in memcache for " 
-                               + username )
+                logging.debug( "Set " + key + " in memcache" )
             else:
-                logging.warning( "Failed to set new runlist for runner " 
-                                 + username + " in memcache" )
-        else:
-            fresh = False
-            logging.debug( "Got runlist for runner " + username 
-                           + " from memcache" )
-        return ( runlist, fresh )
+                logging.warning( "Failed to set " + key + " in memcache" )
+        elif runlist:
+            logging.debug( "Got " + key + " from memcache" )
+        return runlist
 
     def update_cache_runlist_for_runner( self, username, runlist ):
         key = self.get_runlist_for_runner_memkey( username )
         if memcache.set( key, runlist ):
-            logging.debug( "Updated runlist for runner " + username 
-                           + " in memcache" )
+            logging.debug( "Updated " + key + " in memcache" )
         else:
-            logging.error( "Failed to update runlist for runner " + username 
-                           + " in memcache" )
+            logging.error( "Failed to update " + key + " in memcache" )

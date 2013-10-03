@@ -17,7 +17,7 @@ class GamePage( handler.Handler ):
             self.render( "404.html", user=user )
             return
 
-        ( gamepage, fresh ) = self.get_gamepage( game_model.game )
+        gamepage = self.get_gamepage( game_model.game )
 
         self.render( "gamepage.html", user=user, game=game_model.game, 
                      game_code=game_code, gamepage=gamepage )

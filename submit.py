@@ -133,15 +133,9 @@ class Submit( runhandler.RunHandler ):
         self.update_cache_run_by_id( new_run.key().id(), new_run )
         # Must update runinfo before updating pblist, gamepage since these 
         # both rely on runinfo being up to date
-        ( runinfo, fresh ) = self.get_runinfo( user.username, game, category )
-        if not fresh:
-            self.update_runinfo_put( runinfo, params )
-        ( pblist, fresh ) = self.get_pblist( user.username )
-        if not fresh:
-            self.update_pblist_put( pblist, params )
-        ( gamepage, fresh ) = self.get_gamepage( game )
-        if not fresh:
-            self.update_gamepage_put( gamepage, params )
+        self.update_runinfo_put( params )
+        self.update_pblist_put( params )
+        self.update_gamepage_put( params )
         self.update_runlist_for_runner_put( params )
                      
         # Check whether this is the first run for this username, game,
@@ -202,45 +196,17 @@ class Submit( runhandler.RunHandler ):
         self.update_games( params )
 
         # Update memcache with the removal of the old run and addition of the
-        # new run.  Here we go...
-
+        # new run.
         self.update_cache_run_by_id( run_id, new_run )
-
         # Must update runinfo before pblist and gamepage as in put_new_run()
-        ( runinfo, fresh ) = self.get_runinfo( user.username, 
-                                               old_run['game'], 
-                                               old_run['category'] )
-        if not fresh:
-            self.update_runinfo_delete( runinfo, user, old_run )
-        if old_run['game'] == game and old_run['category'] == category:
-            if not fresh:
-                self.update_runinfo_put( runinfo, params )
-        else:
-            ( runinfo, fresh ) = self.get_runinfo( user.username,
-                                                   game,
-                                                   category )
-            if not fresh:
-                self.update_runinfo_put( runinfo, params )
+        self.update_runinfo_delete( user, old_run )
+        self.update_runinfo_put( params )
+        self.update_pblist_delete( user, old_run )
+        self.update_pblist_put( params )
+        self.update_gamepage_delete( user, old_run )
+        self.update_gamepage_put( params )
 
-        # Update pblist
-        ( pblist, fresh ) = self.get_pblist( user.username )
-        if not fresh:
-            self.update_pblist_delete( pblist, user, old_run )
-            self.update_pblist_put( pblist, params )
-
-        # Update gamepage
-        ( gamepage, fresh ) = self.get_gamepage( old_run['game'] )
-        if not fresh:
-            self.update_gamepage_delete( gamepage, user, old_run )
-        if old_run['game'] == game:
-            if not fresh:
-                self.update_gamepage_put( gamepage, params )
-        else:
-            ( gamepage, fresh ) = self.get_gamepage( game )
-            if not fresh:
-                self.update_gamepage_put( gamepage, params )
-
-        # Update gamelist and runnerlist
+        # Update gamelist and runnerlist in memcache
         num_runs = self.num_runs( user.username, old_run[ 'game' ], 
                                   old_run[ 'category' ], 1 )
         if num_runs <= 0:
@@ -253,13 +219,13 @@ class Submit( runhandler.RunHandler ):
                            + username + ", " + game + ", " + category )
             self.update_cache_gamelist( None )
             self.update_cache_runnerlist( None )
-        if num_runs == 1:
+        elif num_runs == 1:
             self.update_gamelist_put( params )
             self.update_runnerlist_put( params )
 
         # Replace the old run in the runlist for runner in memcache
-        ( runlist, fresh ) = self.get_runlist_for_runner( user.username )
-        if not fresh:
+        runlist = self.get_runlist_for_runner( user.username, no_refresh=True )
+        if runlist:
             for run in runlist:
                 if run[ 'run_id' ] == run_id:
                     run[ 'game' ] = game

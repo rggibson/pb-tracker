@@ -7,6 +7,6 @@ class GameList( handler.Handler ):
         # Set this page to be the return page after a login/logout/signup
         self.set_return_url( '/games' )
         
-        ( gamelist, fresh ) = self.get_gamelist( )
+        gamelist = self.get_gamelist( )
 
         self.render( "games.html", user=user, gamelist=gamelist )

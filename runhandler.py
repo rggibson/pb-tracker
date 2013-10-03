@@ -40,7 +40,7 @@ class RunHandler( handler.Handler ):
             logging.debug( "Added category " + category + " to game " 
                            + game + " in database." )
 
-    def update_runinfo_put( self, runinfo, params ):
+    def update_runinfo_put( self, params ):
         user = params[ 'user' ]
         game = params[ 'game' ]
         category = params[ 'category' ]
@@ -49,10 +49,16 @@ class RunHandler( handler.Handler ):
         video = params[ 'video' ]
 
         # Update runinfo in memcache
+        runinfo = self.get_runinfo( user.username, game, category, 
+                                    no_refresh=True )
+        if not runinfo:
+            return
+
         runinfo['num_runs'] += 1
         runinfo['avg_seconds'] += ( ( 1.0 / runinfo['num_runs'] ) 
                                     * ( seconds - runinfo['avg_seconds'] ) )
-        runinfo['avg_time'] = util.seconds_to_timestr( runinfo['avg_seconds'] )
+        runinfo['avg_time'] = util.seconds_to_timestr( 
+            runinfo['avg_seconds'] )
         if( runinfo['pb_seconds'] > seconds ):
             # We need to update pb as well
             runinfo['pb_seconds'] = seconds
@@ -60,8 +66,13 @@ class RunHandler( handler.Handler ):
             runinfo['video'] = video
         self.update_cache_runinfo( user.username, game, category, runinfo )
 
-    def update_runinfo_delete( self, runinfo, user, old_run ):
+    def update_runinfo_delete( self, user, old_run ):
         # Update avg, num runs
+        runinfo = self.get_runinfo( user.username, old_run['game'],
+                                    old_run['category'], no_refresh=True )
+        if not runinfo:
+            return
+
         if runinfo['num_runs'] <= 0:
             logging.error( "Failed to update runinfo due to nonpositive "
                            + "num_runs " + str( runinfo['num_runs'] ) )
@@ -115,7 +126,7 @@ class RunHandler( handler.Handler ):
                                              avg_time="",
                                              video="" ) )
 
-    def update_pblist_put( self, pblist, params ):
+    def update_pblist_put( self, params ):
         user = params[ 'user' ]
         game = params[ 'game' ]
         category = params[ 'category' ]
@@ -125,19 +136,22 @@ class RunHandler( handler.Handler ):
         game_code = params[ 'game_code' ]
 
         # Update pblist in memcache
+        pblist = self.get_pblist( user.username, no_refresh=True )
+        if not pblist:
+            return
+
         for pb in pblist:
             if( pb['game'] == game ):
                 for i, info in enumerate( pb['infolist'] ):
                     if( info['category'] == category ):
-                        ( pb['infolist'][i], fresh ) = self.get_runinfo( 
-                            user.username, game, category )
+                        pb['infolist'][i] = self.get_runinfo( user.username, 
+                                                              game, category )
                         self.update_cache_pblist( user.username, pblist )
                         return
 
                 # User has run this game, but not this category.
                 # Add the run to the pblist and update memcache.
-                ( runinfo, fresh ) = self.get_runinfo( user.username, game,
-                                                       category )
+                runinfo = self.get_runinfo( user.username, game, category )
                 pb['infolist'].append( runinfo )
                 pb['infolist'].sort( key=itemgetter('category') )
                 self.update_cache_pblist( user.username, pblist )
@@ -145,25 +159,29 @@ class RunHandler( handler.Handler ):
 
         # No run for this username, game combination.
         # So, add the run to this username's pblist and update memcache
-        ( runinfo, fresh ) = self.get_runinfo( user.username, game, category )
+        runinfo = self.get_runinfo( user.username, game, category )
         pblist.append( dict( game = game, 
                              game_code = game_code,
                              infolist = [ runinfo ] ) )
         pblist.sort( key=itemgetter('game') )
         self.update_cache_pblist( user.username, pblist )
 
-    def update_pblist_delete( self, pblist, user, old_run ):
+    def update_pblist_delete( self, user, old_run ):
         # Update pblist with the removal to the old run
+        pblist = self.get_pblist( user.username, no_refresh=True )
+        if not pblist:
+            return
+
         for i, pb in enumerate( pblist ):
             if( pb['game'] == old_run['game'] ):
                 for j, info in enumerate( pb['infolist'] ):
                     if( info['category'] == old_run['category'] ):
-                        ( runinfo, fresh ) = self.get_runinfo( 
-                            user.username, old_run['game'], 
-                            old_run['category'] )
+                        runinfo = self.get_runinfo( user.username, 
+                                                    old_run['game'], 
+                                                    old_run['category'] )
                         if runinfo[ 'num_runs' ] > 0:
                             pb[ 'infolist' ][ j ] = runinfo
-                        else:                            
+                        else:
                             # No other runs for game, category combo
                             del pb[ 'infolist' ][ j ]
                             if len( pb[ 'infolist' ] ) <= 0:
@@ -174,7 +192,7 @@ class RunHandler( handler.Handler ):
         logging.error( "Failed to correctly update pblist" )
         self.update_cache_pblist( user.username, None )
 
-    def update_gamepage_put( self, gamepage, params ):
+    def update_gamepage_put( self, params ):
         user = params[ 'user' ]
         game = params[ 'game' ]
         category = params[ 'category' ]
@@ -183,18 +201,21 @@ class RunHandler( handler.Handler ):
         video = params[ 'video' ]
 
         # Update gamepage in memcache
+        gamepage = self.get_gamepage( game, no_refresh=True )
+        if not gamepage:
+            return
+
         for infolist in gamepage:
             if len( infolist ) > 0 and infolist[ 0 ][ 'category' ] == category:
                 for i, runinfo in enumerate( infolist ):
                     if runinfo['username'] == user.username:
-                        ( infolist[i], fresh ) = self.get_runinfo( 
-                            user.username, game, category )
+                        infolist[i] = self.get_runinfo( user.username, 
+                                                        game, category )
                         self.update_cache_gamepage( game, gamepage )
                         return
                 
-                # Category found, but user has not previously run this category
-                ( runinfo, fresh ) = self.get_runinfo( user.username, game,
-                                                       category )
+                # Category found, but user has not prev. run this category
+                runinfo = self.get_runinfo( user.username, game, category )
                 infolist.append( runinfo )
                 infolist.sort( key=itemgetter('pb_seconds') )
                 gamepage.sort( key=len, reverse=True )
@@ -202,27 +223,32 @@ class RunHandler( handler.Handler ):
                 return
         
         # This is a new category for this game
-        ( runinfo, fresh ) = self.get_runinfo( user.username, game, category )
+        runinfo = self.get_runinfo( user.username, game, category )
         gamepage.append( [ runinfo ] )
         self.update_cache_gamepage( game, gamepage )
 
-    def update_gamepage_delete( self, gamepage, user, old_run ):
+    def update_gamepage_delete( self, user, old_run ):
         # Update gamepage in memcache
+        gamepage = self.get_gamepage( old_run['game'], no_refresh=True )
+        if not gamepage:
+            return
+
         for j, infolist in enumerate( gamepage ):
             if( len( infolist ) > 0 
                 and infolist[ 0 ][ 'category' ] == old_run['category'] ):
                 for i, runinfo in enumerate( infolist ):
                     if runinfo[ 'username' ] == user.username:
-                        ( infolist[i], fresh ) = self.get_runinfo( 
-                            user.username, old_run['game'], 
-                            old_run['category'] )
+                        infolist[i] = self.get_runinfo( user.username, 
+                                                        old_run['game'], 
+                                                        old_run['category'] )
                         if infolist[i]['num_runs'] <= 0:
                             del infolist[ i ]
                             if len( infolist ) <= 0:
                                 del gamepage[ j ]
                         else:
                             infolist.sort( key=itemgetter('pb_seconds') )
-                        self.update_cache_gamepage( old_run['game'], gamepage )
+                        self.update_cache_gamepage( old_run['game'], 
+                                                    gamepage )
                         return
                 break
         logging.error( "Failed to correctly update gamepage in memcache" )
@@ -239,8 +265,9 @@ class RunHandler( handler.Handler ):
         run_id = params[ 'run_id' ]
 
         # Update runlist for runner in memcache
-        ( runlist, fresh ) = self.get_runlist_for_runner( user.username )
-        if not fresh:
+        runlist = self.get_runlist_for_runner( user.username, 
+                                               no_refresh=True )
+        if runlist:
             runlist.insert( 0, dict( run_id = run_id,
                                      game = game, game_code = game_code,
                                      category = category, time = time, 
@@ -254,8 +281,8 @@ class RunHandler( handler.Handler ):
         game = params[ 'game' ]
 
         # Update gamelist in memcache if necessary
-        ( gamelist, fresh ) = self.get_gamelist( )
-        if not fresh:
+        gamelist = self.get_gamelist( no_refresh=True )
+        if gamelist:
             found_game = False
             for gamedict in gamelist:
                 if( gamedict['game_code'] == game_code ):
@@ -283,8 +310,8 @@ class RunHandler( handler.Handler ):
 
     def update_gamelist_delete( self, old_run ):
         # Fix the gamelist with the removal of the old run
-        ( gamelist, fresh ) = self.get_gamelist( )
-        if not fresh:
+        gamelist = self.get_gamelist( no_refresh=True )
+        if gamelist:
             for i, gamedict in enumerate( gamelist ):
                 if( gamedict[ 'game' ] == old_run[ 'game' ] ):
                     gamedict['num_pbs'] -= 1
@@ -296,25 +323,12 @@ class RunHandler( handler.Handler ):
                     self.update_cache_gamelist( gamelist )
                     break
 
-    def update_runnerlist_delete( self, user ):
-        # Fix the runnerlist with the removal of the old run
-        ( runnerlist, fresh ) = self.get_runnerlist( )
-        if not fresh:
-            for runnerdict in runnerlist:
-                if( runnerdict['username'] == user.username ):
-                    runnerdict['num_pbs'] -= 1
-                    runnerlist.sort( key=itemgetter('username') )
-                    runnerlist.sort( key=itemgetter('num_pbs'), 
-                                     reverse=True )
-                    self.update_cache_runnerlist( runnerlist )
-                    break
-
     def update_runnerlist_put( self, params ):
         user = params[ 'user' ]
 
         # Update runnerlist in memcache if necessary
-        ( runnerlist, fresh ) = self.get_runnerlist( )
-        if not fresh:
+        runnerlist = self.get_runnerlist( no_refresh=True )
+        if runnerlist:
             found_runner = False
             for runnerdict in runnerlist:
                 if( runnerdict['username'] == user.username ):
@@ -335,3 +349,16 @@ class RunHandler( handler.Handler ):
             if not found_runner:
                 logging.error( "Failed to find " + user.username 
                                + " in runnerlist" )
+
+    def update_runnerlist_delete( self, user ):
+        # Fix the runnerlist with the removal of the old run
+        runnerlist = self.get_runnerlist( no_refresh=True )
+        if runnerlist:
+            for runnerdict in runnerlist:
+                if( runnerdict['username'] == user.username ):
+                    runnerdict['num_pbs'] -= 1
+                    runnerlist.sort( key=itemgetter('username') )
+                    runnerlist.sort( key=itemgetter('num_pbs'), 
+                                     reverse=True )
+                    self.update_cache_runnerlist( runnerlist )
+                    break

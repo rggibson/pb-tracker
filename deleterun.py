@@ -10,7 +10,7 @@ class DeleteRun( runhandler.RunHandler ):
             return
 
         # Get the run
-        run = runs.Runs.get_by_id( long( run_id ), parent=runs.key() )
+        run = self.get_run_by_id( run_id )
         if not run or run.username != user.username:
             self.error( 404 )
             self.render( "404.html", user=user )
@@ -43,24 +43,18 @@ class DeleteRun( runhandler.RunHandler ):
         self.update_cache_run_by_id( run_id, None )
         # Must update runinfo before pblist and gamepage because pblist and
         # gamepage rely on accurate runinfo
-        ( runinfo, fresh ) = self.get_runinfo( user.username, run.game,
-                                               run.category )
-        if not fresh:
-            self.update_runinfo_delete( runinfo, user, old_run )
-        ( pblist, fresh ) = self.get_pblist( user.username )
-        if not fresh:
-            self.update_pblist_delete( pblist, user, old_run )
-        ( gamepage, fresh ) = self.get_gamepage( run.game )
-        if not fresh:
-            self.update_gamepage_delete( gamepage, user, old_run )
+        self.update_runinfo_delete( user, old_run )
+        self.update_pblist_delete( user, old_run )
+        self.update_gamepage_delete( user, old_run )
         num_runs = self.num_runs( user.username, run.game, run.category, 1 )
         if num_runs <= 0:
             self.update_gamelist_delete( old_run )
             self.update_runnerlist_delete( user )
 
         # Update runlist for runner in memcache
-        ( runlist, fresh ) = self.get_runlist_for_runner( user.username )
-        if not fresh:
+        runlist = self.get_runlist_for_runner( user.username, 
+                                               no_refresh=True )
+        if runlist:
             for i, run in enumerate( runlist ):
                 if run[ 'run_id' ] == run_id:
                     del runlist[ i ]

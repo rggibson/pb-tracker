@@ -20,11 +20,11 @@ class RunnerPage( handler.Handler ):
 
         if q == 'view-all':
             # List all runs for this runner
-            ( runlist, fresh ) = self.get_runlist_for_runner( username )
+            runlist = self.get_runlist_for_runner( username )
             self.render( "listruns.html", user=user, username=username,
                          username_code=username_code, runlist=runlist )
         else:
             # By default, list pbs for this runner
-            ( pblist, fresh ) = self.get_pblist( username )
+            pblist = self.get_pblist( username )
             self.render( "runnerpage.html", user=user, username=username,
                          username_code=username_code, pblist=pblist )
