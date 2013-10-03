@@ -10,6 +10,7 @@ import handler
 import gamelist
 import runnerlist
 import deleterun
+import fixerupper
 
 DEBUG = True
 
@@ -31,5 +32,6 @@ app = webapp2.WSGIApplication( [ ('/', front.Front),
                                  ('/runner/' + MY_RE, runnerpage.RunnerPage),
                                  ('/game/' + MY_RE, gamepage.GamePage),
                                  ('/delete/' + RUN_RE, deleterun.DeleteRun),
+                                 ('/fixerupper', fixerupper.FixerUpper),
                                  ('/' + r'.*', Error) ],
                                debug=DEBUG)

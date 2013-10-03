@@ -5,4 +5,4 @@ def key(name = 'default'):
 
 class Games(db.Model):
     game = db.StringProperty(required = True)
-    categories = db.ListProperty(str, required = True)
+    categories = db.StringListProperty(required = True)
