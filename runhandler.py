@@ -146,6 +146,8 @@ class RunHandler( handler.Handler ):
                     if( info['category'] == category ):
                         pb['infolist'][i] = self.get_runinfo( user.username, 
                                                               game, category )
+                        pb['infolist'].sort( key=itemgetter('num_runs'),
+                                             reverse=True )
                         self.update_cache_pblist( user.username, pblist )
                         return
 
@@ -153,7 +155,6 @@ class RunHandler( handler.Handler ):
                 # Add the run to the pblist and update memcache.
                 runinfo = self.get_runinfo( user.username, game, category )
                 pb['infolist'].append( runinfo )
-                pb['infolist'].sort( key=itemgetter('category') )
                 self.update_cache_pblist( user.username, pblist )
                 return
 
@@ -186,6 +187,8 @@ class RunHandler( handler.Handler ):
                             del pb[ 'infolist' ][ j ]
                             if len( pb[ 'infolist' ] ) <= 0:
                                 del pblist[ i ]
+                        pb['infolist'].sort( key=itemgetter('num_runs'),
+                                             reverse=True )
                         self.update_cache_pblist( user.username, pblist )
                         return
                 break

@@ -11,7 +11,7 @@ class FixerUpper( handler.Handler ):
             self.render( "404.html", user=user )
             return
 
-        self.write( "FixerUpper in progress..." )
+        self.write( "FixerUpper in progress... " )
 
         # Create the list of games
         gamelist = [ dict( game='Mega Man 2', 

@@ -221,8 +221,6 @@ class Handler(webapp2.RequestHandler):
             q.ancestor( runs.key() )
             q.filter( 'username =', username )
             q.order( 'game' )
-            q.order( 'category' )
-            q.order( '-datetime_created' )# Grab the last 1000 game,categories
             cur_game = None
             for run in q.run( limit = 1000 ):
                 if run.game != cur_game:
@@ -236,6 +234,10 @@ class Handler(webapp2.RequestHandler):
                 # Add the info to the pblist
                 info = self.get_runinfo( username, run.game, run.category )
                 pb['infolist'].append( info )
+
+            # Sort the categories for a game by num_runs
+            for pb in pblist:
+                pb['infolist'].sort( key=itemgetter('num_runs'), reverse=True )
 
             if memcache.set( key, pblist ):
                 logging.debug( "Set " + key + " in memcache" )
