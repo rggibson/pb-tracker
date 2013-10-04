@@ -195,7 +195,7 @@ class Submit( runhandler.RunHandler ):
                        + ", time= " + time + ", run_id = " + run_id )
         params[ 'datetime_created' ] = new_run.datetime_created
 
-        # Update games
+        # Update games.Games
         self.update_games( params )
 
         # Update memcache with the removal of the old run and addition of the

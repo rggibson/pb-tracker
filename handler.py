@@ -6,6 +6,7 @@ import runners
 import runs
 import games
 import logging
+import json
 
 from operator import itemgetter
 
@@ -263,12 +264,19 @@ class Handler(webapp2.RequestHandler):
         if gamepage is None and not no_refresh:
             # Not in memcache, so construct the gamepage and store it in 
             # memcache.
-            # Gamepage is a list of dictionaries. These dictionaries have 2
-            # keys, 'category' and 'runlist'.  The runlist is itself a
-            # list of dictionaries with the following keys: 'username',
-            # 'username_code', 'num_runs', 'avg_seconds', 'avg_time',
-            # 'pb_seconds', 'pb_time' and 'video'.
+            # Gamepage is a list of dictionaries. These dictionaries have up
+            # to 5 keys, 'category', 'bk_runner', 'bk_time', 'bk_video' and
+            # 'infolist'.
             gamepage = [ ]
+
+            # Grab the game model
+            game_model = self.get_game_model( util.get_code( game ) )
+            if game_model is None:
+                logging.error( "Could not create " + key + " due to no "
+                               + "game model" )
+                return None
+            gameinfolist = json.loads( game_model.info )
+
             # Use a projection query to get all of the unique 
             # username, category pairs
             q = db.Query( runs.Runs, projection=('username', 'category'), 
@@ -280,20 +288,33 @@ class Handler(webapp2.RequestHandler):
             for run in q.run( limit = 1000 ):
                 if run.category != cur_category:
                     # New category
-                    infolist = [ ]
-                    gamepage.append( infolist )
+                    d = dict( category=run.category, infolist=[ ] )
+                    gamepage.append( d )
                     cur_category = run.category
+                    # Check for a best known time for this category
+                    for gameinfo in gameinfolist:
+                        if gameinfo['category'] == run.category:
+                            try:
+                                d['bk_runner'] = gameinfo['bk_runner']
+                                d['bk_time'] = util.seconds_to_timestr(
+                                    gameinfo['bk_seconds'] )
+                                d['bk_video'] = gameinfo['bk_video']
+                            except KeyError:
+                                d['bk_runner'] = None
+                                d['bk_time'] = None
+                                d['bk_video'] = None
+                            break
 
                 # Add the info to the gamepage
                 info = self.get_runinfo( run.username, game, run.category )
-                infolist.append( info )
+                d['infolist'].append( info )
 
             # For each category, sort the runlist by seconds
             for runlist in gamepage:
-                runlist.sort( key=itemgetter('pb_seconds') )
+                runlist['infolist'].sort( key=itemgetter('pb_seconds') )
             
             # Sort the categories by number of runners
-            gamepage.sort( key=len, reverse=True )
+            gamepage.sort( key=lambda x: len(x['infolist']), reverse=True )
 
             if memcache.set( key, gamepage ):
                 logging.debug( "Set " + key + " in memcache" )

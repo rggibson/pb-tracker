@@ -213,26 +213,46 @@ class RunHandler( handler.Handler ):
         if gamepage is None:
             return
 
-        for infolist in gamepage:
-            if len( infolist ) > 0 and infolist[ 0 ][ 'category' ] == category:
-                for i, runinfo in enumerate( infolist ):
+        for d in gamepage:
+            if d[ 'category' ] == category:
+                for runinfo in  d['infolist']:
                     if runinfo['username'] == user.username:
-                        infolist[i] = self.get_runinfo( user.username, 
-                                                        game, category )
+                        runinfo = self.get_runinfo( user.username, 
+                                                    game, category )
                         self.update_cache_gamepage( game, gamepage )
                         return
                 
                 # Category found, but user has not prev. run this category
                 runinfo = self.get_runinfo( user.username, game, category )
-                infolist.append( runinfo )
-                infolist.sort( key=itemgetter('pb_seconds') )
-                gamepage.sort( key=len, reverse=True )
+                d['infolist'].append( runinfo )
+                d['infolist'].sort( key=itemgetter('pb_seconds') )
+                gamepage.sort( key=lambda x: len(x['infolist']), reverse=True )
                 self.update_cache_gamepage( game, gamepage )
                 return
         
         # This is a new category for this game
         runinfo = self.get_runinfo( user.username, game, category )
-        gamepage.append( [ runinfo ] )
+        d = dict( category=category, infolist=[runinfo] )
+        # Check for best known time
+        game_model = self.get_game_model( util.get_code( game ) )
+        if game_model is None:
+            logging.error( "Failed to update gamepage for " + game )
+            self.update_cache_gamepage( game, None )
+            return
+        gameinfolist = json.loads( game_model.info )
+        for gameinfo in gameinfolist:
+            if gameinfo['category'] == category:
+                try:
+                    d['bk_runner'] = gameinfo['bk_runner']
+                    d['bk_time'] = util.seconds_to_timestr( 
+                        gameinfo['bk_seconds'] )
+                    d['bk_video'] = gameinfo['bk_video']
+                except KeyError:
+                    d['bk_runner'] = None
+                    d['bk_time'] = None
+                    d['bk_video'] = None
+                break
+        gamepage.append( d )
         self.update_cache_gamepage( game, gamepage )
 
     def update_gamepage_delete( self, user, old_run ):
@@ -241,20 +261,21 @@ class RunHandler( handler.Handler ):
         if gamepage is None:
             return
 
-        for j, infolist in enumerate( gamepage ):
-            if( len( infolist ) > 0 
-                and infolist[ 0 ][ 'category' ] == old_run['category'] ):
-                for i, runinfo in enumerate( infolist ):
-                    if runinfo[ 'username' ] == user.username:
-                        infolist[i] = self.get_runinfo( user.username, 
-                                                        old_run['game'], 
-                                                        old_run['category'] )
-                        if infolist[i]['num_runs'] <= 0:
-                            del infolist[ i ]
-                            if len( infolist ) <= 0:
+        for j, d in enumerate( gamepage ):
+            if d['category'] == old_run['category']:
+                for i, runinfo in enumerate( d['infolist'] ):
+                    if runinfo['username'] == user.username:
+                        runinfo = self.get_runinfo( user.username, 
+                                                    old_run['game'], 
+                                                    old_run['category'] )
+                        if runinfo['num_runs'] <= 0:
+                            del d['infolist'][ i ]
+                            if len( d['infolist'] ) <= 0:
                                 del gamepage[ j ]
                         else:
-                            infolist.sort( key=itemgetter('pb_seconds') )
+                            d['infolist'].sort( key=itemgetter('pb_seconds') )
+                            gamepage.sort( key=lambda x: len(x['infolist']),
+                                           reverse=True )
                         self.update_cache_gamepage( old_run['game'], 
                                                     gamepage )
                         return

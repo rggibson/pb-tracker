@@ -15,8 +15,8 @@
     <h1>{{game}}</h1>
   </div>
 </div>
-{% for runlist in gamepage %}
-<h2>{{runlist[0]['category']}}</h2>
+{% for d in gamepage %}
+<h2>{{d['category']}}</h2>
 <table class="table table-striped">
   <thead>
     <tr>
@@ -26,7 +26,7 @@
       <th width="25%">Average Time</th>
     </tr>
   </thead>
-  {% for run in runlist %}
+  {% for run in d['infolist'] %}
   <tr>
     <td><a href="/runner/{{run['username_code']}}">{{run['username']}}</td>
     <td>{% if run['video'] %}<a href="{{run['video']}}">{% endif %}
