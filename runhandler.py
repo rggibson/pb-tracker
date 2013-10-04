@@ -63,7 +63,8 @@ class RunHandler( handler.Handler ):
                                     * ( seconds - runinfo['avg_seconds'] ) )
         runinfo['avg_time'] = util.seconds_to_timestr( 
             runinfo['avg_seconds'] )
-        if( runinfo['pb_seconds'] > seconds ):
+        if( runinfo['pb_seconds'] is None 
+            or runinfo['pb_seconds'] > seconds ):
             # We need to update pb as well
             runinfo['pb_seconds'] = seconds
             runinfo['pb_time'] = time
@@ -123,12 +124,12 @@ class RunHandler( handler.Handler ):
                                              username_code=util.get_code(
                                                  user.username ),
                                              category=old_run['category'],
-                                             pb_seconds=0,
-                                             pb_time="",
+                                             pb_seconds=None,
+                                             pb_time=None,
                                              num_runs=0,
                                              avg_seconds=0,
-                                             avg_time="",
-                                             video="" ) )
+                                             avg_time='00:00',
+                                             video=None ) )
 
     def update_pblist_put( self, params ):
         user = params[ 'user' ]

@@ -176,12 +176,12 @@ class Handler(webapp2.RequestHandler):
             runinfo = dict( username = username,
                             username_code = util.get_code( username ),
                             category = category, 
-                            pb_seconds = 0,
-                            pb_time = "",
+                            pb_seconds = None,
+                            pb_time = None,
                             num_runs = num_runs,
                             avg_seconds = avg_seconds,
                             avg_time = util.seconds_to_timestr( avg_seconds ),
-                            video = "" )
+                            video = None )
             if pb_run:
                 runinfo['pb_seconds'] = pb_run.seconds
                 runinfo['pb_time'] = util.seconds_to_timestr( pb_run.seconds )
