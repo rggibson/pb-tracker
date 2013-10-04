@@ -2,6 +2,7 @@ import runhandler
 import util
 import logging
 import runs
+import json
 
 from google.appengine.ext import db
 
@@ -64,16 +65,18 @@ class Submit( runhandler.RunHandler ):
         category_code = util.get_code( category )
         category_found = False
         if game_model:
-            for c in game_model.categories:
-                if category_code == util.get_code( c ):
+            infolist = json.loads( game_model.info )
+            for info in infolist:
+                if category_code == util.get_code( info['category'] ):
                     category_found = True
-                    if category != c:
+                    if category != info['category']:
                         params['category_error'] = ( "Category already exists "
-                                                     + "under [" + c + "] "
+                                                     + "under [" 
+                                                     + info['category'] + "] "
                                                      + "(case sensitive). "
                                                      + "Hit submit again to "
                                                      + "confirm." )
-                        params['category'] = c
+                        params['category'] = info['category']
                         self.render( "submit.html", **params )
                         return
                     break

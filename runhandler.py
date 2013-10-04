@@ -3,6 +3,7 @@ import util
 import games
 import runs
 import logging
+import json
 
 from operator import itemgetter
 from google.appengine.ext import db
@@ -23,10 +24,11 @@ class RunHandler( handler.Handler ):
         game_code = params[ 'game_code' ]
         category_found = params[ 'category_found' ]
 
-        if not game_model:
+        if game_model is None:
             # Add a new game to the database
+            info = [ dict( category=category ) ]
             game_model = games.Games( game = game,
-                                      categories = [ category ],
+                                      info = json.dumps( info ),
                                       parent = games.key(),
                                       key_name = game_code )
             game_model.put( )
@@ -35,7 +37,9 @@ class RunHandler( handler.Handler ):
             self.update_cache_game_model( game_code, game_model )
         elif not category_found:
             # Add a new category for this game in the database
-            game_model.categories.append( category )
+            info = json.loads( game_model.info )
+            info.append( dict( category=category ) )
+            game_model.info = json.dumps( info )
             game_model.put( )
             logging.debug( "Added category " + category + " to game " 
                            + game + " in database." )
@@ -51,7 +55,7 @@ class RunHandler( handler.Handler ):
         # Update runinfo in memcache
         runinfo = self.get_runinfo( user.username, game, category, 
                                     no_refresh=True )
-        if not runinfo:
+        if runinfo is None:
             return
 
         runinfo['num_runs'] += 1
@@ -70,7 +74,7 @@ class RunHandler( handler.Handler ):
         # Update avg, num runs
         runinfo = self.get_runinfo( user.username, old_run['game'],
                                     old_run['category'], no_refresh=True )
-        if not runinfo:
+        if runinfo is None:
             return
 
         if runinfo['num_runs'] <= 0:
@@ -137,7 +141,7 @@ class RunHandler( handler.Handler ):
 
         # Update pblist in memcache
         pblist = self.get_pblist( user.username, no_refresh=True )
-        if not pblist:
+        if pblist is None:
             return
 
         for pb in pblist:
@@ -170,7 +174,7 @@ class RunHandler( handler.Handler ):
     def update_pblist_delete( self, user, old_run ):
         # Update pblist with the removal to the old run
         pblist = self.get_pblist( user.username, no_refresh=True )
-        if not pblist:
+        if pblist is None:
             return
 
         for i, pb in enumerate( pblist ):
@@ -205,7 +209,7 @@ class RunHandler( handler.Handler ):
 
         # Update gamepage in memcache
         gamepage = self.get_gamepage( game, no_refresh=True )
-        if not gamepage:
+        if gamepage is None:
             return
 
         for infolist in gamepage:
@@ -233,7 +237,7 @@ class RunHandler( handler.Handler ):
     def update_gamepage_delete( self, user, old_run ):
         # Update gamepage in memcache
         gamepage = self.get_gamepage( old_run['game'], no_refresh=True )
-        if not gamepage:
+        if gamepage is None:
             return
 
         for j, infolist in enumerate( gamepage ):
@@ -270,7 +274,7 @@ class RunHandler( handler.Handler ):
         # Update runlist for runner in memcache
         runlist = self.get_runlist_for_runner( user.username, 
                                                no_refresh=True )
-        if runlist:
+        if runlist is not None:
             runlist.insert( 0, dict( run_id = run_id,
                                      game = game, game_code = game_code,
                                      category = category, time = time, 
@@ -285,7 +289,7 @@ class RunHandler( handler.Handler ):
 
         # Update gamelist in memcache if necessary
         gamelist = self.get_gamelist( no_refresh=True )
-        if gamelist:
+        if gamelist is not None:
             found_game = False
             for gamedict in gamelist:
                 if( gamedict['game_code'] == game_code ):
@@ -314,7 +318,7 @@ class RunHandler( handler.Handler ):
     def update_gamelist_delete( self, old_run ):
         # Fix the gamelist with the removal of the old run
         gamelist = self.get_gamelist( no_refresh=True )
-        if gamelist:
+        if gamelist is not None:
             for i, gamedict in enumerate( gamelist ):
                 if( gamedict[ 'game' ] == old_run[ 'game' ] ):
                     gamedict['num_pbs'] -= 1
@@ -331,7 +335,7 @@ class RunHandler( handler.Handler ):
 
         # Update runnerlist in memcache if necessary
         runnerlist = self.get_runnerlist( no_refresh=True )
-        if runnerlist:
+        if runnerlist is not None:
             found_runner = False
             for runnerdict in runnerlist:
                 if( runnerdict['username'] == user.username ):
@@ -356,7 +360,7 @@ class RunHandler( handler.Handler ):
     def update_runnerlist_delete( self, user ):
         # Fix the runnerlist with the removal of the old run
         runnerlist = self.get_runnerlist( no_refresh=True )
-        if runnerlist:
+        if runnerlist is not None:
             for runnerdict in runnerlist:
                 if( runnerdict['username'] == user.username ):
                     runnerdict['num_pbs'] -= 1

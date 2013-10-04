@@ -191,7 +191,7 @@ class Handler(webapp2.RequestHandler):
                 logging.debug( "Set " + key + " in memcache" )
             else:
                 logging.warning( "Failed to set " + key + " in memcache" )
-        elif runinfo:
+        elif runinfo is not None:
             logging.debug( "Got " + key + " from memcache" )
         return runinfo
             
@@ -243,7 +243,7 @@ class Handler(webapp2.RequestHandler):
                 logging.debug( "Set " + key + " in memcache" )
             else:
                 logging.warning( "Failed to set " + key + " in memcache" )
-        elif pblist:
+        elif pblist is not None:
             logging.debug( "Got " + key + " from memcache" )
         return pblist
 
@@ -299,7 +299,7 @@ class Handler(webapp2.RequestHandler):
                 logging.debug( "Set " + key + " in memcache" )
             else:
                 logging.warning( "Failed to set " + key + " in memcache" )
-        elif gamepage:
+        elif gamepage is not None:
             logging.debug( "Got " + key + " from memcache" )
         return gamepage
 
@@ -338,7 +338,7 @@ class Handler(webapp2.RequestHandler):
                 logging.debug( "Set gamelist in memcache" )
             else:
                 logging.warning( "Failed to set new gamelist in memcache" )
-        elif gamelist:
+        elif gamelist is not None:
             logging.debug( "Got gamelist from memcache" )
         return gamelist
 
@@ -379,7 +379,7 @@ class Handler(webapp2.RequestHandler):
                 logging.debug( "Set runnerlist in memcache" )
             else:
                 logging.warning( "Failed to set new runnerlist in memcache" )
-        elif runnerlist:
+        elif runnerlist is not None:
             logging.debug( "Got runnerlist from memcache" )
         return runnerlist
 
@@ -418,7 +418,7 @@ class Handler(webapp2.RequestHandler):
                 logging.debug( "Set " + key + " in memcache" )
             else:
                 logging.warning( "Failed to set " + key + " in memcache" )
-        elif runlist:
+        elif runlist is not None:
             logging.debug( "Got " + key + " from memcache" )
         return runlist
 
