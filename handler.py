@@ -44,17 +44,20 @@ class Handler(webapp2.RequestHandler):
                 return runners.Runners.get_by_key_name( username_code, 
                                                         parent=runners.key() )
 
-    def set_return_url(self, url):
+    def set_return_url( self, url ):
         cookie = 'return_url=' + url + ';Path=/'
-        self.response.headers.add_header('Set-Cookie', cookie)        
+        self.response.headers.add_header( 'Set-Cookie', cookie )        
+
+    def get_return_url( self ):
+        return self.request.cookies.get( 'return_url' )
         
-    def goto_return_url(self):
-        url = self.request.cookies.get('return_url')
+    def goto_return_url( self ):
+        url = self.get_return_url( )
         if url:
-            self.redirect(str(url))
+            self.redirect( str(url) )
         else:
-            logging.warning("No return_url found; redirecting to root page")
-            self.redirect("/")
+            logging.warning( "No return_url found; redirecting to root page" )
+            self.redirect( "/" )
 
     # Memcache / Datastore functions
     def get_username_memkey( self, username_code ):
@@ -177,12 +180,14 @@ class Handler(webapp2.RequestHandler):
             runinfo = dict( username = username,
                             username_code = util.get_code( username ),
                             category = category, 
+                            category_code = util.get_code( category ),
                             pb_seconds = None,
                             pb_time = None,
                             num_runs = num_runs,
                             avg_seconds = avg_seconds,
                             avg_time = util.seconds_to_timestr( avg_seconds ),
                             video = None )
+            # Set the pb time
             if pb_run:
                 runinfo['pb_seconds'] = pb_run.seconds
                 runinfo['pb_time'] = util.seconds_to_timestr( pb_run.seconds )
@@ -232,7 +237,7 @@ class Handler(webapp2.RequestHandler):
                     pblist.append( pb )
                     cur_game = run.game                
 
-                # Add the info to the pblist
+                # Add runinfo to pblist
                 info = self.get_runinfo( username, run.game, run.category )
                 pb['infolist'].append( info )
 

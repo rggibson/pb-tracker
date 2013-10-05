@@ -47,6 +47,12 @@ class UpdateBkt( handler.Handler ):
             params['time'] = ''
             params['video'] = ''
             params['updating'] = False
+
+        return_url = self.get_return_url( )
+        if return_url[ 0 : len( '/runner/' ) ] == '/runner/':
+            params['from_runnerpage'] = True
+        else:
+            params['from_runnerpage'] = False
             
         self.render( "updatebkt.html", **params )
 
@@ -89,6 +95,13 @@ class UpdateBkt( handler.Handler ):
                        category=gameinfo['category'], username=username,
                        time=time, video=video )
 
+        # Check for where we came from
+        return_url = self.get_return_url( )
+        if return_url[ 0 : len( '/runner/' ) ] == '/runner/':
+            params['from_runnerpage'] = True
+        else:
+            params['from_runnerpage'] = False
+
         # Make sure we got a username
         if not username:
             params['username_error'] = "You must enter a runner"
@@ -114,7 +127,7 @@ class UpdateBkt( handler.Handler ):
 
         # Update game_model in memcache
         self.update_cache_game_model( game_code, game_model )
-        
+
         # Update gamepage in memcache
         gamepage = self.get_gamepage( game_model.game, no_refresh=True )
         if gamepage is not None:

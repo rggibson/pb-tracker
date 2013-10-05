@@ -124,11 +124,13 @@ class RunHandler( handler.Handler ):
                                              username_code=util.get_code(
                                                  user.username ),
                                              category=old_run['category'],
+                                             category_code=util.get_code(
+                                                 old_run['category'] ),
                                              pb_seconds=None,
                                              pb_time=None,
                                              num_runs=0,
                                              avg_seconds=0,
-                                             avg_time='00:00',
+                                             avg_time='0:00',
                                              video=None ) )
 
     def update_pblist_put( self, params ):
