@@ -140,6 +140,7 @@ class Submit( runhandler.RunHandler ):
         self.update_pblist_put( params )
         self.update_gamepage_put( params )
         self.update_runlist_for_runner_put( params )
+        self.update_cache_user_has_run( user.username, game, True )
                      
         # Check whether this is the first run for this username, game,
         # category combination.  This will determine whether we need to check
@@ -208,6 +209,8 @@ class Submit( runhandler.RunHandler ):
         self.update_pblist_put( params )
         self.update_gamepage_delete( user, old_run )
         self.update_gamepage_put( params )
+        self.update_user_has_run_delete( user, old_run )
+        self.update_cache_user_has_run( user.username, game, True )
 
         # Update gamelist and runnerlist in memcache
         num_runs = self.num_runs( user.username, old_run[ 'game' ], 

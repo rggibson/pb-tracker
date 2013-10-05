@@ -215,10 +215,11 @@ class RunHandler( handler.Handler ):
 
         for d in gamepage:
             if d[ 'category' ] == category:
-                for runinfo in  d['infolist']:
+                for i, runinfo in enumerate( d['infolist'] ):
                     if runinfo['username'] == user.username:
-                        runinfo = self.get_runinfo( user.username, 
-                                                    game, category )
+                        d['infolist'][i] = self.get_runinfo( user.username, 
+                                                             game, category )
+                        d['infolist'].sort( key=itemgetter('pb_seconds') )
                         self.update_cache_gamepage( game, gamepage )
                         return
                 
@@ -232,7 +233,9 @@ class RunHandler( handler.Handler ):
         
         # This is a new category for this game
         runinfo = self.get_runinfo( user.username, game, category )
-        d = dict( category=category, infolist=[runinfo] )
+        d = dict( category=category, 
+                  category_code=util.get_code( category ),
+                  infolist=[runinfo] )
         # Check for best known time
         game_model = self.get_game_model( util.get_code( game ) )
         if game_model is None:
@@ -265,14 +268,15 @@ class RunHandler( handler.Handler ):
             if d['category'] == old_run['category']:
                 for i, runinfo in enumerate( d['infolist'] ):
                     if runinfo['username'] == user.username:
-                        runinfo = self.get_runinfo( user.username, 
-                                                    old_run['game'], 
-                                                    old_run['category'] )
-                        if runinfo['num_runs'] <= 0:
+                        new_info = self.get_runinfo( user.username, 
+                                                     old_run['game'], 
+                                                     old_run['category'] )
+                        if new_info['num_runs'] <= 0:
                             del d['infolist'][ i ]
                             if len( d['infolist'] ) <= 0:
                                 del gamepage[ j ]
                         else:
+                            d['infolist'][i] = new_info
                             d['infolist'].sort( key=itemgetter('pb_seconds') )
                             gamepage.sort( key=lambda x: len(x['infolist']),
                                            reverse=True )
@@ -391,3 +395,7 @@ class RunHandler( handler.Handler ):
                                      reverse=True )
                     self.update_cache_runnerlist( runnerlist )
                     break
+
+    def update_user_has_run_delete( self, user, old_run ):
+        # This refresh is so cheap, let's just kill the old value
+        self.update_cache_user_has_run( user.username, old_run['game'], None )

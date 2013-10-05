@@ -17,7 +17,15 @@ class GamePage( handler.Handler ):
             self.render( "404.html", user=user )
             return
 
+        # Find out if this user has run this game
+        if user is not None:
+            user_has_run = self.get_user_has_run( user.username, 
+                                                  game_model.game )
+        else:
+            user_has_run = False
+            
         gamepage = self.get_gamepage( game_model.game )
 
         self.render( "gamepage.html", user=user, game=game_model.game, 
-                     game_code=game_code, gamepage=gamepage )
+                     game_code=game_code, gamepage=gamepage,
+                     user_has_run=user_has_run )

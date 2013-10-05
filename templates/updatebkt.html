@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<script type="text/javascript">
+  document.getElementById("nav-" + {% if from_runnerpage %}"username"{% else %}"games"{% endif %}).setAttribute("class", "active");
+</script>
+
+<div class="col-lg-11 col-lg-offset-1">
+  <h1>{{game}} - {{category}}</h1>
+</div>
+<form method="post" class="form-horizontal" role="form">
+  <div class="form-group">
+    <label for="username" class="col-lg-2 control-label">Runner</label>
+    <div class="col-lg-4">
+      <input type="text" class="form-control" id="username" name="username" 
+	     placeholder="e.g. Spiderman" value="{{username}}">
+    </div>
+    <div class="error">{{username_error}}</div>
+  </div>
+  <div class="form-group">
+    <label for="time" class="col-lg-2 control-label">Time</label>
+    <div class="col-lg-4">
+      <input type="text" class="form-control" id="time" name="time"
+	     placeholder="e.g. 2:34:56" value="{{time}}">
+    </div>
+    <div class="error">{{time_error}}</div>
+  </div>
+  <div class="form-group">
+    <label for="video" class="col-lg-2 control-label">Video (optional)</label>
+    <div class="col-lg-4">
+      <input type="text" class="form-control" id="video" name="video"
+	     placeholder="e.g. http://www.youtube.com/watch?v=oLXNOHdo8s8" 
+	     value="{{video}}">
+    </div>
+    <div class="error">{{video_error}}</div>
+  </div>
+  <div class="form-group">
+    <div class="col-lg-offset-2 col-lg-4">
+      <button class="btn btn-lg btn-primary" type="submit">
+	{% if updating %}Update{% else %}Set{% endif %} best known time
+      </button>
+    </div>
+  </div>
+</form>
+
+{% endblock %}

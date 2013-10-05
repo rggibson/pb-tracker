@@ -288,7 +288,9 @@ class Handler(webapp2.RequestHandler):
             for run in q.run( limit = 1000 ):
                 if run.category != cur_category:
                     # New category
-                    d = dict( category=run.category, infolist=[ ] )
+                    d = dict( category=run.category, 
+                              category_code=util.get_code( run.category ), 
+                              infolist=[ ] )
                     gamepage.append( d )
                     cur_category = run.category
                     # Check for a best known time for this category
@@ -446,6 +448,38 @@ class Handler(webapp2.RequestHandler):
     def update_cache_runlist_for_runner( self, username, runlist ):
         key = self.get_runlist_for_runner_memkey( username )
         if memcache.set( key, runlist ):
+            logging.debug( "Updated " + key + " in memcache" )
+        else:
+            logging.error( "Failed to update " + key + " in memcache" )
+
+    def get_user_has_run_memkey( self, username, game ):
+        return username + ":" + game + ":user_has_run"
+
+    def get_user_has_run( self, username, game, no_refresh=False ):
+        key = self.get_user_has_run_memkey( username, game )
+        user_has_run = memcache.get( key )
+        if user_has_run is None and not no_refresh:
+            # Not in memcache, so check datastore
+            q = db.Query( runs.Runs, keys_only=True )
+            q.ancestor( runs.key() )
+            q.filter( 'username =', username )
+            q.filter( 'game =', game )
+            num = q.count( limit=1 )
+            if num > 0:
+                user_has_run = True
+            else:
+                user_has_run = False
+            if memcache.set( key, user_has_run ):
+                logging.debug( "Set " + key + " in memcache" )
+            else:
+                logging.warning( "Failed to set " + key + " in memcache" )
+        elif user_has_run is not None:
+            logging.debug( "Got " + key + " from memcache" )
+        return user_has_run
+
+    def update_cache_user_has_run( self, username, game, user_has_run ):
+        key = self.get_user_has_run_memkey( username, game )
+        if memcache.set( key, user_has_run ):
             logging.debug( "Updated " + key + " in memcache" )
         else:
             logging.error( "Failed to update " + key + " in memcache" )

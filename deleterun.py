@@ -46,6 +46,7 @@ class DeleteRun( runhandler.RunHandler ):
         self.update_runinfo_delete( user, old_run )
         self.update_pblist_delete( user, old_run )
         self.update_gamepage_delete( user, old_run )
+        self.update_user_has_run_delete( user, old_run )
         num_runs = self.num_runs( user.username, run.game, run.category, 1 )
         if num_runs <= 0:
             self.update_gamelist_delete( old_run )

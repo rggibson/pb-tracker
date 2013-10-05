@@ -17,6 +17,20 @@
 </div>
 {% for d in gamepage %}
 <h2>{{d['category']}}</h2>
+{% if d['bk_time'] %}
+<h4>Best known time: 
+  {% if d['bk_video'] %}<a href="{{d['bk_video']}}">{% endif %}
+    {{d['bk_time']}}{% if d['bk_video'] %}</a>{% endif %} 
+  by {{d['bk_runner']}}
+  {% if user_has_run %}
+  (<a href="/game/{{game_code}}/update-bkt?c={{d['category_code']}}">update</a>)
+  {% endif %}
+</h4>
+{% elif user_has_run %}
+<h4>
+  (<a href="/game/{{game_code}}/update-bkt?c={{d['category_code']}}">Set best known time</a>)
+</h4>
+{% endif %}
 <table class="table table-striped">
   <thead>
     <tr>
