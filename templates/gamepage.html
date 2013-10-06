@@ -34,10 +34,11 @@
 <table class="table table-striped">
   <thead>
     <tr>
-      <th width="25%">Runner</th>
-      <th width="25%">Personal Best</th>
-      <th width="25%">Runs</th>
-      <th width="25%">Average Time</th>
+      <th width="30%">Runner</th>
+      <th width="15%">Personal Best</th>
+      <th width="25%">Version</th>
+      <th width="15%">Runs</th>
+      <th width="15%">Average Time</th>
     </tr>
   </thead>
   {% for run in d['infolist'] %}
@@ -46,6 +47,7 @@
     <td>{% if run['video'] %}<a href="{{run['video']}}">{% endif %}
 	{{run['pb_time']}}{% if run['video'] %}</a>{% endif %}
     </td>
+    <td>{% if run['version'] %}{{run['version']}}{% else %}-{% endif %}</td>
     <td>{{run['num_runs']}}</td>
     <td>{{run['avg_time']}}</td>
   </tr>

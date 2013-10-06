@@ -28,8 +28,10 @@ class Submit( runhandler.RunHandler ):
             params[ 'category' ] = run.category
             params[ 'time' ] = util.seconds_to_timestr( run.seconds )
             params[ 'run_id' ] = run_id
-            if run.video:
+            if run.video is not None:
                 params[ 'video' ] = run.video
+            if run.version is not None:
+                params[ 'version' ] = run.version
             
         self.render( "submit.html", **params )
 
@@ -43,6 +45,7 @@ class Submit( runhandler.RunHandler ):
         category = self.request.get( 'category' )
         time = self.request.get( 'time' )
         video = self.request.get( 'video' )
+        version = self.request.get( 'version' )
         is_bkt = self.request.get( 'bkt', default_value="no" )
         if is_bkt == "yes":
             is_bkt = True
@@ -51,8 +54,8 @@ class Submit( runhandler.RunHandler ):
         run_id = self.request.get( 'edit' )
 
         params = dict( user = user, game = game, category = category, 
-                       time = time, video = video, run_id = run_id, 
-                       is_bkt = is_bkt )
+                       time = time, video = video, version = version,
+                       run_id = run_id, is_bkt = is_bkt )
 
         # Make sure the game doesn't already exist under a similar name
         game_code = util.get_code( game )
@@ -134,12 +137,14 @@ class Submit( runhandler.RunHandler ):
         seconds = params[ 'seconds' ]
         time = params[ 'time' ]
         video = params[ 'video' ]
+        version = params[ 'version' ]
 
         # Add a new run to the database
         new_run = runs.Runs( username = user.username,
                              game = game,
                              category = category,
                              seconds = seconds,
+                             version = version,
                              parent = runs.key() )
         if video:
             try:
@@ -189,6 +194,7 @@ class Submit( runhandler.RunHandler ):
         seconds = params[ 'seconds' ]
         time = params[ 'time' ]
         video = params[ 'video' ]
+        version = params[ 'version' ]
         run_id = params[ 'run_id' ]
 
         # Grab the old run, which we will update to be the new run
@@ -207,6 +213,7 @@ class Submit( runhandler.RunHandler ):
         new_run.game = game
         new_run.category = category
         new_run.seconds = seconds
+        new_run.version = version
         if video:
             try:
                 new_run.video = video
@@ -265,6 +272,7 @@ class Submit( runhandler.RunHandler ):
                     run[ 'category' ] = category
                     run[ 'time' ] = time
                     run[ 'video' ] = video
+                    run[ 'version' ] = version
                     self.update_cache_runlist_for_runner( user.username, 
                                                           runlist )
                     break

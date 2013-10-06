@@ -17,6 +17,7 @@
       <th>Game</th>
       <th>Category</th>
       <th>Time</th>
+      <th>Version</th>
       <th>Date</th>
       {% if user.username == username %}<th></th>{% endif %}
     </tr>
@@ -38,6 +39,7 @@
 	{% if run['video'] %}<a href="{{run['video']}}">{% endif %}
 	  {{run['time']}}{% if run['video'] %}</a>{% endif %}      
       </td>
+      <td>{% if run['version'] %}{{run['version']}}{% else %}-{% endif %}</td>
       <td>{{run['date']}}</td>
       {% if user.username == username %}
       <td><a href="/submit?edit={{run['run_id']}}">edit</a> | 

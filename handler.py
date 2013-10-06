@@ -161,7 +161,7 @@ class Handler(webapp2.RequestHandler):
         if runinfo is None and not no_refresh:
             # Not in memcache, so constrcut the runinfo dictionary
             q = db.Query( runs.Runs, 
-                          projection=('seconds', 'video') )
+                          projection=('seconds', 'video', 'version') )
             q.ancestor( runs.key() )
             q.filter('username =', username)
             q.filter('game =', game)
@@ -192,6 +192,7 @@ class Handler(webapp2.RequestHandler):
                 runinfo['pb_seconds'] = pb_run.seconds
                 runinfo['pb_time'] = util.seconds_to_timestr( pb_run.seconds )
                 runinfo['video'] = pb_run.video
+                runinfo['version'] = pb_run.version
                 
             if memcache.set( key, runinfo ):
                 logging.debug( "Set " + key + " in memcache" )
@@ -435,7 +436,8 @@ class Handler(webapp2.RequestHandler):
                                       seconds_to_timestr( run.seconds ),
                                       date = run.datetime_created.strftime(
                                           "%a %b %d %H:%M:%S %Y" ),
-                                      video = run.video ) )
+                                      video = run.video,
+                                      version = run.version ) )
 
             if memcache.set( key, runlist ):
                 logging.debug( "Set " + key + " in memcache" )

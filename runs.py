@@ -9,7 +9,5 @@ class Runs(db.Model):
     category = db.StringProperty(required = True)
     seconds = db.IntegerProperty(required = True)
     datetime_created = db.DateTimeProperty(auto_now_add = True)
-    console = db.StringProperty(required = False)
     version = db.StringProperty(required = False)
-    region = db.StringProperty(required = False)
     video = db.LinkProperty(required = False)
