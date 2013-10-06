@@ -7,16 +7,24 @@
 </script>
 
 <div class="row">
-  <div class="list-group col-lg-6 col-lg-offset-3">
+  <div class="list-group col-lg-6 col-lg-offset-3 col-md-6 col-md-offset-3">
     {% for gamedict in gamelist %}
     <a href="/game/{{gamedict['game_code']}}" class="list-group-item">
-      <span class="badge">{{gamedict['num_pbs']}}
-	{% if gamedict['num_pbs'] >= 1000 %}+{% endif %}
-      </span>
-      <img id="img-{{gamedict['game_code']}}" alt="" class="img-responsive" 
-	   style="max-height: 22px; float: left; margin-right: 5px;"
-	   src="/static/boxart/__blank__.png">
-      {{gamedict['game']}}
+      <div class="row">
+	<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
+	  <center>
+	    <img id="img-{{gamedict['game_code']}}" alt="" 
+		 class="img-responsive" 
+		 style="max-height: 22px;" src="/static/boxart/__blank__.png">
+	  </center>
+	</div>
+	<div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
+	  {{gamedict['game']}}
+	  <span class="badge pull-right">{{gamedict['num_pbs']}}
+	    {% if gamedict['num_pbs'] >= 1000 %}+{% endif %}
+	  </span>
+	</div>
+      </div>
     </a>
     {% endfor %}
   </div>
