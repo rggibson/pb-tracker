@@ -43,15 +43,21 @@ class Submit( runhandler.RunHandler ):
         category = self.request.get( 'category' )
         time = self.request.get( 'time' )
         video = self.request.get( 'video' )
+        is_bkt = self.request.get( 'bkt', default_value="no" )
+        if is_bkt == "yes":
+            is_bkt = True
+        else:
+            is_bkt = False
         run_id = self.request.get( 'edit' )
 
         params = dict( user = user, game = game, category = category, 
-                       time = time, video = video, run_id = run_id )
+                       time = time, video = video, run_id = run_id, 
+                       is_bkt = is_bkt )
 
         # Make sure the game doesn't already exist under a similar name
         game_code = util.get_code( game )
         game_model = self.get_game_model( game_code )
-        if game_model and game != game_model.game:
+        if game_model is not None and game != game_model.game:
             params['game_error'] = ( "Game already exists under [" 
                                      + game_model.game + "] (case sensitive). "
                                      + "Hit submit again to confirm." )
@@ -64,7 +70,7 @@ class Submit( runhandler.RunHandler ):
         # Make sure the category doesn't already exist under a similar name
         category_code = util.get_code( category )
         category_found = False
-        if game_model:
+        if game_model is not None:
             infolist = json.loads( game_model.info )
             for info in infolist:
                 if category_code == util.get_code( info['category'] ):
@@ -91,6 +97,26 @@ class Submit( runhandler.RunHandler ):
         time = util.seconds_to_timestr( seconds ) # Enforce standard format
         params[ 'time' ] = time
         params[ 'seconds' ] = seconds
+
+        # Check that if this is a best known time, that it beats the old
+        # best known time
+        if is_bkt and game_model is not None:
+            gameinfolist = json.loads( game_model.info )
+            for gameinfo in gameinfolist:
+                if gameinfo['category'] == category:
+                    if( gameinfo.get( 'bk_seconds' ) is not None
+                        and gameinfo['bk_seconds'] <= seconds ):
+                        s = ( "This time does not beat current best known "
+                              + "time of " + util.seconds_to_timestr( 
+                                  gameinfo.get( 'bk_seconds' ) ) 
+                              + " by " + gameinfo['bk_runner'] 
+                              + " (if best known time is incorrect, you can "
+                              + "update best known time after submission)" )
+                        params['bkt_error'] = s
+                        params['is_bkt'] = False
+                        self.render( "submit.html", **params )
+                        return
+                    break
 
         if run_id:
             self.put_existing_run( params )

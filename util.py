@@ -39,6 +39,9 @@ def get_code( string ):
     return re.sub( '[^a-zA-Z0-9]+', '-', string ).lower()
 
 def seconds_to_timestr( seconds ):
+    if seconds is None:
+        return None
+
     secs = int( round( seconds ) )
     mins = secs / 60
     secs = secs % 60

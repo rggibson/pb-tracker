@@ -43,6 +43,16 @@
     <div class="error">{{video_error}}</div>
   </div>
   <div class="form-group">
+    <div class="col-lg-offset-2">
+      <label>
+	<input type="checkbox" id="bkt" name="bkt" value="yes"
+	       {% if is_bkt %} checked="checked" {% endif %}> 
+	Is this the best known time for this game and category?
+      </label>
+    </div>
+    <div class="error">{{bkt_error}}</div>
+  </div>
+  <div class="form-group">
     <div class="col-lg-offset-2 col-lg-4">
       <button class="btn btn-lg btn-primary" type="submit">
 	{% if run_id %}Save changes{% else %}Submit{% endif %}

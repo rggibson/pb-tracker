@@ -20,8 +20,8 @@
 {% if d['bk_time'] %}
 <h4>Best known time: 
   {% if d['bk_video'] %}<a href="{{d['bk_video']}}">{% endif %}
-    {{d['bk_time']}}{% if d['bk_video'] %}</a>{% endif %} 
-  by {{d['bk_runner']}}
+    {{d['bk_time']}} by {{d['bk_runner']}}
+    {% if d['bk_video'] %}</a>{% endif %} 
   {% if user_has_run %}
   (<a href="/game/{{game_code}}/update-bkt?c={{d['category_code']}}">update</a>)
   {% endif %}

@@ -18,17 +18,27 @@ class RunHandler( handler.Handler ):
         return q.count( limit=limit )
 
     def update_games( self, params ):
-        game_model = params[ 'game_model' ]
-        game = params[ 'game' ]
-        category = params[ 'category' ]
-        game_code = params[ 'game_code' ]
-        category_found = params[ 'category_found' ]
+        user = params['user']
+        game_model = params['game_model']
+        game = params['game']
+        category = params['category']
+        game_code = params['game_code']
+        category_found = params['category_found']
+        seconds = params['seconds']
+        video = params['video']
+        is_bkt = params['is_bkt']
 
         if game_model is None:
             # Add a new game to the database
-            info = [ dict( category=category ) ]
+            d = dict( category=category, bk_runner=None, bk_seconds=None,
+                      bk_video=None, bk_update=None )
+            if is_bkt:
+                d['bk_runner'] = user.username
+                d['bk_seconds'] = seconds
+                d['bk_video'] = video
+                d['bk_updater'] = user.username
             game_model = games.Games( game = game,
-                                      info = json.dumps( info ),
+                                      info = json.dumps( [ d ] ),
                                       parent = games.key(),
                                       key_name = game_code )
             game_model.put( )
@@ -38,11 +48,35 @@ class RunHandler( handler.Handler ):
         elif not category_found:
             # Add a new category for this game in the database
             info = json.loads( game_model.info )
-            info.append( dict( category=category ) )
+            d = dict( category=category, bk_runner=None, bk_seconds=None,
+                      bk_video=None )
+            if is_bkt:
+                d['bk_runner'] = user.username
+                d['bk_seconds'] = seconds
+                d['bk_video'] = video
+                d['bk_updater'] = user.username
+            info.append( d )
             game_model.info = json.dumps( info )
             game_model.put( )
             logging.debug( "Added category " + category + " to game " 
                            + game + " in database." )
+            self.update_cache_game_model( game_code, game_model )
+        elif is_bkt:
+            # Update the best known time for this game, category
+            gameinfolist = json.loads( game_model.info )
+            for gameinfo in gameinfolist:
+                if gameinfo['category'] == category:
+                    gameinfo['bk_runner'] = user.username
+                    gameinfo['bk_seconds'] = seconds
+                    gameinfo['bk_video'] = video
+                    gameinfo['bk_updater'] = user.username
+                    game_model.info = json.dumps( gameinfolist )
+                    game_model.put( )
+                    logging.debug( "Updated best known time for game "
+                                   + game + ", category " + category 
+                                   + " in database" )
+                    self.update_cache_game_model( game_code, game_model )
+                    break
 
     def update_runinfo_put( self, params ):
         user = params[ 'user' ]
@@ -209,6 +243,7 @@ class RunHandler( handler.Handler ):
         seconds = params[ 'seconds' ]
         time = params[ 'time' ]
         video = params[ 'video' ]
+        is_bkt = params[ 'is_bkt' ]
 
         # Update gamepage in memcache
         gamepage = self.get_gamepage( game, no_refresh=True )
@@ -217,8 +252,14 @@ class RunHandler( handler.Handler ):
 
         for d in gamepage:
             if d[ 'category' ] == category:
+                if is_bkt:
+                    # Update best known time for this category
+                    d['bk_runner'] = user.username
+                    d['bk_time'] = util.seconds_to_timestr( seconds )
+                    d['bk_video'] = video
                 for i, runinfo in enumerate( d['infolist'] ):
                     if runinfo['username'] == user.username:
+                        # User has run this category before
                         d['infolist'][i] = self.get_runinfo( user.username, 
                                                              game, category )
                         d['infolist'].sort( key=itemgetter('pb_seconds') )
@@ -238,7 +279,8 @@ class RunHandler( handler.Handler ):
         d = dict( category=category, 
                   category_code=util.get_code( category ),
                   infolist=[runinfo] )
-        # Check for best known time
+        # Check for best known time. Since we update games.Games before 
+        # updating gamepage, this will catch the case for when is_bkt is true.
         game_model = self.get_game_model( util.get_code( game ) )
         if game_model is None:
             logging.error( "Failed to update gamepage for " + game )
@@ -247,15 +289,10 @@ class RunHandler( handler.Handler ):
         gameinfolist = json.loads( game_model.info )
         for gameinfo in gameinfolist:
             if gameinfo['category'] == category:
-                try:
-                    d['bk_runner'] = gameinfo['bk_runner']
-                    d['bk_time'] = util.seconds_to_timestr( 
-                        gameinfo['bk_seconds'] )
-                    d['bk_video'] = gameinfo['bk_video']
-                except KeyError:
-                    d['bk_runner'] = None
-                    d['bk_time'] = None
-                    d['bk_video'] = None
+                d['bk_runner'] = gameinfo.get( 'bk_runner' )
+                d['bk_time'] = util.seconds_to_timestr( 
+                        gameinfo.get( 'bk_seconds' ) )
+                d['bk_video'] = gameinfo.get( 'bk_video' )
                 break
         gamepage.append( d )
         self.update_cache_gamepage( game, gamepage )

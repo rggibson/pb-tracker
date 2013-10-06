@@ -37,16 +37,17 @@ class UpdateBkt( handler.Handler ):
 
         params = dict( user=user, game=game_model.game, 
                        category=gameinfo['category'] )
-        try:
-            params['username'] = gameinfo['bk_runner']
-            params['time'] = util.seconds_to_timestr( gameinfo['bk_seconds'] )
-            params['video'] = gameinfo['bk_video']
-            params['updating'] = True
-        except KeyError:
+        params['username'] = gameinfo.get( 'bk_runner' )
+        if params['username'] is None:
             params['username'] = ''
             params['time'] = ''
             params['video'] = ''
             params['updating'] = False
+        else:
+            params['time'] = util.seconds_to_timestr( 
+                gameinfo.get( 'bk_seconds' ) )
+            params['video'] = gameinfo.get( 'bk_video' )
+            params['updating'] = True
 
         return_url = self.get_return_url( )
         if return_url[ 0 : len( '/runner/' ) ] == '/runner/':

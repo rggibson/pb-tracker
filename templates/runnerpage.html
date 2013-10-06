@@ -32,10 +32,12 @@
     {% for pb in pblist %}
     <tr>
       <td rowspan="{{pb['infolist']|length}}">
-	<a href="/game/{{pb['game_code']}}">
-	  <img id="img-{{pb['game_code']}}" alt="" class="img-responsive" 
-	       style="max-height: 50px;">
-	</a>
+	<center>
+	  <a href="/game/{{pb['game_code']}}">
+	    <img id="img-{{pb['game_code']}}" alt="" class="img-responsive" 
+		 style="max-height: 50px;" src="/static/boxart/__blank__.png">
+	  </a>
+	</center>
       </td>
       <td rowspan="{{pb['infolist']|length}}">
 	<a href="/game/{{pb['game_code']}}">
@@ -55,8 +57,8 @@
       <td>{{info['avg_time']}}</td>
       <td>{% if info['bk_time'] %}
 	{% if info['bk_video'] %}<a href="{{info['bk_video']}}">{% endif %}
-	  {{info['bk_time']}}{% if info['bk_video'] %}</a>{% endif %} 
-	by {{info['bk_runner']}} 
+	  {{info['bk_time']}} by {{info['bk_runner']}} 
+	  {% if info['bk_video'] %}</a>{% endif %} 
 	{% if user.username == username %}
 	(<a href="/game/{{pb['game_code']}}/update-bkt?c={{info['category_code']}}">update</a>)
 	{% endif %}

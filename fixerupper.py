@@ -23,8 +23,15 @@ class FixerUpper( handler.Handler ):
         self.write( "Adding games to database...\n" )
         for g in gamelist:
             game_code = util.get_code( g['game'] )
+            gameinfolist = [ ]
+            for category in g['categories']:
+                gameinfolist.append( dict( category=category,
+                                           bk_runner=None,
+                                           bk_seconds=None,
+                                           bk_video=None,
+                                           bk_updater=None ) )
             game_model = games.Games( game=g['game'],
-                                      categories=g['categories'],
+                                      info=json.dumps( gameinfolist ),
                                       key_name=game_code,
                                       parent=games.key() )
             game_model.put( )

@@ -110,7 +110,7 @@ class Handler(webapp2.RequestHandler):
                                  + game_code + " in memcache" )
         else:
             logging.debug( "Got game_model for game_code " + game_code 
-                          + " from memcache" )
+                           + " from memcache" )
         return game_model
 
     def update_cache_game_model( self, game_code, game_model ):
@@ -301,15 +301,10 @@ class Handler(webapp2.RequestHandler):
                     # Check for a best known time for this category
                     for gameinfo in gameinfolist:
                         if gameinfo['category'] == run.category:
-                            try:
-                                d['bk_runner'] = gameinfo['bk_runner']
-                                d['bk_time'] = util.seconds_to_timestr(
-                                    gameinfo['bk_seconds'] )
-                                d['bk_video'] = gameinfo['bk_video']
-                            except KeyError:
-                                d['bk_runner'] = None
-                                d['bk_time'] = None
-                                d['bk_video'] = None
+                            d['bk_runner'] = gameinfo.get( 'bk_runner' )
+                            d['bk_time'] = util.seconds_to_timestr(
+                                gameinfo.get( 'bk_seconds' ) )
+                            d['bk_video'] = gameinfo.get( 'bk_video' )
                             break
 
                 # Add the info to the gamepage
