@@ -19,7 +19,7 @@
 <table class="table">
   <thead>
     <tr>
-      <th></th>
+      <th class="hidden-xs"></th>
       <th>Game</th>
       <th>Category</th>
       <th>Personal Best</th>
@@ -31,7 +31,7 @@
   <tbody>
     {% for pb in pblist %}
     <tr>
-      <td rowspan="{{pb['infolist']|length}}">
+      <td rowspan="{{pb['infolist']|length}}" class="hidden-xs">
 	<center>
 	  <a href="/game/{{pb['game_code']}}">
 	    <img id="img-{{pb['game_code']}}" alt="" class="img-responsive" 

@@ -13,7 +13,7 @@
 <table class="table table-striped">
   <thead>
     <tr>
-      <th></th>
+      <th class="hidden-xs"></th>
       <th>Game</th>
       <th>Category</th>
       <th>Time</th>
@@ -24,11 +24,13 @@
   <tbody>
     {% for run in runlist %}
     <tr>
-      <td>
-	<a href="/game/{{run['game_code']}}">
-	  <img id="img-{{loop.index}}" alt="" class="img-responsive" 
-	       style="max-height: 22px;">
-	</a>
+      <td class="hidden-xs">
+	<center>
+	  <a href="/game/{{run['game_code']}}">
+	    <img id="img-{{loop.index}}" alt="" class="img-responsive" 
+		 style="max-height: 22px;">
+	  </a>
+	</center>
       </td>
       <td><a href="/game/{{run['game_code']}}">{{run['game']}}</a></td>
       <td>{{run['category']}}</td>
