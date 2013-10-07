@@ -15,7 +15,7 @@
       <input type="text" class="form-control" id="game" name="game" 
 	     placeholder="e.g. Mega Man 2" value="{{game}}" autofocus>
     </div>
-    <div class="error">{{game_error}}</div>
+    <div class="col-lg-4 col-md-4 error">{{game_error}}</div>
   </div>
   <div class="form-group">
     <label for="category" class="col-lg-4 col-md-4 control-label">Category</label>
@@ -23,7 +23,7 @@
       <input type="text" class="form-control" id="category" name="category"
 	     placeholder="e.g. Any% (normal)" value="{{category}}">
     </div>
-    <div class="error">{{category_error}}</div>
+    <div class="col-lg-4 col-md-4 error">{{category_error}}</div>
   </div>
   <div class="form-group">
     <label for="time" class="col-lg-4 col-md-4 control-label">Time</label>
@@ -31,7 +31,7 @@
       <input type="text" class="form-control" id="time" name="time"
 	     placeholder="e.g. 2:34:56" value="{{time}}">
     </div>
-    <div class="error">{{time_error}}</div>
+    <div class="col-lg-4 col-md-4 error">{{time_error}}</div>
   </div>
   <div class="form-group">
     <label for="video" class="col-lg-4 col-md-4 control-label">Video (optional)</label>
@@ -40,7 +40,7 @@
 	     placeholder="e.g. http://www.youtube.com/watch?v=oLXNOHdo8s8" 
 	     value="{{video}}">
     </div>
-    <div class="error">{{video_error}}</div>
+    <div class="col-lg-4 col-md-4 error">{{video_error}}</div>
   </div>
   <div class="form-group">
     <label for="version" class="col-lg-4 col-md-4 control-label">
@@ -50,17 +50,17 @@
       <input type="text" class="form-control" id="version" name="version"
 	     placeholder="e.g. NES" value="{{version}}">
     </div>
-    <div class="error">{{version_error}}</div>
+    <div class="col-lg-4 col-md-4 error">{{version_error}}</div>
   </div>
   <div class="form-group">
-    <div class="col-lg-offset-4 col-md-offset-4">
+    <div class="col-lg-offset-4 col-md-offset-4 col-lg-4 col-md-4">
       <label>
 	<input type="checkbox" id="bkt" name="bkt" value="yes"
 	       {% if is_bkt %} checked="checked" {% endif %}> 
-	Is this the best known time for this game and category?
+	Best known time?
       </label>
     </div>
-    <div class="error">{{bkt_error}}</div>
+    <div class="col-lg-4 col-md-4 error">{{bkt_error}}</div>
   </div>
   <div class="form-group">
     <div class="col-lg-offset-4 col-md-offset-4 col-lg-4 col-md-4">

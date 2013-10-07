@@ -93,8 +93,8 @@ class Signup( handler.Handler ):
         if not user:
             # Add a new runner to the database
             runner = runners.Runners( username = username, 
-                                      password = util.make_pw_hash( username, 
-                                                                    password ),
+                                      password = util.make_pw_hash( 
+                                          username_code, password ),
                                       twitter = twitter,
                                       youtube = youtube,
                                       twitch = twitch,

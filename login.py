@@ -20,7 +20,7 @@ class Login(handler.Handler):
             return
 
         # Check for valid password
-        if util.valid_pw( username, password, user.password ):
+        if util.valid_pw( username_code, password, user.password ):
             self.login( username_code )
             self.goto_return_url( )
         else:

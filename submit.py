@@ -57,6 +57,8 @@ class Submit( runhandler.RunHandler ):
                        time = time, video = video, version = version,
                        run_id = run_id, is_bkt = is_bkt )
 
+        valid = True
+
         # Make sure the game doesn't already exist under a similar name
         game_code = util.get_code( game )
         game_model = self.get_game_model( game_code )
@@ -65,8 +67,7 @@ class Submit( runhandler.RunHandler ):
                                      + game_model.game + "] (case sensitive). "
                                      + "Hit submit again to confirm." )
             params['game'] = game_model.game
-            self.render( "submit.html", **params )
-            return
+            valid = False
         params[ 'game_code' ] = game_code
         params[ 'game_model' ] = game_model
 
@@ -86,8 +87,7 @@ class Submit( runhandler.RunHandler ):
                                                      + "Hit submit again to "
                                                      + "confirm." )
                         params['category'] = info['category']
-                        self.render( "submit.html", **params )
-                        return
+                        valid = False
                     break
         params[ 'category_found' ] = category_found
 
@@ -95,18 +95,19 @@ class Submit( runhandler.RunHandler ):
         ( seconds, time_error ) = util.timestr_to_seconds( time )
         if not seconds:
             params['time_error'] = "Invalid time: " + time_error
-            self.render( "submit.html", **params )
-            return
-        time = util.seconds_to_timestr( seconds ) # Enforce standard format
-        params[ 'time' ] = time
-        params[ 'seconds' ] = seconds
+            params['seconds'] = -1
+            valid = False
+        else:
+            time = util.seconds_to_timestr( seconds ) # Enforce standard form
+            params[ 'time' ] = time
+            params[ 'seconds' ] = seconds
 
         # Check that if this is a best known time, that it beats the old
         # best known time
         if is_bkt and game_model is not None:
             gameinfolist = json.loads( game_model.info )
             for gameinfo in gameinfolist:
-                if gameinfo['category'] == category:
+                if gameinfo['category'] == params['category']:
                     if( gameinfo.get( 'bk_seconds' ) is not None
                         and gameinfo['bk_seconds'] <= seconds ):
                         s = ( "This time does not beat current best known "
@@ -117,17 +118,15 @@ class Submit( runhandler.RunHandler ):
                               + "update best known time after submission)" )
                         params['bkt_error'] = s
                         params['is_bkt'] = False
-                        self.render( "submit.html", **params )
-                        return
+                        valid = False
                     break
 
+        params['valid'] = valid
+        
         if run_id:
             self.put_existing_run( params )
-            self.redirect( "/runner/" + util.get_code( user.username )
-                           + "?q=view-all" )
         else:
             self.put_new_run( params )
-            self.redirect( "/runner/" + util.get_code( user.username ) )
 
 
     def put_new_run( self, params ):
@@ -138,6 +137,7 @@ class Submit( runhandler.RunHandler ):
         time = params[ 'time' ]
         video = params[ 'video' ]
         version = params[ 'version' ]
+        valid = params[ 'valid' ]
 
         # Add a new run to the database
         new_run = runs.Runs( username = user.username,
@@ -151,8 +151,12 @@ class Submit( runhandler.RunHandler ):
                 new_run.video = video
             except db.BadValueError:
                 params[ 'video_error' ] = "Invalid video URL"
-                self.render( "submit.html", **params )
-                return                
+                valid = False
+        
+        if not valid:
+            self.render( "submit.html", **params )
+            return
+
         new_run.put( )
         params[ 'run_id' ] = str( new_run.key().id() )
         params[ 'datetime_created' ] = new_run.datetime_created
@@ -185,6 +189,8 @@ class Submit( runhandler.RunHandler ):
             self.update_gamelist_put( params )
             self.update_runnerlist_put( params )
 
+        self.redirect( "/runner/" + util.get_code( user.username ) )
+
 
     def put_existing_run( self, params ):
         user = params[ 'user' ]
@@ -195,6 +201,7 @@ class Submit( runhandler.RunHandler ):
         time = params[ 'time' ]
         video = params[ 'video' ]
         version = params[ 'version' ]
+        valid = params[ 'valid' ]
         run_id = params[ 'run_id' ]
 
         # Grab the old run, which we will update to be the new run
@@ -219,10 +226,14 @@ class Submit( runhandler.RunHandler ):
                 new_run.video = video
             except db.BadValueError:
                 params['video_error'] = "Invalid video URL"
-                self.render( "submit.html", **params )
-                return
+                valid = False
         elif new_run.video:
             new_run.video = None
+            
+        if not valid:
+            self.render( "submit.html", **params )
+            return
+            
         new_run.put( )
         logging.debug( "Put updated run for runner " + user.username
                        + ", game = " + game + ", category = " + category
@@ -276,3 +287,6 @@ class Submit( runhandler.RunHandler ):
                     self.update_cache_runlist_for_runner( user.username, 
                                                           runlist )
                     break
+
+        self.redirect( "/runner/" + util.get_code( user.username )
+                       + "?q=view-all" )
