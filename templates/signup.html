@@ -6,38 +6,93 @@
   document.getElementById("nav-signup").setAttribute("class", "active");
 </script>
 
-<form method="post" class="form-signin">
-  <h2 class="form-signin-heading">
-    {% if user %}Edit profile{% else %}Sign up{% endif %}
-  </h2>
+<div class="row">
+  <div class="col-lg-4 col-md-4 col-lg-offset-4 col-md-offset-4">
+    <h2 class="form-signin-heading">
+      {% if user %}Edit profile{% else %}Sign up{% endif %}
+    </h2>
+  </div>
+</div>
+<form method="post" class="form-horizontal" role="form">
   {% if not user %}
-  <input type="text" class="form-control" name="username" 
-	 placeholder="username" value="{{username}}" autofocus>
-  <span class="error">{{user_error}}</span>
+  <div class="form-group">
+    <label for="username" class="col-lg-4 col-md-4 control-label">
+      Username (permanent, choose wisely)
+    </label>
+    <div class="col-lg-4 col-md-4">
+      <input type="text" class="form-control" name="username" 
+	     placeholder="e.g. Spiderman" value="{{username}}" autofocus>
+    </div>
+    <div class="col-lg-4 col-md-4 error">{{user_error}}</div>
+  </div>
   {% endif %}
-  <input type="password" class="form-control" name="password" 
-	 placeholder="password {% if user %}(leave blank to not change){% endif %}" value="{{password}}">
-  <span class="error">{{pass_error}}</span>
-  <input type="password" class="form-control" name="verify" 
-	 placeholder="retype password {% if user %}(leave blank to not change){% endif %}" value="{{verify}}">
-  <span class="error">{{ver_error}}</span>
-  <input type="text" class="form-control" name="twitter" 
-	 placeholder="Twitter handle (optional)" value="{{twitter}}">
-  <span class="error">{{twitter_error}}</span>
-  <input type="text" class="form-control" name="youtube" 
-	 placeholder="YouTube handle (optional)" value="{{youtube}}">
-  <span class="error">{{youtube_error}}</span>
-  <input type="text" class="form-control" name="twitch" 
-	 placeholder="TwitchTV handle (optional)" value="{{twitch}}">
-  <span class="error">{{twitch_error}}</span>
-  <input type="text" class="form-control" name="gravatar" 
-	 placeholder="Gravatar email (optional, private)" value="{{gravatar}}">
-  <span class="error">{{gravatar_error}}</span>
-
-  <button class="btn btn-lg btn-primary btn-block" 
-	  type="submit">
-    {% if user %}Save changes{% else %}Register{% endif %}
-  </button>
+  <div class="form-group">
+    <label for="password" class="col-lg-4 col-md-4 control-label">
+      Password {% if user %}(leave blank to not change){% endif %}
+    </label>
+    <div class="col-lg-4 col-md-4">
+      <input type="password" class="form-control" name="password" 
+	     placeholder="" value="{{password}}">
+    </div>
+    <div class="col-lg-4 col-md-4 error">{{pass_error}}</div>
+  </div>
+  <div class="form-group">
+    <label for="verify" class="col-lg-4 col-md-4 control-label">
+      Retype password {% if user %}(leave blank to not change){% endif %}
+    </label>
+    <div class="col-lg-4 col-md-4">
+      <input type="password" class="form-control" name="verify" 
+	     placeholder="" value="{{verify}}">
+    </div>
+    <div class="col-lg-4 col-md-4 error">{{ver_error}}</div>
+  </div>
+  <div class="form-group">
+    <label for="twitter" class="col-lg-4 col-md-4 control-label">
+      Twitter handle (optional)
+    </label>
+    <div class="col-lg-4 col-md-4">
+      <input type="text" class="form-control" name="twitter" 
+	     placeholder="e.g. @spidey127" value="{{twitter}}">
+    </div>
+    <div class="col-lg-4 col-md-4 error">{{twitter_error}}</div>
+  </div>
+  <div class="form-group">
+    <label for="youtube" class="col-lg-4 col-md-4 control-label">
+      YouTube handle (optional)
+    </label>
+    <div class="col-lg-4 col-md-4">
+      <input type="text" class="form-control" name="youtube" 
+	     placeholder="e.g. spideyvids" value="{{youtube}}">
+    </div>
+    <div class="col-lg-4 col-md-4 error">{{youtube_error}}</div>
+  </div>
+  <div class="form-group">
+    <label for="twitch" class="col-lg-4 col-md-4 control-label">
+      Twitch TV handle (optional)
+    </label>
+    <div class="col-lg-4 col-md-4">
+      <input type="text" class="form-control" name="twitch" 
+	     placeholder="e.g. sp1derman" value="{{twitch}}">
+    </div>
+    <div class="col-lg-4 col-md-4 error">{{twitch_error}}</div>
+  </div>
+  <div class="form-group">
+    <label for="gravatar" class="col-lg-4 col-md-4 control-label">
+      Gravatar email (optional, private)
+    </label>
+    <div class="col-lg-4 col-md-4">
+      <input type="text" class="form-control" name="gravatar" 
+	     placeholder="e.g. spiderman64@gmail.com" value="{{gravatar}}">
+    </div>
+    <div class="col-lg-4 col-md-4 error">{{gravatar_error}}</div>
+  </div>
+  <div class="form-group">
+    <div class="col-lg-offset-4 col-md-offset-4 col-lg-4 col-md-4">
+      <button class="btn btn-lg btn-primary" type="submit">
+	{% if user %}Save changes{% else %}Register{% endif %}
+      </button>
+    </div>
+  </div>
 </form>
 {% if not user %}
 <center>
