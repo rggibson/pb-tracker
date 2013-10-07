@@ -4,13 +4,45 @@
 
 <script type="text/javascript">
   document.getElementById("nav-"
-  + {% if user.username == username %}"username"{% else %}"runners"{% endif %}
+  + {% if user.username == runner.username %}"username"
+  {% else %}"runners"{% endif %}
   ).setAttribute("class", "active");
 </script>
 
-<h1>{{username}}</h1>
+<div class="row">
+  <div class="col-lg-3 col-md-3 col-lg-push-9 col-md-push-9">
+    {% if gravatar %}
+    <img src="{{gravatar}}" alt="Gravatar" class="img-responsive">
+    {% endif %}
+  </div>
+  <div class="col-lg-9 col-md-9 col-lg-pull-3 col-md-pull-3">
+    <h1>{{runner.username}}</h1>
+    {% if runner.twitter %}
+    <a href="https://twitter.com/{{runner.twitter}}" 
+       class="social-button pull-left">
+      <img src="/static/icons/twitter.png" alt="Twitter" 
+	   class="img-responsive img-social">
+    </a>
+    {% endif %}
+    {% if runner.youtube %}
+    <a href="https://youtube.com/{{runner.youtube}}" 
+       class="social-button pull-left" style="margin-right: 3px;">
+      <img src="/static/icons/youtube.png" alt="Youtube" 
+	   class="img-responsive img-social">
+    </a>
+    {% endif %}
+    {% if runner.twitch %}
+    <a href="https://twitch.com/{{runner.twitch}}" 
+       class="social-button pull-left" style="margin-top: 2px;">
+      <img src="/static/icons/twitch.png" alt="Twitch" 
+	   class="img-responsive img-social" style="height: 33px;">
+    </a>
+    {% endif %}
+  </div>
+</div>
+
 <a href="/runner/{{username_code}}?q=view-all">
-  {% if user.username == username %}
+  {% if user.username == runner.username %}
   View / edit runs
   {% else %}
   View all runs
@@ -59,11 +91,11 @@
 	{% if info['bk_video'] %}<a href="{{info['bk_video']}}">{% endif %}
 	  {{info['bk_time']}} by {{info['bk_runner']}} 
 	  {% if info['bk_video'] %}</a>{% endif %} 
-	{% if user.username == username %}
+	{% if user.username == runner.username %}
 	(<a href="/game/{{pb['game_code']}}/update-bkt?c={{info['category_code']}}">update</a>)
 	{% endif %}
 	{% else %}
-	{% if user.username == username %}
+	{% if user.username == runner.username %}
 	(<a href="/game/{{pb['game_code']}}/update-bkt?c={{info['category_code']}}">set</a>)
 	{% else %}
 	-

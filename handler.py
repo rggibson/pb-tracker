@@ -60,37 +60,30 @@ class Handler(webapp2.RequestHandler):
             self.redirect( "/" )
 
     # Memcache / Datastore functions
-    def get_username_memkey( self, username_code ):
-        return username_code + ":username"
+    def get_runner_memkey( self, username_code ):
+        return username_code + ":runner"
 
-    def get_username( self, username_code ):
-        key = self.get_username_memkey( username_code )
-        username = memcache.get( key )
-        if username is None:
+    def get_runner( self, username_code ):
+        key = self.get_runner_memkey( username_code )
+        runner = memcache.get( key )
+        if runner is None:
             # Not in memcache, so check the database
             runner = runners.Runners.get_by_key_name( username_code,
                                                       parent=runners.key() )
-            if runner:
-                username = runner.username
-                if memcache.set( key, username ):
-                    logging.debug( "Set username in memcache for " 
-                                   + username )
-                else:
-                    logging.warning( "Failed to set username for "
-                                     + username + " in memcache" )
+            if memcache.set( key, runner ):
+                logging.debug( "Set " + key + " in memcache" )
+            else:
+                logging.warning( "Failed to set " + key + " in memcache" )
         else:
-            logging.debug( "Got username for " + username 
-                           + " in memcache" )
-        return username
+            logging.debug( "Got " + key + " from memcache" )
+        return runner
 
-    def update_cache_username( self, username_code, username ):
-        key = self.get_username_memkey( username_code )
-        if memcache.set( key, username ):
-            logging.debug( "Updated username for " + username 
-                          + " in memcache" )
+    def update_cache_runner( self, username_code, runner ):
+        key = self.get_runner_memkey( username_code )
+        if memcache.set( key, runner ):
+            logging.debug( "Updated " + key + " in memcache" )
         else:
-            logging.error( "Failed to update username for " + username 
-                           + " in memcache" )
+            logging.error( "Failed to update " + key + " in memcache" )
 
     def get_game_model_memkey( self, game_code ):
         return game_code + ":game_model"

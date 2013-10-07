@@ -15,17 +15,20 @@ class RunnerPage( handler.Handler ):
         self.set_return_url( return_url )
 
         # Make sure the runner exists
-        username = self.get_username( username_code )
-        if not username:
+        runner = self.get_runner( username_code )
+        if runner is None:
             self.error( 404 )
             self.render( "404.html", user=user )
             return
+        username = runner.username
+        gravatar = util.get_gravatar_url( runner.gravatar )
 
         if q == 'view-all':
             # List all runs for this runner
             runlist = self.get_runlist_for_runner( username )
-            self.render( "listruns.html", user=user, username=username,
-                         username_code=username_code, runlist=runlist )
+            self.render( "listruns.html", user=user, runner=runner,
+                         username_code=username_code, runlist=runlist,
+                         gravatar=gravatar )
         else:
             # By default, list pbs for this runner
             pblist = self.get_pblist( username )
@@ -47,5 +50,6 @@ class RunnerPage( handler.Handler ):
                             runinfo['bk_video'] = gameinfo.get( 'bk_video' )
                             break
 
-            self.render( "runnerpage.html", user=user, username=username,
-                         username_code=username_code, pblist=pblist )
+            self.render( "runnerpage.html", user=user, runner=runner,
+                         username_code=username_code, pblist=pblist,
+                         gravatar=gravatar )

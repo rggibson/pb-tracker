@@ -50,3 +50,20 @@ body {
 .table tbody > tr > td {
     vertical-align: middle;
 }
+
+/* Social network buttons */
+.social-button,
+.social-button:visited {
+    opacity: 0.75;
+    filter: alpha(opacity=75); /* For IE8 and earlier */
+    height: 37px;
+}
+
+.social-button:hover {
+    opacity: 1;
+    filter: alpha(opacity=100);
+}
+
+.img-social {
+    height: 37px;
+}

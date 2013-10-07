@@ -35,7 +35,7 @@ def valid_pw(name, pw, h):
 
 # Game, time string utility functions
 def get_code( string ):
-    # Substitute all sets of consecutive nonalphanumeric characters with a dash
+    # Substitute sets of consecutive nonalphanumeric characters with a dash
     return re.sub( '[^a-zA-Z0-9]+', '-', string ).lower()
 
 def seconds_to_timestr( seconds ):
@@ -90,3 +90,8 @@ def timestr_to_seconds( time ):
             seconds += 3600 * hours
 
     return (seconds, "")
+
+# Gravatar utility function
+def get_gravatar_url( gravatar ):
+    if gravatar:
+        return 'http://www.gravatar.com/avatar/' + gravatar
