@@ -1,45 +1,6 @@
-{% extends "base.html" %}
+{% extends "runnerpage_base.html" %}
 
-{% block content %}
-
-<script type="text/javascript">
-  document.getElementById("nav-"
-  + {% if user.username == runner.username %}"username"
-  {% else %}"runners"{% endif %}
-  ).setAttribute("class", "active");
-</script>
-
-<div class="row">
-  <div class="col-lg-3 col-md-3 col-lg-push-9 col-md-push-9">
-    {% if gravatar %}
-    <img src="{{gravatar}}" alt="Gravatar" class="img-responsive">
-    {% endif %}
-  </div>
-  <div class="col-lg-9 col-md-9 col-lg-pull-3 col-md-pull-3">
-    <h1>{{runner.username}}</h1>
-    {% if runner.twitter %}
-    <a href="https://twitter.com/{{runner.twitter}}" 
-       class="social-button pull-left">
-      <img src="/static/icons/twitter.png" alt="Twitter" 
-	   class="img-responsive img-social">
-    </a>
-    {% endif %}
-    {% if runner.youtube %}
-    <a href="https://youtube.com/{{runner.youtube}}" 
-       class="social-button pull-left" style="margin-right: 3px;">
-      <img src="/static/icons/youtube.png" alt="Youtube" 
-	   class="img-responsive img-social">
-    </a>
-    {% endif %}
-    {% if runner.twitch %}
-    <a href="https://twitch.com/{{runner.twitch}}" 
-       class="social-button pull-left" style="margin-top: 2px;">
-      <img src="/static/icons/twitch.png" alt="Twitch" 
-	   class="img-responsive img-social" style="height: 33px;">
-    </a>
-    {% endif %}
-  </div>
-</div>
+{% block runner_content %}
 
 <a href="/runner/{{username_code}}">View PBs</a>
 <table class="table table-striped">
