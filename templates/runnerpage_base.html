@@ -16,7 +16,14 @@
     {% endif %}
   </div>
   <div class="col-lg-9 col-md-9 col-lg-pull-3 col-md-pull-3">
-    <h1>{{runner.username}}</h1>
+    <h1>
+      {{runner.username}} 
+      {% if runner.username == user.username %}
+      <a href="/signup">
+	<i class="icon-pencil"></i>
+      </a>
+      {% endif %}
+    </h1>
     {% if runner.twitter %}
     <a href="https://twitter.com/{{runner.twitter}}" 
        class="social-button pull-left">
@@ -25,14 +32,14 @@
     </a>
     {% endif %}
     {% if runner.youtube %}
-    <a href="https://youtube.com/user/{{runner.youtube}}" 
+    <a href="http://www.youtube.com/user/{{runner.youtube}}" 
        class="social-button pull-left">
       <img src="/static/icons/youtube.png" alt="Youtube" 
 	   class="img-responsive img-social">
     </a>
     {% endif %}
     {% if runner.twitch %}
-    <a href="https://twitch.tv/{{runner.twitch}}" 
+    <a href="http://www.twitch.tv/{{runner.twitch}}" 
        class="social-button pull-left" style="margin-top: 1px;">
       <img src="/static/icons/twitch.png" alt="Twitch" 
 	   class="img-responsive img-social">

@@ -19,9 +19,22 @@ def valid_email( email ):
 
 class Signup( handler.Handler ):
     def get( self ):
-        self.render( "signup.html" )
+        user = self.get_user( )
+        if user:
+            # Editing profile
+            params = dict( user=user,
+                           twitter=user.twitter,
+                           youtube=user.youtube,
+                           twitch=user.twitch )
+            if user.gravatar:
+                params['gravatar'] = '<private email>'
+            self.render( "signup.html", **params )
+        else:
+            # New user
+            self.render( "signup.html" )
 
     def post( self ):
+        user = self.get_user( )
         username = self.request.get( 'username' )
         password = self.request.get( 'password' )
         verify = self.request.get( 'verify' )
@@ -29,11 +42,14 @@ class Signup( handler.Handler ):
         if twitter[ 0:1 ] == '@':
             twitter = twitter[ 1: ]
         youtube = self.request.get( 'youtube' )
+        youtube = youtube.split( '/' )[ -1 ]
         twitch = self.request.get( 'twitch' )
+        twitch = twitch.split( '/' )[ -1 ]
         gravatar = self.request.get( 'gravatar' )
         username_code = util.get_code( username )
 
-        params = dict( username = username,
+        params = dict( user = user,
+                       username = username,
                        password = password,
                        verify = verify,
                        twitter = twitter,
@@ -43,44 +59,50 @@ class Signup( handler.Handler ):
 
         valid = True
 
-        if not valid_username( username ):
+        if user is None and not valid_username( username ):
             params['user_error'] = ( "Username must be between " 
                                      + "1 and 20 characters." )
             valid = False
-        else:
+        elif user is None:
             # Check if username already exists
-            if self.get_runner( username_code ) is not None:
+            runner = self.get_runner( username_code )
+            if runner is not None:
                 params['user_error'] = "That user already exists."
                 valid = False
         
         if not valid_password( password ):
-            params['pass_error'] = ( "Password must be between "
-                                     + "3 and 20 characters." )
-            valid = False
+            if user is None or len( password ) > 0:
+                params['pass_error'] = ( "Password must be between "
+                                         + "3 and 20 characters." )
+                valid = False
 
         if password != verify:
             params['ver_error'] = "Passwords do not match."
             valid = False
 
         if gravatar != "" and not valid_email( gravatar ):
-            params['gravatar_error'] = "That's not a valid email."
-            valid = False
+            if( user is None or not user.gravatar 
+                or gravatar != '<private email>' ):
+                params['gravatar_error'] = "That's not a valid email."
+                valid = False
 
         if not valid:
             self.render( "signup.html", **params )
+            return
 
-        else:
-            # Add a runner to the database
+        if not user:
+            # Add a new runner to the database
             runner = runners.Runners( username = username, 
                                       password = util.make_pw_hash( username, 
-                                                                    password),
+                                                                    password ),
                                       twitter = twitter,
                                       youtube = youtube,
                                       twitch = twitch,
-                                      gravatar = hashlib.md5( 
-                                          gravatar.lower( ) ).hexdigest( ),
                                       parent = runners.key(),
                                       key_name = username_code )
+            if gravatar:
+                runner.gravatar = hashlib.md5( gravatar.lower( ) ).hexdigest( )
+                
             runner.put( )
 
             # Update runner in memcache
@@ -100,6 +122,23 @@ class Signup( handler.Handler ):
             # Update runs for runner in memcache
             self.update_cache_runlist_for_runner( username, [ ] )
 
-            # Login and gogo
             self.login( username_code )
-            self.goto_return_url( )
+            
+        else:
+            # Editing the current user
+            if len( password ) > 0:
+                user.password = util.make_pw_hash( user.username, password )
+            user.twitter = twitter
+            user.youtube = youtube
+            user.twitch = twitch
+            if gravatar and gravatar != '<private email>':
+                user.gravatar = hashlib.md5( gravatar.lower( ) ).hexdigest( )
+            elif not gravatar:
+                user.gravatar = None
+            
+            user.put( )
+
+            # Update user in memcache
+            self.update_cache_runner( util.get_code( user.username ), user )
+
+        self.goto_return_url( )

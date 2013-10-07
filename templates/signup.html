@@ -7,15 +7,19 @@
 </script>
 
 <form method="post" class="form-signin">
-  <h2 class="form-signin-heading">Sign up</h2>
+  <h2 class="form-signin-heading">
+    {% if user %}Edit profile{% else %}Sign up{% endif %}
+  </h2>
+  {% if not user %}
   <input type="text" class="form-control" name="username" 
 	 placeholder="username" value="{{username}}" autofocus>
   <span class="error">{{user_error}}</span>
+  {% endif %}
   <input type="password" class="form-control" name="password" 
-	 placeholder="password" value="{{password}}">
+	 placeholder="password {% if user %}(leave blank to not change){% endif %}" value="{{password}}">
   <span class="error">{{pass_error}}</span>
   <input type="password" class="form-control" name="verify" 
-	 placeholder="retype password" value="{{verify}}">
+	 placeholder="retype password {% if user %}(leave blank to not change){% endif %}" value="{{verify}}">
   <span class="error">{{ver_error}}</span>
   <input type="text" class="form-control" name="twitter" 
 	 placeholder="Twitter handle (optional)" value="{{twitter}}">
@@ -31,10 +35,14 @@
   <span class="error">{{gravatar_error}}</span>
 
   <button class="btn btn-lg btn-primary btn-block" 
-	  type="submit">Register</button>
+	  type="submit">
+    {% if user %}Save changes{% else %}Register{% endif %}
+  </button>
 </form>
+{% if not user %}
 <center>
   <p class="lead">Already signed up?  Then <a href="/login">log in</a>.
 </center>
+{% endif %}
 
 {% endblock %}
