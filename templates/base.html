@@ -42,26 +42,54 @@
 	  <span class="icon-bar"></span>
 	  <span class="icon-bar"></span>
 	</button>
-	<a class="navbar-brand" href="/">PB Tracker</a>
+	<a class="navbar-brand" href="/">
+	  <i class="icon-road"></i> PB Tracker
+	</a>
       </div>
       <div class="navbar-collapse collapse">
 	<ul class="nav navbar-nav">
-	  <li id="nav-home"><a href="/">Home</a></li>
-	  <li id="nav-runners"><a href="/runners">Runners</a></li>
-	  <li id="nav-games"><a href="/games">Games</a></li>
+	  <li id="nav-home">
+	    <a href="/"><i class="icon-home icon-large"></i> Home</a>
+	  </li>
+	  <li id="nav-runners">
+	    <a href="/runners">
+	      <i class="icon-group icon-large"></i> Runners
+	    </a>
+	  </li>
+	  <li id="nav-games">
+	    <a href="/games">
+	      <i class="icon-gamepad icon-large"></i> Games
+	    </a>
+	  </li>
 	  {% if user %}
-	  <li id="nav-submit"><a href="/submit">Submit run</a></li>
+	  <li id="nav-submit">
+	    <a href="/submit">
+	      <i class="icon-flag-checkered icon-large"></i> Submit run
+	    </a>
+	  </li>
 	  {% endif %}
 	</ul>
 	<ul class="nav navbar-nav navbar-right">
 	  {% if user %}
 	  <li id="nav-username">
-	    <a href="/runner/{{user.key().name()}}">{{user.username}}</a>
+	    <a href="/runner/{{user.key().name()}}">
+	      <i class="icon-user icon-large"></i> {{user.username}}
+	    </a>
 	  </li>
-	  <li id="nav-logout"><a href="/logout">Log out</a></li>
+	  <li id="nav-logout">
+	    <a href="/logout">
+	      <i class="icon-signout icon-large"></i> Log out
+	    </a>
+	  </li>
 	  {% else %}
-	  <li id="nav-signup"><a href="/signup">Sign up</a></li>
-	  <li id="nav-login"><a href="/login">Log in</a></li>
+	  <li id="nav-signup">
+	    <a href="/signup">
+	      <i class="icon-book icon-large"></i> Sign up
+	    </a>
+	  </li>
+	  <li id="nav-login">
+	    <a href="/login"><i class="icon-signin icon-large"></i> Log in</a>
+	  </li>
 	  {% endif %}
 	</ul>
       </div>

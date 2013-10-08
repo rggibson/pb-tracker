@@ -12,34 +12,36 @@
 	 style="max-height: 200px;">
   </div>
   <div class="col-lg-9 col-md-9 col-lg-pull-3 col-md-pull-3">
-    <h1>{{game}}</h1>
+    <h1><i class="icon-gamepad"></i> {{game}}</h1>
   </div>
 </div>
 {% for d in gamepage %}
-<h2>{{d['category']}}</h2>
+<h2><i class="icon-compass"></i> {{d['category']}}</h2>
 {% if d['bk_time'] %}
-<h4>Best known time: 
+<h4><i class="icon-trophy"></i> Best known time: 
   {% if d['bk_video'] %}<a href="{{d['bk_video']}}">{% endif %}
-    {{d['bk_time']}} by {{d['bk_runner']}}
-    {% if d['bk_video'] %}</a>{% endif %} 
+    {{d['bk_time']}}{% if d['bk_video'] %}</a>{% endif %} 
+  by {{d['bk_runner']}}
   {% if user_has_run %}
-  <a href="/game/{{game_code}}/update-bkt?c={{d['category_code']}}"><i class="icon-edit"></i></a>
+  <a href="/game/{{game_code}}/update-bkt?c={{d['category_code']}}">
+    <i class="icon-edit"></i>
+  </a>
   {% endif %}
 </h4>
 {% elif user_has_run %}
 <h4>
-  Best known time: 
+  <i class="icon-trophy"></i> Best known time: 
   <a href="/game/{{game_code}}/update-bkt?c={{d['category_code']}}"><i class="icon-edit"></i></a>
 </h4>
 {% endif %}
 <table class="table table-striped">
   <thead>
     <tr>
-      <th width="30%">Runner</th>
-      <th width="15%">Personal Best</th>
-      <th width="25%">Version</th>
-      <th width="15%">Runs</th>
-      <th width="15%">Average Time</th>
+      <th width="30%"><i class="icon-user icon-large"></i> Runner</th>
+      <th width="15%"><i class="icon-star icon-large"></i> PB</th>
+      <th width="25%"><i class="icon-desktop icon-large"></i> Version</th>
+      <th width="15%"><i class="icon-flag-checkered icon-large"></i> Runs</th>
+      <th width="15%"><i class="icon-time icon-large"></i> Avg Time</th>
     </tr>
   </thead>
   {% for run in d['infolist'] %}

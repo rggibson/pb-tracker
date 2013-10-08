@@ -10,7 +10,9 @@
 
 <form method="post" class="form-horizontal" role="form">
   <div class="form-group">
-    <label for="game" class="col-lg-4 col-md-4 control-label">Game</label>
+    <label for="game" class="col-lg-4 col-md-4 control-label">
+      <i class="icon-gamepad icon-large"></i> Game
+    </label>
     <div class="col-lg-4 col-md-4">
       <input type="text" class="form-control" id="game" name="game" 
 	     placeholder="e.g. Mega Man 2" value="{{game}}" autofocus>
@@ -18,7 +20,9 @@
     <div class="col-lg-4 col-md-4 error">{{game_error}}</div>
   </div>
   <div class="form-group">
-    <label for="category" class="col-lg-4 col-md-4 control-label">Category</label>
+    <label for="category" class="col-lg-4 col-md-4 control-label">
+      <i class="icon-compass icon-large"></i> Category
+    </label>
     <div class="col-lg-4 col-md-4">
       <input type="text" class="form-control" id="category" name="category"
 	     placeholder="e.g. Any% (normal)" value="{{category}}">
@@ -26,7 +30,9 @@
     <div class="col-lg-4 col-md-4 error">{{category_error}}</div>
   </div>
   <div class="form-group">
-    <label for="time" class="col-lg-4 col-md-4 control-label">Time</label>
+    <label for="time" class="col-lg-4 col-md-4 control-label">
+      <i class="icon-time icon-large"></i> Time
+    </label>
     <div class="col-lg-4 col-md-4">
       <input type="text" class="form-control" id="time" name="time"
 	     placeholder="e.g. 2:34:56" value="{{time}}">
@@ -34,7 +40,9 @@
     <div class="col-lg-4 col-md-4 error">{{time_error}}</div>
   </div>
   <div class="form-group">
-    <label for="video" class="col-lg-4 col-md-4 control-label">Video (optional)</label>
+    <label for="video" class="col-lg-4 col-md-4 control-label">
+      <i class="icon-facetime-video icon-large"></i> Video (optional)
+    </label>
     <div class="col-lg-4 col-md-4">
       <input type="text" class="form-control" id="video" name="video"
 	     placeholder="e.g. http://www.youtube.com/watch?v=oLXNOHdo8s8" 
@@ -44,6 +52,7 @@
   </div>
   <div class="form-group">
     <label for="version" class="col-lg-4 col-md-4 control-label">
+      <i class="icon-desktop icon-large"></i> 
       Console / Emulator / Version (optional)
     </label>
     <div class="col-lg-4 col-md-4">
@@ -57,7 +66,7 @@
       <label>
 	<input type="checkbox" id="bkt" name="bkt" value="yes"
 	       {% if is_bkt %} checked="checked" {% endif %}> 
-	Best known time?
+	<i class="icon-trophy icon-large"></i> Best known time?
       </label>
     </div>
     <div class="col-lg-4 col-md-4 error">{{bkt_error}}</div>
@@ -69,7 +78,8 @@
 				 icon-large'></i> {% if run_id %}Saving
 				 {% else %}Submitting{% endif %}">
 	{% if run_id %}<i class="icon-save icon-large"></i> Save changes
-	{% else %}<i class="icon-share-alt icon-large"></i> Submit{% endif %}
+	{% else %}<i class="icon-flag-checkered icon-large"></i>
+	Submit{% endif %}
       </button>
     </div>
   </div>

@@ -15,14 +15,18 @@
   </div>
   <div class="col-lg-4 col-md-4 col-lg-pull-3 col-md-pull-3 
 	      col-lg-offset-4 col-md-offset-4">
-    <h1><a href="/game/{{game_code}}">{{game}}</a></h1>
-    <h2>{{category}}</h2>
+    <ul class="icons-ul">
+      <li>
+	<h1><i class="icon-li icon-gamepad"></i><a href="/game/{{game_code}}">{{game}}</a></h1>
+      </li>
+      <li><h2><i class="icon-li icon-compass"></i>{{category}}</h2></li>
+    </ul>
   </div>
 </div>
 <form method="post" class="form-horizontal" role="form">
   <div class="form-group">
     <label for="username" class="col-lg-4 col-md-4 control-label">
-      Runner
+      <i class="icon-user icon-large"></i> Runner
     </label>
     <div class="col-lg-4 col-md-4">
       <input type="text" class="form-control" id="username" name="username" 
@@ -31,7 +35,9 @@
     <div class="col-lg-4 col-md-4 error">{{username_error}}</div>
   </div>
   <div class="form-group">
-    <label for="time" class="col-lg-4 col-md-4 control-label">Time</label>
+    <label for="time" class="col-lg-4 col-md-4 control-label">
+      <i class="icon-time icon-large"></i> Time
+    </label>
     <div class="col-lg-4 col-md-4">
       <input type="text" class="form-control" id="time" name="time"
 	     placeholder="e.g. 2:34:56" value="{{time}}">
@@ -40,7 +46,7 @@
   </div>
   <div class="form-group">
     <label for="video" class="col-lg-4 col-md-4 control-label">
-      Video (optional)
+      <i class="icon-facetime-video icon-large"></i> Video (optional)
     </label>
     <div class="col-lg-4 col-md-4">
       <input type="text" class="form-control" id="video" name="video"
