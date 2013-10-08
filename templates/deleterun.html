@@ -6,7 +6,7 @@
   document.getElementById("nav-username").setAttribute("class", "active");
 </script>
 
-<h3>Are you sure you want to delete this run?</h3>
+<h3><i class="icon-warning-sign"></i> Are you sure you want to delete this run?</h3>
 <table class="table">
   <thead>
     <tr>
@@ -14,6 +14,7 @@
       <th>Game</th>
       <th>Category</th>
       <th>Time</th>
+      <th>Version</th>
       <th>Date</th>
     </tr>
   </thead>
@@ -30,6 +31,7 @@
 	{% if run.video %}<a href="{{run.video}}">{% endif %}
 	  {{time}}{% if run.video %}</a>{% endif %}      
       </td>
+      <td>{% if run.version %}{{run.version}}{% else %}-{% endif %}</td>
       <td>{{run.datetime_created.strftime("%a %b %d %H:%M:%S %Y")}}</td>
     </tr>
   </tbody>

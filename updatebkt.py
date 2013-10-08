@@ -35,7 +35,7 @@ class UpdateBkt( handler.Handler ):
             self.render( "404.html" )
             return
 
-        params = dict( user=user, game=game_model.game, 
+        params = dict( user=user, game=game_model.game, game_code=game_code, 
                        category=gameinfo['category'] )
         params['username'] = gameinfo.get( 'bk_runner' )
         if params['username'] is None:
@@ -92,7 +92,7 @@ class UpdateBkt( handler.Handler ):
         time = self.request.get( 'time' )
         video = self.request.get( 'video' )
 
-        params = dict( user=user, game=game_model.game, 
+        params = dict( user=user, game=game_model.game, game_code=game_code,
                        category=gameinfo['category'], username=username,
                        time=time, video=video )
 
