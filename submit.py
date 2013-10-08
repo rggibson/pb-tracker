@@ -62,7 +62,10 @@ class Submit( runhandler.RunHandler ):
         # Make sure the game doesn't already exist under a similar name
         game_code = util.get_code( game )
         game_model = self.get_game_model( game_code )
-        if game_model is not None and game != game_model.game:
+        if not game_code:
+            params['game_error'] = "Game cannot be blank"
+            valid = False
+        elif game_model is not None and game != game_model.game:
             params['game_error'] = ( "Game already exists under [" 
                                      + game_model.game + "] (case sensitive). "
                                      + "Hit submit again to confirm." )
@@ -74,7 +77,10 @@ class Submit( runhandler.RunHandler ):
         # Make sure the category doesn't already exist under a similar name
         category_code = util.get_code( category )
         category_found = False
-        if game_model is not None:
+        if not category_code:
+            params['category_error'] = "Category cannot be blank"
+            valid = False
+        elif game_model is not None:
             infolist = json.loads( game_model.info )
             for info in infolist:
                 if category_code == util.get_code( info['category'] ):
@@ -140,18 +146,21 @@ class Submit( runhandler.RunHandler ):
         valid = params[ 'valid' ]
 
         # Add a new run to the database
-        new_run = runs.Runs( username = user.username,
-                             game = game,
-                             category = category,
-                             seconds = seconds,
-                             version = version,
-                             parent = runs.key() )
-        if video:
+        try:
+            new_run = runs.Runs( username = user.username,
+                                 game = game,
+                                 category = category,
+                                 seconds = seconds,
+                                 version = version,
+                                 parent = runs.key() )
             try:
-                new_run.video = video
+                if video:
+                    new_run.video = video
             except db.BadValueError:
                 params[ 'video_error' ] = "Invalid video URL"
                 valid = False
+        except db.BadValueError:
+            valid = False
         
         if not valid:
             self.render( "submit.html", **params )
@@ -217,10 +226,13 @@ class Submit( runhandler.RunHandler ):
                         seconds = new_run.seconds )
 
         # Update the run
-        new_run.game = game
-        new_run.category = category
-        new_run.seconds = seconds
-        new_run.version = version
+        try:
+            new_run.game = game
+            new_run.category = category
+            new_run.seconds = seconds
+            new_run.version = version
+        except db.BadValueError:
+            valid = False
         if video:
             try:
                 new_run.video = video

@@ -7,6 +7,7 @@ import runs
 import games
 import logging
 import json
+import time
 
 from operator import itemgetter
 
@@ -44,6 +45,7 @@ class Handler(webapp2.RequestHandler):
                 return runners.Runners.get_by_key_name( username_code, 
                                                         parent=runners.key() )
 
+    # Return url stuff
     def set_return_url( self, url ):
         cookie = 'return_url=' + url + ';Path=/'
         self.response.headers.add_header( 'Set-Cookie', cookie )        
@@ -64,6 +66,9 @@ class Handler(webapp2.RequestHandler):
         return username_code + ":runner"
 
     def get_runner( self, username_code ):
+        if not username_code:
+            return None
+
         key = self.get_runner_memkey( username_code )
         runner = memcache.get( key )
         if runner is None:
@@ -89,6 +94,9 @@ class Handler(webapp2.RequestHandler):
         return game_code + ":game_model"
 
     def get_game_model( self, game_code ):
+        if not game_code:
+            return None
+
         key = self.get_game_model_memkey( game_code )
         game_model = memcache.get( key )
         if game_model is None:
