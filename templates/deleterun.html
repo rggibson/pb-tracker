@@ -39,18 +39,26 @@
   <div class="form-group">
     <div class="row">
       <div class="col-lg-offset-1">
-	<button class="btn btn-lg btn-primary" type="submit">Delete</button>
+	<button id="submit-btn" class="btn btn-lg btn-primary" type="submit"
+		data-loading-text="<i class='icon-refresh icon-spin icon-large'></i> Deleting">
+	  <i class="icon-trash icon-large"></i> Delete
+	</button>
 	<a href="/runner/{{username_code}}?q=view-all" 
-	   class="btn btn-lg btn-warning">Cancel</a>
+	   class="btn btn-lg btn-warning">
+	  <i class="icon-undo icon-large"></i> Cancel
+	</a>
       </div>
     </div>
   </div>
 </form>
 
 <!-- Add game image when it exists -->
+<script src="/static/js/jquery-2.0.3.min.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
   set_img_if_exists( "img-{{game_code}}", "{{game_code}}" );
+  block_double_submit( '#submit-btn' );
 </script>
 
 {% endblock %}

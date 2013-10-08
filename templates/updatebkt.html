@@ -6,42 +6,59 @@
   document.getElementById("nav-" + {% if from_runnerpage %}"username"{% else %}"games"{% endif %}).setAttribute("class", "active");
 </script>
 
-<div class="col-lg-11 col-lg-offset-1">
-  <h1>{{game}} - {{category}}</h1>
+<div class="row">
+  <div class="col-lg-4 col-md-4 col-lg-offset-4 col-md-offset-4">
+    <h1>{{game}} - {{category}}</h1>
+  </div>
 </div>
 <form method="post" class="form-horizontal" role="form">
   <div class="form-group">
-    <label for="username" class="col-lg-2 control-label">Runner</label>
-    <div class="col-lg-4">
+    <label for="username" class="col-lg-4 col-md-4 control-label">
+      Runner
+    </label>
+    <div class="col-lg-4 col-md-4">
       <input type="text" class="form-control" id="username" name="username" 
 	     placeholder="e.g. Spiderman" value="{{username}}">
     </div>
-    <div class="error">{{username_error}}</div>
+    <div class="col-lg-4 col-md-4 error">{{username_error}}</div>
   </div>
   <div class="form-group">
-    <label for="time" class="col-lg-2 control-label">Time</label>
-    <div class="col-lg-4">
+    <label for="time" class="col-lg-4 col-md-4 control-label">Time</label>
+    <div class="col-lg-4 col-md-4">
       <input type="text" class="form-control" id="time" name="time"
 	     placeholder="e.g. 2:34:56" value="{{time}}">
     </div>
-    <div class="error">{{time_error}}</div>
+    <div class="col-lg-4 col-md-4 error">{{time_error}}</div>
   </div>
   <div class="form-group">
-    <label for="video" class="col-lg-2 control-label">Video (optional)</label>
-    <div class="col-lg-4">
+    <label for="video" class="col-lg-4 col-md-4 control-label">
+      Video (optional)
+    </label>
+    <div class="col-lg-4 col-md-4">
       <input type="text" class="form-control" id="video" name="video"
 	     placeholder="e.g. http://www.youtube.com/watch?v=oLXNOHdo8s8" 
 	     value="{{video}}">
     </div>
-    <div class="error">{{video_error}}</div>
+    <div class="col-lg-4 col-md-4 error">{{video_error}}</div>
   </div>
   <div class="form-group">
-    <div class="col-lg-offset-2 col-lg-4">
-      <button class="btn btn-lg btn-primary" type="submit">
+    <div class="col-lg-offset-4 col-md-offset-4 col-lg-4 col-md-4">
+      <button id="submit-btn" class="btn btn-lg btn-primary" type="submit"
+	      data-loading-text="<i class='icon-refresh icon-spin 
+				 icon-large'></i> Saving">	
+	<i class="icon-save icon-large"></i> 
 	{% if updating %}Update{% else %}Set{% endif %} best known time
       </button>
     </div>
   </div>
 </form>
+
+<!-- Disable button on submit to avoid double submissions -->
+<script src="/static/js/jquery-2.0.3.min.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+<script src="/static/js/util.js"></script>
+<script type="text/javascript">
+  block_double_submit( '#submit-btn' );
+</script>
 
 {% endblock %}

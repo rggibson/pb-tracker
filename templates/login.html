@@ -14,9 +14,21 @@
 	 placeholder="password">
   <div class="error">{{error}}</div>
 
-  <button class="btn btn-lg btn-primary btn-block" 
-	  type="submit">Log in</button>
+  <button id="submit-btn" class="btn btn-lg btn-primary btn-block" 
+	  type="submit" 
+	  data-loading-text="<i class='icon-refresh icon-spin icon-large'></i>
+			     Logging in">
+    <i class="icon-signin icon-large"></i> Log in
+  </button>
   <p class="lead">New user?  Then <a href="/signup">sign up</a>.
 </form>
+
+<!-- Disable button on submit to avoid double submissions -->
+<script src="/static/js/jquery-2.0.3.min.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+<script src="/static/js/util.js"></script>
+<script type="text/javascript">
+  block_double_submit( '#submit-btn' );
+</script>
 
 {% endblock %}

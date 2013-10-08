@@ -67,3 +67,7 @@ body {
 .img-social {
     height: 37px;
 }
+
+a > i:hover {
+    text-decoration: none;
+}

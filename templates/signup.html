@@ -88,8 +88,12 @@
   </div>
   <div class="form-group">
     <div class="col-lg-offset-4 col-md-offset-4 col-lg-4 col-md-4">
-      <button class="btn btn-lg btn-primary" type="submit">
-	{% if user %}Save changes{% else %}Register{% endif %}
+      <button id="submit-btn" class="btn btn-lg btn-primary" type="submit"
+	      data-loading-text="<i class='icon-refresh icon-spin 
+				 icon-large'></i> {% if user %}Saving
+				 {% else %}Registering{% endif %}">
+	{% if user %}<i class="icon-save icon-large"></i> Save changes
+	{% else %}<i class="icon-book icon-large"></i> Register{% endif %}
       </button>
     </div>
   </div>
@@ -99,5 +103,13 @@
   <p class="lead">Already signed up?  Then <a href="/login">log in</a>.
 </center>
 {% endif %}
+
+<!-- Disable button on submit to avoid double submissions -->
+<script src="/static/js/jquery-2.0.3.min.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+<script src="/static/js/util.js"></script>
+<script type="text/javascript">
+  block_double_submit( '#submit-btn' );
+</script>
 
 {% endblock %}

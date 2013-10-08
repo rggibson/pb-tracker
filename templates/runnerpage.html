@@ -53,11 +53,11 @@
 	  {{info['bk_time']}} by {{info['bk_runner']}} 
 	  {% if info['bk_video'] %}</a>{% endif %} 
 	{% if user.username == runner.username %}
-	(<a href="/game/{{pb['game_code']}}/update-bkt?c={{info['category_code']}}">update</a>)
+	<a href="/game/{{pb['game_code']}}/update-bkt?c={{info['category_code']}}"><i class="icon-edit"></i></a>
 	{% endif %}
 	{% else %}
 	{% if user.username == runner.username %}
-	(<a href="/game/{{pb['game_code']}}/update-bkt?c={{info['category_code']}}">set</a>)
+	<a href="/game/{{pb['game_code']}}/update-bkt?c={{info['category_code']}}"><i class="icon-edit"></i></a>
 	{% else %}
 	-
 	{% endif %}

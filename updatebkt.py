@@ -96,6 +96,8 @@ class UpdateBkt( handler.Handler ):
                        category=gameinfo['category'], username=username,
                        time=time, video=video )
 
+        valid = True
+
         # Check for where we came from
         return_url = self.get_return_url( )
         if return_url[ 0 : len( '/runner/' ) ] == '/runner/':
@@ -106,15 +108,18 @@ class UpdateBkt( handler.Handler ):
         # Make sure we got a username
         if not username:
             params['username_error'] = "You must enter a runner"
-            self.render( "updatebkt.html", **params )
-            return
+            valid = False
 
         # Parse the time into seconds, ensure it is valid
         ( seconds, time_error ) = util.timestr_to_seconds( time )
         if not seconds:
             params['time_error'] = "Invalid time: " + time_error
+            valid = False
+
+        if not valid:
             self.render( "updatebkt.html", **params )
             return
+
         time = util.seconds_to_timestr( seconds ) # Enforce standard format
         params['time'] = time
 
