@@ -12,7 +12,7 @@
 <div class="row">
   <div class="col-lg-3 col-md-3 col-lg-push-9 col-md-push-9">
     {% if gravatar %}
-    <img src="{{gravatar}}" alt="Gravatar" class="img-responsive">
+    <img id="gravatar" alt="Gravatar" class="img-responsive">
     {% endif %}
   </div>
   <div class="col-lg-9 col-md-9 col-lg-pull-3 col-md-pull-3">
@@ -51,5 +51,11 @@
 {% block runner_content %}
 
 {% endblock %}
+
+<!-- Add Gravatar image when it exists -->
+<script src="/static/js/util.js"></script>
+<script type="text/javascript">
+  set_img( "gravatar", "{{gravatar}}" );
+</script>
 
 {% endblock %}

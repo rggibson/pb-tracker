@@ -1,4 +1,4 @@
-function set_img_if_exists( img_id, game_code ) {
+function set_boxart_if_exists( img_id, game_code ) {
     if( window.XMLHttpRequest ) {
 	xhttp = new XMLHttpRequest( );
     } else {
@@ -10,6 +10,13 @@ function set_img_if_exists( img_id, game_code ) {
 	var elem = document.getElementById( img_id );
 	elem.setAttribute( "src", "/static/boxart/" + game_code + ".jpg" );
     }    
+}
+
+function set_img( img_id, img_src ) {
+    if( img_src ) {
+	var elem = document.getElementById( img_id );
+	elem.setAttribute( "src", img_src );
+    }
 }
 
 function block_double_submit( button_id ) {

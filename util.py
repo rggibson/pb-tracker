@@ -95,3 +95,5 @@ def timestr_to_seconds( time ):
 def get_gravatar_url( gravatar ):
     if gravatar:
         return 'http://www.gravatar.com/avatar/' + gravatar
+    else:
+        return ''

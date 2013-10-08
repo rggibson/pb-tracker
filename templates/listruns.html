@@ -48,7 +48,7 @@
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
   {% for run in runlist %}
-  set_img_if_exists( "img-{{loop.index}}", "{{run['game_code']}}" );
+  set_boxart_if_exists( "img-{{loop.index}}", "{{run['game_code']}}" );
   {% endfor %}
 </script>
 

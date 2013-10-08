@@ -34,8 +34,8 @@
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
   {% for gamedict in gamelist %}
-  set_img_if_exists( "img-{{gamedict['game_code']}}", 
-                     "{{gamedict['game_code']}}" );
+  set_boxart_if_exists( "img-{{gamedict['game_code']}}", 
+                        "{{gamedict['game_code']}}" );
   {% endfor %}
 </script>
 

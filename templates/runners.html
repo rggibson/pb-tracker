@@ -7,16 +7,36 @@
 </script>
 
 <div class="row">
-  <div class="list-group col-lg-6 col-lg-offset-3">
+  <div class="list-group col-lg-6 col-lg-offset-3 col-md-6 col-md-offset-3">
     {% for runnerdict in runnerlist %}
     <a href="/runner/{{runnerdict['username_code']}}" class="list-group-item">
-      <span class="badge">{{runnerdict['num_pbs']}}
-	{% if runnerdict['num_pbs'] >= 1000 %}+{% endif %}
-      </span>
-      {{runnerdict['username']}}
+      <div class="row">
+	<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
+	  <center>
+	    <img id="img-{{runnerdict['username_code']}}" alt=""
+		 class="img-responsive" style="max-height: 22px;"
+		 src="/static/boxart/__blank__.png">
+	  </center>
+	</div>
+	<div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
+	  {{runnerdict['username']}}
+	  <span class="badge pull-right">{{runnerdict['num_pbs']}}
+	    {% if runnerdict['num_pbs'] >= 1000 %}+{% endif %}
+	  </span>
+	</div>
+      </div>
     </a>
     {% endfor %}
   </div>
 </div>
+
+<!-- Add Gravatar images when they exist -->
+<script src="/static/js/util.js"></script>
+<script type="text/javascript">
+  {% for runnerdict in runnerlist %}
+  set_img( "img-{{runnerdict['username_code']}}", 
+           "{{runnerdict['gravatar_url']}}" );
+  {% endfor %}
+</script>
 
 {% endblock %}

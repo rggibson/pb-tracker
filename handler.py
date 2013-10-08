@@ -385,7 +385,8 @@ class Handler(webapp2.RequestHandler):
             # dict gives the username and number of pbs for that user.
             # The list is sorted by numbers of pbs for the user.
             runnerlist = [ ]
-            q = db.Query( runners.Runners, projection=['username'] )
+            q = db.Query( runners.Runners, 
+                          projection=('username', 'gravatar') )
             q.ancestor( runners.key() )
             q.order( 'username' )
             for runner in q.run( limit=100000 ):
@@ -398,7 +399,9 @@ class Handler(webapp2.RequestHandler):
                 runnerlist.append( 
                     dict( username = runner.username, 
                           username_code = util.get_code( runner.username ),
-                          num_pbs = num_pbs ) )
+                          num_pbs = num_pbs,
+                          gravatar_url = util.get_gravatar_url( 
+                              runner.gravatar ) ) )
             runnerlist.sort( key=itemgetter('num_pbs'), reverse=True )
             if memcache.set( key, runnerlist ):
                 logging.debug( "Set runnerlist in memcache" )

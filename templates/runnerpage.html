@@ -73,7 +73,7 @@
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
   {% for pb in pblist %}
-  set_img_if_exists( "img-{{pb['game_code']}}", "{{pb['game_code']}}" );
+  set_boxart_if_exists( "img-{{pb['game_code']}}", "{{pb['game_code']}}" );
   {% endfor %}
 </script>
 

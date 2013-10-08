@@ -116,7 +116,9 @@ class Signup( handler.Handler ):
             if runnerlist is not None:
                 runnerlist.append( dict( username = username, 
                                          username_code = username_code,
-                                         num_pbs = 0 ) )
+                                         num_pbs = 0,
+                                         gravatar_url = util.get_gravatar_url( 
+                                             runner.gravatar ) ) )
                 self.update_cache_runnerlist( runnerlist )
 
             # Update runs for runner in memcache
