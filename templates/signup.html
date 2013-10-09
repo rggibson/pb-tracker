@@ -12,7 +12,7 @@
 </div>
 <form method="post" class="form-horizontal" role="form">
   {% if not user %}
-  <div class="form-group">
+  <div class="form-group{% if user_error %} has-error{% endif %}">
     <label for="username" class="col-lg-4 col-md-4 control-label">
       Username (permanent, choose wisely)
     </label>
@@ -23,7 +23,7 @@
     <div class="col-lg-4 col-md-4 error">{{user_error}}</div>
   </div>
   {% endif %}
-  <div class="form-group">
+  <div class="form-group{% if pass_error %} has-error{% endif %}">
     <label for="password" class="col-lg-4 col-md-4 control-label">
       Password {% if user %}(leave blank to not change){% endif %}
     </label>
@@ -33,7 +33,7 @@
     </div>
     <div class="col-lg-4 col-md-4 error">{{pass_error}}</div>
   </div>
-  <div class="form-group">
+  <div class="form-group{% if verify_error %} has-error{% endif %}">
     <label for="verify" class="col-lg-4 col-md-4 control-label">
       Retype password {% if user %}(leave blank to not change){% endif %}
     </label>
@@ -43,7 +43,7 @@
     </div>
     <div class="col-lg-4 col-md-4 error">{{ver_error}}</div>
   </div>
-  <div class="form-group">
+  <div class="form-group{% if twitter_error %} has-error{% endif %}">
     <label for="twitter" class="col-lg-4 col-md-4 control-label">
       Twitter handle (optional)
     </label>
@@ -53,7 +53,7 @@
     </div>
     <div class="col-lg-4 col-md-4 error">{{twitter_error}}</div>
   </div>
-  <div class="form-group">
+  <div class="form-group{% if youtube_error %} has-error{% endif %}">
     <label for="youtube" class="col-lg-4 col-md-4 control-label">
       YouTube handle (optional)
     </label>
@@ -63,7 +63,7 @@
     </div>
     <div class="col-lg-4 col-md-4 error">{{youtube_error}}</div>
   </div>
-  <div class="form-group">
+  <div class="form-group{% if twitch_error %} has-error{% endif %}">
     <label for="twitch" class="col-lg-4 col-md-4 control-label">
       Twitch TV handle (optional)
     </label>
@@ -73,7 +73,7 @@
     </div>
     <div class="col-lg-4 col-md-4 error">{{twitch_error}}</div>
   </div>
-  <div class="form-group">
+  <div class="form-group{% if gravatar_error %} has-error{% endif %}">
     <label for="gravatar" class="col-lg-4 col-md-4 control-label">
       Gravatar email (optional, private)
     </label>

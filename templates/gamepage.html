@@ -34,7 +34,7 @@
   <a href="/game/{{game_code}}/update-bkt?c={{d['category_code']}}"><i class="icon-edit"></i></a>
 </h4>
 {% endif %}
-<table class="table table-striped">
+<table class="table table-striped table-bordered">
   <thead>
     <tr>
       <th width="30%"><i class="icon-user icon-large"></i> Runner</th>
@@ -45,7 +45,7 @@
     </tr>
   </thead>
   {% for run in d['infolist'] %}
-  <tr>
+  <tr{% if run['username'] == user.username %} class="success"{% endif %}>
     <td><a href="/runner/{{run['username_code']}}">{{run['username']}}</td>
     <td>{% if run['video'] %}<a href="{{run['video']}}">{% endif %}
 	{{run['pb_time']}}{% if run['video'] %}</a>{% endif %}

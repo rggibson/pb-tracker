@@ -96,6 +96,12 @@ class UpdateBkt( handler.Handler ):
                        category=gameinfo['category'], username=username,
                        time=time, video=video )
 
+        # Are we updating?
+        if gameinfo.get( 'bk_runner' ) is None:
+            params['updating'] = False
+        else:
+            params['updating'] = True
+
         valid = True
 
         # Check for where we came from

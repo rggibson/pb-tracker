@@ -27,7 +27,7 @@
       </ul>
     </div>
     <form method="post" class="form-horizontal" role="form">
-      <div class="form-group">
+      <div class="form-group{% if username_error %} has-error{% endif %}">
 	<label for="username" class="col-lg-6 col-md-6 control-label">
 	  <i class="icon-user icon-large"></i> Runner
 	</label>
@@ -35,9 +35,11 @@
 	  <input type="text" class="form-control" id="username" name="username" 
 		 placeholder="e.g. Spiderman" value="{{username}}">
 	</div>
-	<div class="col-lg-6 col-md-6 error">{{username_error}}</div>
+	<div class="col-lg-6 col-md-6 col-lg-offset-6 col-md-offset-6 error">
+	  {{username_error}}
+	</div>
       </div>
-      <div class="form-group">
+      <div class="form-group{% if time_error %} has-error{% endif %}">
 	<label for="time" class="col-lg-6 col-md-6 control-label">
 	  <i class="icon-time icon-large"></i> Time
 	</label>
@@ -45,9 +47,11 @@
 	  <input type="text" class="form-control" id="time" name="time"
 		 placeholder="e.g. 2:34:56" value="{{time}}">
 	</div>
-	<div class="col-lg-6 col-md-6 error">{{time_error}}</div>
+	<div class="col-lg-6 col-md-6 col-lg-offset-6 col-md-offset-6 error">
+	  {{time_error}}
+	</div>
       </div>
-      <div class="form-group">
+      <div class="form-group{% if video_error %} has-error{% endif %}">
 	<label for="video" class="col-lg-6 col-md-6 control-label">
 	  <i class="icon-facetime-video icon-large"></i> Video (optional)
 	</label>
@@ -56,7 +60,9 @@
 		 placeholder="e.g. http://www.youtube.com/watch?v=oLXNOHdo8s8" 
 		 value="{{video}}">
 	</div>
-	<div class="col-lg-6 col-md-6 error">{{video_error}}</div>
+	<div class="col-lg-6 col-md-6 col-lg-offset-6 col-md-offset-6 error">
+	  {{video_error}}
+	</div>
       </div>
       <div class="form-group">
 	<div class="col-lg-offset-6 col-md-offset-6 col-lg-6 col-md-6">
