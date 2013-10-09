@@ -37,7 +37,8 @@
 <table class="table table-striped table-bordered">
   <thead>
     <tr>
-      <th width="30%"><i class="icon-user icon-large"></i> Runner</th>
+      <th width="5%" class="hidden-xs"></th>
+      <th width="25%"><i class="icon-user icon-large"></i> Runner</th>
       <th width="15%"><i class="icon-star icon-large"></i> PB</th>
       <th width="25%"><i class="icon-desktop icon-large"></i> Version</th>
       <th width="15%"><i class="icon-flag-checkered icon-large"></i> Runs</th>
@@ -46,6 +47,15 @@
   </thead>
   {% for run in d['infolist'] %}
   <tr{% if run['username'] == user.username %} class="success"{% endif %}>
+    <td class="hidden-xs">
+      <center>
+	<a href="/runner/{{run['username_code']}}">
+	  <img id="gravatar-{{d['category_code']}}-{{run['username_code']}}" 
+	       alt="" class="img-responsive"
+	       style="max-height: 20px;">
+	</a>
+      </center>
+    </td>
     <td><a href="/runner/{{run['username_code']}}">{{run['username']}}</td>
     <td>{% if run['video'] %}<a href="{{run['video']}}">{% endif %}
 	{{run['pb_time']}}{% if run['video'] %}</a>{% endif %}
@@ -58,10 +68,16 @@
 </table>
 {% endfor %}
 
-<!-- Add game image when it exists -->
+<!-- Add game image and gravatars when they exist -->
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
   set_boxart_if_exists( "img-{{game_code}}", "{{game_code}}" );
+  {% for d in gamepage %}
+  {% for run in d['infolist'] %}
+  set_img( "gravatar-{{d['category_code']}}-{{run['username_code']}}",
+           "{{run['gravatar_url']}}" );
+  {% endfor %}
+  {% endfor %}
 </script>
 
 {% endblock %}

@@ -1,5 +1,6 @@
 import handler
 import runs
+import util
 
 from google.appengine.ext import db
 
@@ -25,6 +26,14 @@ class GamePage( handler.Handler ):
             user_has_run = False
             
         gamepage = self.get_gamepage( game_model.game )
+        
+        # Add gravatar images to the gamepage
+        for d in gamepage:
+            for run in d['infolist']:
+                runner = self.get_runner( util.get_code( run['username'] ) )
+                if runner is not None:
+                    run['gravatar_url'] = util.get_gravatar_url( 
+                        runner.gravatar, size=20 )
 
         self.render( "gamepage.html", user=user, game=game_model.game, 
                      game_code=game_code, gamepage=gamepage,
