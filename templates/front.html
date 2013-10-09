@@ -6,12 +6,75 @@
   document.getElementById("nav-home").setAttribute("class", "active");
 </script>
 
-<div class="jumbotron">
-  <h1>PB Tracker</h1>
-  <p>
-    A web app for tracking speed run times and personal bests. 
-    Currently under construction.
-  </p>
+<div id="pb-carousel" class="carousel slide" data-interval="false">
+  <!-- Indicators -->
+  <ol class="carousel-indicators">
+    <li data-target="#pb-carousel" data-slide-to="0" class="active"></li>
+    <li data-target="#pb-carousel" data-slide-to="1"></li>
+    <li data-target="#pb-carousel" data-slide-to="2"></li>
+  </ol>
+
+  <!-- Wrapper for slides -->
+  <div class="carousel-inner">
+    <div class="item active">
+      <img src="/static/carousel/splash.png" alt="Splash">
+      <div class="carousel-caption">
+	<h3 class="hidden-xs">
+	  Track your video game speedrun times and personal bests.
+	</h3> 
+      </div>
+    </div>
+    <div class="item">
+      <img src="/static/carousel/runnerpage.png" alt="Runner page">
+      <div class="carousel-caption" style="color: black;">
+	<h3>Share your times with your own personal records page.</h3>
+      </div>
+    </div>
+    <div class="item">
+      <img src="/static/carousel/gamepage.png" alt="Game page">
+      <div class="carousel-caption" style="color: black;">
+	<h3>See other PB Tracker times on individual game pages.</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <a class="left carousel-control" href="#pb-carousel" data-slide="prev">
+    <span class="icon-prev"></span>
+  </a>
+  <a class="right carousel-control" href="#pb-carousel" data-slide="next">
+    <span class="icon-next"></span>
+  </a> 
 </div>
+
+<div class="row">
+  <div class="col-sm-6">
+    <h3><i class="icon-upload-alt"></i> Submit Your Times</h3>
+    <p>Submit your speed run times, then track your times and view 
+      your personal bests.</p>
+  </div>
+  <div class="col-sm-6">
+    <h3><i class="icon-bullhorn"></i> Show Off Your Times</h3>
+    <p>Point viewers to your personal PB Tracker page for a one-stop shop
+    of your best times.</p>
+  </div>
+  <div class="col-sm-6">
+    <h3><i class="icon-list-ul"></i> Compare Your Times</h3>
+    <p>Check out each game's page to see how well you stack up against 
+      other PB Trackers.</p>
+  </div>
+  <div class="col-sm-6">
+    <h3><i class="icon-rocket"></i> More Features Planned</h3>
+    <p>Uploading and downloading of run 
+      splits and automatic submission straight from splits.</p>
+  </div>
+</div>
+
+
+<script src="/static/js/jquery-2.0.3.min.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+  $( '#pb-carousel' ).carousel( )
+</script>
 
 {% endblock %}

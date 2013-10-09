@@ -3,7 +3,9 @@
 {% block content %}
 
 <script type="text/javascript">
-  document.getElementById("nav-signup").setAttribute("class", "active");
+  document.getElementById(
+  "nav-{% if user %}username{% else %}signup{% endif %}").setAttribute(
+  "class", "active");
 </script>
 
 <div class="row">

@@ -23,7 +23,8 @@
   </thead>
   <tbody>
     {% for pb in pblist %}
-    <tr>
+    {% set outer_loop = loop %}
+    <tr class="{{ outer_loop.cycle('active', '') }}">
       <td rowspan="{{pb['infolist']|length}}" class="hidden-xs">
 	<center>
 	  <a href="/game/{{pb['game_code']}}">
@@ -39,7 +40,7 @@
       </td>
       {% for info in pb['infolist'] %}
       {% if not loop.first %}
-    <tr>
+    <tr class="{{ outer_loop.cycle('active', '') }}">
       {% endif %}
       <td>{{info['category']}}</td>
       <td>

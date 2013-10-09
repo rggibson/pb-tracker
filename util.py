@@ -92,8 +92,9 @@ def timestr_to_seconds( time ):
     return (seconds, "")
 
 # Gravatar utility function
-def get_gravatar_url( gravatar ):
+def get_gravatar_url( gravatar, size=80 ):
     if gravatar:
-        return 'http://www.gravatar.com/avatar/' + gravatar
+        return ( 'http://www.gravatar.com/avatar/' + gravatar + "?s=" 
+                 + str( size ) )
     else:
         return ''

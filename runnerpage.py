@@ -21,7 +21,7 @@ class RunnerPage( handler.Handler ):
             self.render( "404.html", user=user )
             return
         username = runner.username
-        gravatar = util.get_gravatar_url( runner.gravatar )
+        gravatar = util.get_gravatar_url( runner.gravatar, size=120 )
 
         if q == 'view-all':
             # List all runs for this runner

@@ -61,7 +61,8 @@ class Signup( handler.Handler ):
 
         if user is None and not valid_username( username ):
             params['user_error'] = ( "Username must be between " 
-                                     + "1 and 20 characters." )
+                                     + "1 and 20 alphanumeric, dash, or "
+                                     + "underscore characters." )
             valid = False
         elif user is None:
             # Check if username already exists
