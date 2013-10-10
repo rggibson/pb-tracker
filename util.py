@@ -35,8 +35,15 @@ def valid_pw(name, pw, h):
 
 # Game, time string utility functions
 def get_code( string ):
-    # Substitute sets of consecutive nonalphanumeric characters with a dash
-    return re.sub( '[^a-zA-Z0-9]+', '-', string ).lower()
+    # First, remove apostrophes
+    res = re.sub( "'", "", string )
+    # Then, substitute consecutive nonalphanumeric characters with a dash
+    # Also, convert to lower case
+    res = re.sub( '[^a-zA-Z0-9]+', '-', res ).lower()
+    # Finally, remove leading and trailing dashes
+    res = re.sub( '^-', '', res )
+    res = re.sub( '-$', '', res )
+    return res
 
 def seconds_to_timestr( seconds ):
     if seconds is None:
