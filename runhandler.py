@@ -31,7 +31,7 @@ class RunHandler( handler.Handler ):
         if game_model is None:
             # Add a new game to the database
             d = dict( category=category, bk_runner=None, bk_seconds=None,
-                      bk_video=None, bk_update=None )
+                      bk_video=None, bk_updater=None )
             if is_bkt:
                 d['bk_runner'] = user.username
                 d['bk_seconds'] = seconds
@@ -44,7 +44,14 @@ class RunHandler( handler.Handler ):
             game_model.put( )
             logging.warning( "Put new game " + game + " with "
                              + " category " + category + " in database." )
+
+            # Update memcache
             self.update_cache_game_model( game_code, game_model )
+            all_games = self.get_all_games( no_refresh=True )
+            if all_games is not None:
+                all_games.append( game )
+                self.update_cache_all_games( all_games )
+
         elif not category_found:
             # Add a new category for this game in the database
             info = json.loads( game_model.info )
@@ -61,6 +68,7 @@ class RunHandler( handler.Handler ):
             logging.debug( "Added category " + category + " to game " 
                            + game + " in database." )
             self.update_cache_game_model( game_code, game_model )
+
         elif is_bkt:
             # Update the best known time for this game, category
             gameinfolist = json.loads( game_model.info )

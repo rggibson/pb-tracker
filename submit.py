@@ -41,6 +41,9 @@ class Submit( runhandler.RunHandler ):
                 params['category'] = run.category
                 if run.version is not None:
                     params['version'] = run.version
+
+        # Grab all of the games for autocompleting
+        params['all_games'] = self.get_all_games( )
             
         self.render( "submit.html", **params )
 
@@ -172,6 +175,9 @@ class Submit( runhandler.RunHandler ):
             valid = False
         
         if not valid:
+            # Grab all of the games for autocompleting
+            params['all_games'] = self.get_all_games( )
+
             self.render( "submit.html", **params )
             return
 
@@ -253,6 +259,9 @@ class Submit( runhandler.RunHandler ):
             new_run.video = None
             
         if not valid:
+            # Grab all of the games for autocompleting
+            params['all_games'] = self.get_all_games( )
+
             self.render( "submit.html", **params )
             return
             

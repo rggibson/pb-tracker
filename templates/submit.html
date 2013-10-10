@@ -91,6 +91,10 @@
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
   block_double_submit( '#submit-btn' );
+  $( 'input#game' ).autocomplete( {
+  source: ["Mario", "Mega Man", "Sonic", "Zelda"]
+/*  source: [ {% for g in all_games %}"{{g}}"{% if not loop.last %},{% endif %}{% endfor %} ] */
+  } );
 </script>
 
 {% endblock %}

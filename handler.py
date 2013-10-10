@@ -123,6 +123,34 @@ class Handler(webapp2.RequestHandler):
             logging.error( "Failed to update game_model for game_code " 
                            + game_code + " in memcache" )
 
+    def get_all_games_memkey( self ):
+        return "all_games"
+
+    def get_all_games( self, no_refresh=False ):
+        key = self.get_all_games_memkey( )
+        all_games = memcache.get( key )
+        if all_games is None and not no_refresh:
+            # Not in memcache, so get all the game_models
+            all_games = [ ]
+            q = db.Query( games.Games, projection=['game'] )
+            q.ancestor( games.key() )
+            for game_model in q.run( limit=10000 ):
+                all_games.append( game_model.game )
+            if memcache.set( key, all_games ):
+                logging.debug( "Set " + key + " in memcache" )
+            else:
+                logging.warning( "Failed to set " + key + " in memcache" )
+        elif games is not None:
+            logging.debug( "Got " + key + " from memcache" )
+        return all_games
+
+    def update_cache_all_games( self, all_games ):
+        key = self.get_all_games_memkey( )
+        if memcache.set( key, all_games ):
+            logging.debug( "Updated " + key + " in memcache" )
+        else:
+            logging.error( "Failed to update " + key + " in memcache" )
+
     def get_run_by_id_memkey( self, run_id ):
         return str( run_id ) + ":run"
 
