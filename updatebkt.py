@@ -111,28 +111,34 @@ class UpdateBkt( handler.Handler ):
         else:
             params['from_runnerpage'] = False
 
-        # Make sure we got a username
-        if not username:
-            params['username_error'] = "You must enter a runner"
-            valid = False
+        if not username and not time and not video:
+            gameinfo['bk_runner'] = None
+            gameinfo['bk_seconds'] = None
+            gameinfo['bk_video'] = None
+        else:
+            # Make sure we got a username
+            if not username:
+                params['username_error'] = "You must enter a runner"
+                valid = False
 
-        # Parse the time into seconds, ensure it is valid
-        ( seconds, time_error ) = util.timestr_to_seconds( time )
-        if not seconds:
-            params['time_error'] = "Invalid time: " + time_error
-            valid = False
+            # Parse the time into seconds, ensure it is valid
+            ( seconds, time_error ) = util.timestr_to_seconds( time )
+            if not seconds:
+                params['time_error'] = "Invalid time: " + time_error
+                valid = False
 
-        if not valid:
-            self.render( "updatebkt.html", **params )
-            return
+            if not valid:
+                self.render( "updatebkt.html", **params )
+                return
 
-        time = util.seconds_to_timestr( seconds ) # Enforce standard format
-        params['time'] = time
+            time = util.seconds_to_timestr( seconds ) # Standard format
+            params['time'] = time
 
-        # Store the best known time
-        gameinfo['bk_runner'] = username
-        gameinfo['bk_seconds'] = seconds
-        gameinfo['bk_video'] = video
+            # Store the best known time
+            gameinfo['bk_runner'] = username
+            gameinfo['bk_seconds'] = seconds
+            gameinfo['bk_video'] = video
+
         gameinfo['bk_updater'] = user.username
         game_model.info = json.dumps( gameinfolist )
         game_model.put( )
@@ -145,9 +151,10 @@ class UpdateBkt( handler.Handler ):
         if gamepage is not None:
             for d in gamepage:
                 if d['category'] == gameinfo['category']:
-                    d['bk_runner'] = username
-                    d['bk_time'] = time
-                    d['bk_video'] = video
+                    d['bk_runner'] = gameinfo['bk_runner']
+                    d['bk_time'] = util.seconds_to_timestr( 
+                        gameinfo['bk_seconds'] )
+                    d['bk_video'] = gameinfo['bk_video']
                     break
             self.update_cache_gamepage( game_model.game, gamepage )
 
