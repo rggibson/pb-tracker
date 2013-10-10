@@ -27,13 +27,13 @@
     <div class="item">
       <img src="/static/carousel/runnerpage.png" alt="Runner page">
       <div class="carousel-caption" style="color: black;">
-	<h3>Share your times with your own personal records page.</h3>
+	<h3><b>Share your times with your own personal records page.</b></h3>
       </div>
     </div>
     <div class="item">
       <img src="/static/carousel/gamepage.png" alt="Game page">
       <div class="carousel-caption" style="color: black;">
-	<h3>See other PB Tracker times on individual game pages.</h3>
+	<h3><b>See other PB Tracker times on individual game pages.</b></h3>
       </div>
     </div>
   </div>
@@ -69,6 +69,15 @@
       splits and automatic submission straight from splits.</p>
   </div>
 </div>
+
+<center>
+  <h1><a href="{% if user %}/submit{% else %}/signup{% endif %}" 
+     class="btn btn-large btn-primary">
+    <i class="icon-{% if user %}flag-checkered{% else %}book{% endif %} 
+	      icon-large"></i>
+    {% if user %}Submit runs now{% else %}Start tracking now{% endif %}
+  </a></h1>
+</center>
 
 
 <script src="/static/js/jquery-2.0.3.min.js"></script>

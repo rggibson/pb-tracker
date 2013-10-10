@@ -15,7 +15,7 @@
     </label>
     <div class="col-lg-4 col-md-4">
       <input type="text" class="form-control" id="game" name="game" 
-	     placeholder="e.g. Mega Man 2" value="{{game}}" autofocus>
+	     placeholder="e.g. Mega Man 2" value="{{game}}" autofocus> 
     </div>
     <div class="col-lg-4 col-md-4 error">{{game_error}}</div>
   </div>
@@ -39,17 +39,6 @@
     </div>
     <div class="col-lg-4 col-md-4 error">{{time_error}}</div>
   </div>
-  <div class="form-group{% if video_error %} has-error{% endif %}">
-    <label for="video" class="col-lg-4 col-md-4 control-label">
-      <i class="icon-facetime-video icon-large"></i> Video (optional)
-    </label>
-    <div class="col-lg-4 col-md-4">
-      <input type="text" class="form-control" id="video" name="video"
-	     placeholder="e.g. http://www.youtube.com/watch?v=oLXNOHdo8s8" 
-	     value="{{video}}">
-    </div>
-    <div class="col-lg-4 col-md-4 error">{{video_error}}</div>
-  </div>
   <div class="form-group{% if version_error %} has-error{% endif %}">
     <label for="version" class="col-lg-4 col-md-4 control-label">
       <i class="icon-desktop icon-large"></i> 
@@ -60,6 +49,17 @@
 	     placeholder="e.g. NES" value="{{version}}">
     </div>
     <div class="col-lg-4 col-md-4 error">{{version_error}}</div>
+  </div>
+  <div class="form-group{% if video_error %} has-error{% endif %}">
+    <label for="video" class="col-lg-4 col-md-4 control-label">
+      <i class="icon-facetime-video icon-large"></i> Video (optional)
+    </label>
+    <div class="col-lg-4 col-md-4">
+      <input type="text" class="form-control" id="video" name="video"
+	     placeholder="e.g. http://www.youtube.com/watch?v=oLXNOHdo8s8" 
+	     value="{{video}}">
+    </div>
+    <div class="col-lg-4 col-md-4 error">{{video_error}}</div>
   </div>
   <div class="form-group{% if bkt_error %} has-error{% endif %}">
     <div class="col-lg-offset-4 col-md-offset-4 col-lg-4 col-md-4">

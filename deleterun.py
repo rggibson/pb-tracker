@@ -63,6 +63,11 @@ class DeleteRun( runhandler.RunHandler ):
                                                           runlist )
                     break
 
+        # Update last run
+        last_run = self.get_last_run( user.username, no_refresh=True )
+        if last_run is not None and last_run.key( ).id( ) == long( run_id ):
+            self.update_cache_last_run( user.username, None )
+
         # Done with deletion
         self.redirect( "/runner/" + util.get_code( user.username )
                        + "?q=view-all" )

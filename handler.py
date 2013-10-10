@@ -494,3 +494,31 @@ class Handler(webapp2.RequestHandler):
             logging.debug( "Updated " + key + " in memcache" )
         else:
             logging.error( "Failed to update " + key + " in memcache" )
+
+    def get_last_run_memkey( self, username ):
+        return username + ":last_run"
+
+    def get_last_run( self, username, no_refresh=False ):
+        key = self.get_last_run_memkey( username )
+        run = memcache.get( key )
+        if run is None and not no_refresh:
+            # Not in memcache, so check datastore
+            q = db.Query( runs.Runs )
+            q.ancestor( runs.key() )
+            q.filter( 'username =', username )
+            q.order( '-datetime_created' )
+            run = q.get( )
+            if memcache.set( key, run ):
+                logging.debug( "Set " + key + " in memcache" )
+            else:
+                logging.warning( "Failed to set " + key + " in memcache" )
+        elif run is not None:
+            logging.debug( "Got " + key + " from memcache" )
+        return run
+        
+    def update_cache_last_run( self, username, run ):
+        key = self.get_last_run_memkey( username )
+        if memcache.set( key, run ):
+            logging.debug( "Updated " + key + " in memcache" )
+        else:
+            logging.error( "Failed to update " + key + " in memcache" )

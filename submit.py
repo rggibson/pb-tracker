@@ -32,6 +32,15 @@ class Submit( runhandler.RunHandler ):
                 params[ 'video' ] = run.video
             if run.version is not None:
                 params[ 'version' ] = run.version
+        else:
+            # Start with the game, category and version from this user's 
+            # last run
+            run = self.get_last_run( user.username )
+            if run is not None:
+                params['game'] = run.game
+                params['category'] = run.category
+                if run.version is not None:
+                    params['version'] = run.version
             
         self.render( "submit.html", **params )
 
@@ -67,8 +76,8 @@ class Submit( runhandler.RunHandler ):
             valid = False
         elif game_model is not None and game != game_model.game:
             params['game_error'] = ( "Game already exists under [" 
-                                     + game_model.game + "] (case sensitive). "
-                                     + "Hit submit again to confirm." )
+                                     + game_model.game + "] (case sensitive)."
+                                     + " Hit submit again to confirm." )
             params['game'] = game_model.game
             valid = False
         params[ 'game_code' ] = game_code
@@ -185,6 +194,7 @@ class Submit( runhandler.RunHandler ):
         self.update_gamepage_put( params )
         self.update_runlist_for_runner_put( params )
         self.update_cache_user_has_run( user.username, game, True )
+        self.update_cache_last_run( user.username, new_run )
                      
         # Check whether this is the first run for this username, game,
         # category combination.  This will determine whether we need to check
@@ -299,6 +309,12 @@ class Submit( runhandler.RunHandler ):
                     self.update_cache_runlist_for_runner( user.username, 
                                                           runlist )
                     break
+
+        # Check to see if we need to replace the last run for this user
+        last_run = self.get_last_run( user.username, no_refresh=True )
+        if( last_run is not None 
+            and new_run.key().id() == last_run.key().id() ):
+            self.update_cache_last_run( user.username, new_run )
 
         self.redirect( "/runner/" + util.get_code( user.username )
                        + "?q=view-all" )
