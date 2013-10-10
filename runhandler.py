@@ -188,6 +188,8 @@ class RunHandler( handler.Handler ):
 
         for pb in pblist:
             if( pb['game'] == game ):
+                pb['num_runs'] += 1
+                pblist.sort( key=itemgetter('num_runs'), reverse=True )
                 for i, info in enumerate( pb['infolist'] ):
                     if( info['category'] == category ):
                         pb['infolist'][i] = self.get_runinfo( user.username, 
@@ -209,8 +211,8 @@ class RunHandler( handler.Handler ):
         runinfo = self.get_runinfo( user.username, game, category )
         pblist.append( dict( game = game, 
                              game_code = game_code,
+                             num_runs = 1,
                              infolist = [ runinfo ] ) )
-        pblist.sort( key=itemgetter('game') )
         self.update_cache_pblist( user.username, pblist )
 
     def update_pblist_delete( self, user, old_run ):
@@ -221,6 +223,7 @@ class RunHandler( handler.Handler ):
 
         for i, pb in enumerate( pblist ):
             if( pb['game'] == old_run['game'] ):
+                pb['num_runs'] -= 1
                 for j, info in enumerate( pb['infolist'] ):
                     if( info['category'] == old_run['category'] ):
                         runinfo = self.get_runinfo( user.username, 
@@ -235,6 +238,8 @@ class RunHandler( handler.Handler ):
                                 del pblist[ i ]
                         pb['infolist'].sort( key=itemgetter('num_runs'),
                                              reverse=True )
+                        pblist.sort( key=itemgetter('num_runs'), 
+                                     reverse=True )
                         self.update_cache_pblist( user.username, pblist )
                         return
                 break

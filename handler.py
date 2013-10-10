@@ -235,6 +235,7 @@ class Handler(webapp2.RequestHandler):
                     # New game
                     pb = dict( game = run.game, 
                                game_code = util.get_code( run.game ),
+                               num_runs = 0,
                                infolist = [ ] )
                     pblist.append( pb )
                     cur_game = run.game                
@@ -242,10 +243,14 @@ class Handler(webapp2.RequestHandler):
                 # Add runinfo to pblist
                 info = self.get_runinfo( username, run.game, run.category )
                 pb['infolist'].append( info )
+                pb['num_runs'] += info['num_runs']
 
             # Sort the categories for a game by num_runs
             for pb in pblist:
                 pb['infolist'].sort( key=itemgetter('num_runs'), reverse=True )
+
+            # Sort the games by number of runs
+            pblist.sort( key=itemgetter('num_runs'), reverse=True )
 
             if memcache.set( key, pblist ):
                 logging.debug( "Set " + key + " in memcache" )
