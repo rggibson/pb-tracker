@@ -16,7 +16,7 @@ class FixerUpper( handler.Handler ):
         self.write( "FixerUpper in progress...\n" )
 
         # Grab the gamelist
-        j = urllib2.urlopen( '/static/json/import_games.json' ).read( )
+        j = urllib2.urlopen( 'http://www.pbtracker.net/static/json/import_games.json' ).read( )
         gamelist = json.loads( j )
 
         # Add the games, overwriting any existing versions in database

@@ -1,5 +1,13 @@
 {% extends "base.html" %}
 
+{% block morehead %}
+  
+<link rel="stylesheet" 
+      href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css"/>
+
+{% endblock %}
+
+
 {% block content %}
 
 <script type="text/javascript">
@@ -25,7 +33,7 @@
     </label>
     <div class="col-lg-4 col-md-4">
       <input type="text" class="form-control" id="category" name="category"
-	     placeholder="e.g. Any% (normal)" value="{{category}}">
+	     placeholder="e.g. Any% (Normal)" value="{{category}}">
     </div>
     <div class="col-lg-4 col-md-4 error">{{category_error}}</div>
   </div>
@@ -88,12 +96,13 @@
 <!-- Disable button on submit to avoid double submissions -->
 <script src="/static/js/jquery-2.0.3.min.js"></script>
 <script src="/static/js/bootstrap.min.js"></script>
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
   block_double_submit( '#submit-btn' );
   $( 'input#game' ).autocomplete( {
-  source: ["Mario", "Mega Man", "Sonic", "Zelda"]
-/*  source: [ {% for g in all_games %}"{{g}}"{% if not loop.last %},{% endif %}{% endfor %} ] */
+  source: [ {% for g in all_games %}"{{g}}"{% if not loop.last %},{% endif %}
+  {% endfor %} ] 
   } );
 </script>
 
