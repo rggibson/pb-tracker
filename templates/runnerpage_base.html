@@ -26,17 +26,18 @@
     </h1>
     {% if runner.twitter %}
     <a href="https://twitter.com/{{runner.twitter}}">
-      <i class="icon-twitter icon-2x pull-left"></i></a>
+      <i class="icon-twitter icon-2x"></i></a>
     {% endif %}
     {% if runner.youtube %}
     <a href="http://www.youtube.com/user/{{runner.youtube}}">
-      <i class="icon-youtube-play icon-2x pull-left"></i></a>
+      <i class="icon-youtube-play icon-2x"></i></a>
     {% endif %}
     {% if runner.twitch %}
-    <a href="http://www.twitch.tv/{{runner.twitch}}" 
-       class="social-button pull-left">
+    <a href="http://www.twitch.tv/{{runner.twitch}}">
       <img src="/static/icons/twitch-orange.png" alt="Twitch" 
-	   class="img-responsive img-social"></a>
+	   class="img-responsive img-twitch"
+	   onmouseover="this.src='/static/icons/twitch-orange-hover.png'"
+	   onmouseout="this.src='/static/icons/twitch-orange.png'"></a>
     {% endif %}
   </div>
 </div>

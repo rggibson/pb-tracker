@@ -54,20 +54,10 @@ body, h1, h2, h3, h4, h5, h6 {
     vertical-align: middle;
 }
 
-/* Social network buttons */
-.social-button,
-.social-button:visited {
-    opacity: 0.75;
-    filter: alpha(opacity=75); /* For IE8 and earlier */
-}
-
-.social-button:hover {
-    opacity: 1;
-    filter: alpha(opacity=100);
-}
-
-.img-social {
+.img-twitch {
+    margin-top: -10px;
     height: 30px;
+    display: inline;
 }
 
 a > i:hover {
