@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block morehead %}
-  
+
 <link rel="stylesheet" 
       href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css"/>
 
@@ -22,7 +22,8 @@
       <i class="icon-gamepad icon-large"></i> Game
     </label>
     <div class="col-lg-4 col-md-4">
-      <input type="text" class="form-control" id="game" name="game" 
+      <input type="text" class="form-control" id="game" 
+	     name="game" 
 	     placeholder="e.g. Mega Man 2" value="{{game}}" autofocus> 
     </div>
     <div class="col-lg-4 col-md-4 error">{{game_error}}</div>
@@ -101,7 +102,7 @@
 <script type="text/javascript">
   block_double_submit( '#submit-btn' );
   $( 'input#game' ).autocomplete( {
-  source: [ {% for g in all_games %}"{{g}}"{% if not loop.last %},{% endif %}
+  source: [ {% for g in all_games %}"{{g | safe}}"{% if not loop.last %},{% endif %}
   {% endfor %} ] 
   } );
 </script>

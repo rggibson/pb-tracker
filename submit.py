@@ -3,8 +3,13 @@ import util
 import logging
 import runs
 import json
+import re
 
 from google.appengine.ext import db
+
+GAME_RE = re.compile( r"^[a-zA-Z0-9 !@#$%&*()'/\\-]{1,100}$" )
+def valid_game( game ):
+    return GAME_RE.match( game )
 
 class Submit( runhandler.RunHandler ):
     def get( self ):
@@ -82,6 +87,11 @@ class Submit( runhandler.RunHandler ):
                                      + game_model.game + "] (case sensitive)."
                                      + " Hit submit again to confirm." )
             params['game'] = game_model.game
+            valid = False
+        elif not valid_game( game ):
+            params['game_error'] = ( "Game name must not use any 'funny'"
+                                     + " characters and can be up to 100 "
+                                     + "characters long" )
             valid = False
         params[ 'game_code' ] = game_code
         params[ 'game_model' ] = game_model
