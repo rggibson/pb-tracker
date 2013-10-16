@@ -12,7 +12,7 @@ class UpdateBkt( handler.Handler ):
         category_code = self.request.get( 'c' )
         if user is None or category_code is None:
             self.error( 404 )
-            self.render( "404.html" )
+            self.render( "404.html", user=user )
             return
         
         # Check to make sure that the user has run this game
@@ -20,7 +20,7 @@ class UpdateBkt( handler.Handler ):
         user_has_run = self.get_user_has_run( user.username, game_model.game )
         if not user_has_run:
             self.error( 404 )
-            self.render( "404.html" )
+            self.render( "404.html", user=user )
             return
 
         # Find the corresponding gameinfo for this category
@@ -32,7 +32,7 @@ class UpdateBkt( handler.Handler ):
                 break
         if gameinfo is None:
             self.error( 404 )
-            self.render( "404.html" )
+            self.render( "404.html", user=user )
             return
 
         params = dict( user=user, game=game_model.game, game_code=game_code, 
@@ -64,7 +64,7 @@ class UpdateBkt( handler.Handler ):
         category_code = self.request.get( 'c' )
         if user is None or category_code is None:
             self.error( 404 )
-            self.render( "404.html" )
+            self.render( "404.html", user=user )
             return
         
         # Check to make sure that the user has run this game
@@ -72,7 +72,7 @@ class UpdateBkt( handler.Handler ):
         user_has_run = self.get_user_has_run( user.username, game_model.game )
         if not user_has_run:
             self.error( 404 )
-            self.render( "404.html" )
+            self.render( "404.html", user=user )
             return
 
         # Find the corresponding gameinfo for this category
@@ -84,7 +84,7 @@ class UpdateBkt( handler.Handler ):
                 break
         if gameinfo is None:
             self.error( 404 )
-            self.render( "404.html" )
+            self.render( "404.html", user=user )
             return
 
         # Get the inputs
