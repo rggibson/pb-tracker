@@ -36,11 +36,14 @@
 <!-- Add game images when they exist -->
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
-  window.onload = function() {
   {% for gamedict in gamelist %}
-  set_boxart_if_exists( "img-{{gamedict['game_code']}}", 
-                        "{{gamedict['game_code']}}" );
+  $.ajax( {url: "/static/boxart/{{gamedict['game_code']}}.jpg",
+    type: "HEAD",
+    success: function() {
+      document.getElementById( "img-{{gamedict['game_code']}}" ).setAttribute(
+        "src", "/static/boxart/{{gamedict['game_code']}}.jpg" );
+    }
+  } );
   {% endfor %}
-  };
 </script>
 {% endblock %}
