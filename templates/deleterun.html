@@ -54,15 +54,13 @@
   </div>
 </form>
 
-<!-- Add game image when it exists -->
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js">
-</script>
-<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js">
-</script>
+{% endblock %}
+
+{% block js %}
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
-  set_boxart_if_exists( "img-{{game_code}}", "{{game_code}}" );
   block_double_submit( '#submit-btn' );
+  /* Add game image when it exists */
+  $( set_boxart_if_exists( "img-{{game_code}}", "{{game_code}}" ) );
 </script>
-
 {% endblock %}

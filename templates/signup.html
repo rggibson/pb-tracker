@@ -103,14 +103,12 @@
 </center>
 {% endif %}
 
-<!-- Disable button on submit to avoid double submissions -->
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js">
-</script>
-<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js">
-</script>
+{% endblock %}
+
+{% block js %}
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
+  /* Disable button on submit to avoid double submissions */
   block_double_submit( '#submit-btn' );
 </script>
-
 {% endblock %}

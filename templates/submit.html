@@ -94,19 +94,22 @@
   </div>
 </form>
 
+{% endblock %}
+
+{% block js %}
 <!-- Disable button on submit to avoid double submissions -->
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js">
-</script>
-<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js">
-</script>
 <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+<!-- Have to re-include bootstrap.js, otherwise blocking double 
+     submit breaks -->
+<script 
+   src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js">
+</script>
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
-  block_double_submit( '#submit-btn' );
   $( 'input#game' ).autocomplete( {
   source: [ {% for g in all_games %}"{{g | safe}}"{% if not loop.last %},{% endif %}
   {% endfor %} ] 
-  } );
+  } ); 
+  block_double_submit( '#submit-btn' );
 </script>
-
 {% endblock %}

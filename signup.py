@@ -144,4 +144,15 @@ class Signup( handler.Handler ):
             # Update user in memcache
             self.update_cache_runner( util.get_code( user.username ), user )
 
+            # Update runnerlist in memcache if gravatar updated
+            if gravatar != '<private email>':
+                runnerlist = self.get_runnerlist( no_refresh=True )
+                if runnerlist is not None:
+                    for runnerdict in runnerlist:
+                        if runnerdict['username'] == user.username:
+                            runnerdict['gravatar_url'] = util.get_gravatar_url(
+                                user.gravatar )
+                            break
+                    self.update_cache_runnerlist( runnerlist )
+
         self.goto_return_url( )

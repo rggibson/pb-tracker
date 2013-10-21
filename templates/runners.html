@@ -30,13 +30,15 @@
   </div>
 </div>
 
+{% endblock %}
+
+{% block js %}
 <!-- Add Gravatar images when they exist -->
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
   {% for runnerdict in runnerlist %}
-  set_img( "img-{{runnerdict['username_code']}}", 
-           "{{runnerdict['gravatar_url']}}" );
+  $( set_img( "img-{{runnerdict['username_code']}}", 
+              "{{runnerdict['gravatar_url']}}" ) );
   {% endfor %}
 </script>
-
 {% endblock %}

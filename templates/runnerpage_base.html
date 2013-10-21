@@ -43,13 +43,16 @@
 </div>
 
 {% block runner_content %}
+{% endblock %}
 
 {% endblock %}
 
+{% block js %}
 <!-- Add Gravatar image when it exists -->
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
-  set_img( "gravatar", "{{gravatar}}" );
+  $( set_img( "gravatar", "{{gravatar}}" ) );
+  {% block runner_js %}
+  {% endblock %}
 </script>
-
 {% endblock %}

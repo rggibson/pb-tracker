@@ -6,7 +6,7 @@
   document.getElementById("nav-home").setAttribute("class", "active");
 </script>
 
-<div id="pb-carousel" class="carousel slide" data-interval="false">
+<div id="pb-carousel" class="carousel slide hidden-xs" data-interval="false">
   <!-- Indicators -->
   <ol class="carousel-indicators">
     <li data-target="#pb-carousel" data-slide-to="0" class="active"></li>
@@ -79,13 +79,10 @@
   </a></h1>
 </center>
 
+{% endblock %}
 
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js">
-</script>
-<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js">
-</script>
+{% block js %}
 <script type="text/javascript">
   $( '#pb-carousel' ).carousel( )
 </script>
-
 {% endblock %}

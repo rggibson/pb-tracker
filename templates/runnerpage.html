@@ -70,12 +70,10 @@
   </tbody>
 </table>
 
-<!-- Add game images when they exist -->
-<script src="/static/js/util.js"></script>
-<script type="text/javascript">
-  {% for pb in pblist %}
-  set_boxart_if_exists( "img-{{pb['game_code']}}", "{{pb['game_code']}}" );
-  {% endfor %}
-</script>
+{% endblock %}
 
+{% block runner_js %}
+{% for pb in pblist %}
+$( set_boxart_if_exists( "img-{{pb['game_code']}}", "{{pb['game_code']}}" ) );
+{% endfor %}
 {% endblock %}

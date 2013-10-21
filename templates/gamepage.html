@@ -68,16 +68,18 @@
 </table>
 {% endfor %}
 
+{% endblock %}
+
+{% block js %}
 <!-- Add game image and gravatars when they exist -->
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
-  set_boxart_if_exists( "img-{{game_code}}", "{{game_code}}" );
+  $( set_boxart_if_exists( "img-{{game_code}}", "{{game_code}}" ) );
   {% for d in gamepage %}
   {% for run in d['infolist'] %}
-  set_img( "gravatar-{{d['category_code']}}-{{run['username_code']}}",
-           "{{run['gravatar_url']}}" );
+  $( set_img( "gravatar-{{d['category_code']}}-{{run['username_code']}}",
+              "{{run['gravatar_url']}}" ) );
   {% endfor %}
   {% endfor %}
 </script>
-
 {% endblock %}

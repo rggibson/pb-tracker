@@ -44,12 +44,10 @@
   </tbody>
 </table>
 
-<!-- Add game images when they exist -->
-<script src="/static/js/util.js"></script>
-<script type="text/javascript">
-  {% for run in runlist %}
-  set_boxart_if_exists( "img-{{loop.index}}", "{{run['game_code']}}" );
-  {% endfor %}
-</script>
+{% endblock %}
 
+{% block runner_js %}
+{% for run in runlist %}
+$( set_boxart_if_exists( "img-{{loop.index}}", "{{run['game_code']}}" ) );
+{% endfor %}
 {% endblock %}
