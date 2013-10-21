@@ -34,18 +34,8 @@
 {% endblock %}
 
 {% block js %}
-<!-- Add game images when they exist 
-<script src="/static/js/util.js"></script>
-<script type="text/javascript">
-  {% for gamedict in gamelist %}
-  set_boxart_if_exists( "img-{{gamedict['game_code']}}", 
-                        "{{gamedict['game_code']}}" );
-  {% endfor %}
-</script> -->
-
 <script src="/static/js/jquery.lazyload.min.js"></script>
 <script type="text/javascript">
   $( "img.lazy" ).lazyload( );
 </script>
-
 {% endblock %}

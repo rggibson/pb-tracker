@@ -21,8 +21,9 @@
       <td class="hidden-xs">
 	<center>
 	  <a href="/game/{{run['game_code']}}">
-	    <img id="img-{{loop.index}}" alt="" class="img-responsive" 
-		 style="max-height: 22px;">
+	    <img alt="" class="img-responsive lazy" style="max-height: 22px;"
+		 src="/static/boxart/__blank-pixel__.png"
+		 data-original="/static/boxart/{{run['game_code']}}.jpg">
 	  </a>
 	</center>
       </td>
@@ -44,10 +45,4 @@
   </tbody>
 </table>
 
-{% endblock %}
-
-{% block runner_js %}
-{% for run in runlist %}
-$( set_boxart_if_exists( "img-{{loop.index}}", "{{run['game_code']}}" ) );
-{% endfor %}
 {% endblock %}

@@ -8,8 +8,9 @@
 
 <div class="row">
   <div class="col-lg-3 col-md-3 col-lg-push-9 col-md-push-9">
-    <img id="img-{{game_code}}" alt="" class="img-responsive" 
-	 style="max-height: 200px;">
+    <img alt="" class="img-responsive lazy" style="max-height: 200px;"
+	 src="/static/boxart/__blank-pixel__.png" 
+	 data-original="/static/boxart/{{game_code}}.jpg">
   </div>
   <div class="col-lg-9 col-md-9 col-lg-pull-3 col-md-pull-3">
     <h1><i class="icon-gamepad"></i> {{game}}</h1>
@@ -50,9 +51,9 @@
     <td class="hidden-xs">
       <center>
 	<a href="/runner/{{run['username_code']}}">
-	  <img id="gravatar-{{d['category_code']}}-{{run['username_code']}}" 
-	       alt="" class="img-responsive"
-	       style="max-height: 20px;">
+	  <img alt="" class="img-responsive lazy" style="max-height: 20px;"
+	       src="/static/boxart/__blank-pixel__.png"
+	       data-original="{{run['gravatar_url']}}">
 	</a>
       </center>
     </td>
@@ -71,15 +72,8 @@
 {% endblock %}
 
 {% block js %}
-<!-- Add game image and gravatars when they exist -->
-<script src="/static/js/util.js"></script>
+<script src="/static/js/jquery.lazyload.min.js"></script>
 <script type="text/javascript">
-  $( set_boxart_if_exists( "img-{{game_code}}", "{{game_code}}" ) );
-  {% for d in gamepage %}
-  {% for run in d['infolist'] %}
-  $( set_img( "gravatar-{{d['category_code']}}-{{run['username_code']}}",
-              "{{run['gravatar_url']}}" ) );
-  {% endfor %}
-  {% endfor %}
+  $( "img.lazy" ).lazyload( );
 </script>
 {% endblock %}

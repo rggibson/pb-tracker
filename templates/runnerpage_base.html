@@ -12,7 +12,9 @@
 <div class="row">
   <div class="col-lg-3 col-md-3 col-lg-push-9 col-md-push-9">
     {% if gravatar %}
-    <img id="gravatar" alt="Gravatar" class="img-responsive">
+    <img alt="Gravatar" class="img-responsive lazy"
+	 src="/static/boxart/__blank-pixel__.png"
+	 data-original="{{gravatar}}">
     {% endif %}
   </div>
   <div class="col-lg-9 col-md-9 col-lg-pull-3 col-md-pull-3">
@@ -48,11 +50,8 @@
 {% endblock %}
 
 {% block js %}
-<!-- Add Gravatar image when it exists -->
-<script src="/static/js/util.js"></script>
+<script src="/static/js/jquery.lazyload.min.js"></script>
 <script type="text/javascript">
-  $( set_img( "gravatar", "{{gravatar}}" ) );
-  {% block runner_js %}
-  {% endblock %}
+  $( "img.lazy" ).lazyload( );
 </script>
 {% endblock %}

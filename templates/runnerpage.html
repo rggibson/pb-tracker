@@ -28,8 +28,9 @@
       <td rowspan="{{pb['infolist']|length}}" class="hidden-xs">
 	<center>
 	  <a href="/game/{{pb['game_code']}}">
-	    <img id="img-{{pb['game_code']}}" alt="" class="img-responsive" 
-		 style="max-height: 50px;" src="/static/boxart/__blank__.png">
+	    <img alt="" class="img-responsive lazy" style="max-height: 50px;" 
+		 src="/static/boxart/__blank__.png"
+		 data-original="/static/boxart/{{pb['game_code']}}.jpg">
 	  </a>
 	</center>
       </td>
@@ -70,10 +71,4 @@
   </tbody>
 </table>
 
-{% endblock %}
-
-{% block runner_js %}
-{% for pb in pblist %}
-$( set_boxart_if_exists( "img-{{pb['game_code']}}", "{{pb['game_code']}}" ) );
-{% endfor %}
 {% endblock %}
