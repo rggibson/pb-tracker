@@ -14,7 +14,8 @@
 	<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
 	  <center>
 	    <img id="img-{{gamedict['game_code']}}" alt="" 
-		 class="img-responsive" 
+		 class="img-responsive lazy" 
+		 data-original="/static/boxart/{{gamedict['game_code']}}.jpg"
 		 style="max-height: 22px;" src="/static/boxart/__blank__.png">
 	  </center>
 	</div>
@@ -33,17 +34,18 @@
 {% endblock %}
 
 {% block js %}
-<!-- Add game images when they exist -->
+<!-- Add game images when they exist 
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
   {% for gamedict in gamelist %}
-  $.ajax( {url: "/static/boxart/{{gamedict['game_code']}}.jpg",
-    type: "HEAD",
-    success: function() {
-      document.getElementById( "img-{{gamedict['game_code']}}" ).setAttribute(
-        "src", "/static/boxart/{{gamedict['game_code']}}.jpg" );
-    }
-  } );
+  set_boxart_if_exists( "img-{{gamedict['game_code']}}", 
+                        "{{gamedict['game_code']}}" );
   {% endfor %}
+</script> -->
+
+<script src="/static/js/jquery.lazyload.min.js"></script>
+<script type="text/javascript">
+  $( "img.lazy" ).lazyload( );
 </script>
+
 {% endblock %}
