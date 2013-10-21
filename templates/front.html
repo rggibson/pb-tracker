@@ -19,9 +19,7 @@
     <div class="item active">
       <img src="/static/carousel/splash.png" alt="Splash">
       <div class="carousel-caption">
-	<h3 class="hidden-xs">
-	  Track your video game speedrun times and personal bests.
-	</h3> 
+	<h3>Track your video game speedrun times and personal bests.</h3> 
       </div>
     </div>
     <div class="item">
@@ -47,37 +45,72 @@
   </a> 
 </div>
 
+<div class="jumbotron visible-xs"
+     style="color: white; 
+	    background: linear-gradient(20deg, #882200 30%, #AA4400 60%, #CC6600 100%)">
+  <center>
+    <h1 style="font-size: 35px;">PB Tracker</h1>
+    <p class="lead">
+      Track your video game speedrun times and personal bests.
+    </p>
+  </center>
+</div>
+
 <div class="row">
   <div class="col-sm-6">
-    <h3><i class="icon-upload-alt"></i> Submit Your Times</h3>
+    <h3 class="hidden-xs">
+      <i class="icon-upload-alt"></i> Submit Your Times
+    </h3>
+    <h3 class="visible-xs">
+      <i class="icon-upload-alt"></i> Submit Times
+    </h3>
     <p>Submit your speed run times, then track your times and view 
       your personal bests.</p>
   </div>
   <div class="col-sm-6">
-    <h3><i class="icon-bullhorn"></i> Show Off Your Times</h3>
+    <h3 class="hidden-xs">
+      <i class="icon-bullhorn"></i> Show Off Your Times
+    </h3>
+    <h3 class="visible-xs">
+      <i class="icon-bullhorn"></i> Show Off Times
+    </h3>
     <p>Point viewers to your personal PB Tracker page for a one-stop shop
     of your best times.</p>
   </div>
   <div class="col-sm-6">
-    <h3><i class="icon-list-ul"></i> Compare Your Times</h3>
+    <h3 class="hidden-xs"><i class="icon-list-ul"></i> Compare Your Times</h3>
+    <h3 class="visible-xs"><i class="icon-list-ul"></i> Compare Times</h3>
     <p>Check out each game's page to see how well you stack up against 
       other PB Trackers.</p>
   </div>
   <div class="col-sm-6">
-    <h3><i class="icon-rocket"></i> More Features Planned</h3>
+    <h3 class="hidden-xs">
+      <i class="icon-rocket"></i> More Features Planned
+    </h3>
+    <h3 class="visible-xs">
+      <i class="icon-rocket"></i> More Planned
+    </h3>
     <p>Uploading and downloading of run 
       splits and automatic submission straight from splits.</p>
   </div>
-</div>
 
-<center>
-  <h1><a href="{% if user %}/submit{% else %}/signup{% endif %}" 
-     class="btn btn-large btn-primary" style="font-size: 30px;">
-    <i class="icon-{% if user %}flag-checkered{% else %}book{% endif %} 
-	      icon-large"></i>
-    {% if user %}Submit runs now{% else %}Start tracking now{% endif %}
-  </a></h1>
-</center>
+  <div class="col-sm-4 col-sm-offset-4">
+  <h1>
+    <a href="{% if user %}/submit{% else %}/signup{% endif %}" 
+       class="btn btn-large btn-primary hidden-xs" style="font-size: 30px;">
+      <i class="icon-{% if user %}flag-checkered{% else %}book{% endif %} 
+		icon-large"></i>
+      {% if user %}Submit runs now{% else %}Start tracking now{% endif %}
+    </a>
+    <a href="{% if user %}/submit{% else %}/signup{% endif %}" 
+       class="btn btn-large btn-primary visible-xs" style="font-size: 30px;">
+      <i class="icon-{% if user %}flag-checkered{% else %}book{% endif %} 
+		icon-large"></i>
+      {% if user %}Submit now{% else %}Track now{% endif %}
+    </a>
+  </h1>
+  </div>
+</div>
 
 {% endblock %}
 
