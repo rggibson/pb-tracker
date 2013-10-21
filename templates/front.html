@@ -93,24 +93,37 @@
     <p>Uploading and downloading of run 
       splits and automatic submission straight from splits.</p>
   </div>
+</div>
 
-  <div class="col-sm-4 col-sm-offset-4">
+<center>
   <h1>
     <a href="{% if user %}/submit{% else %}/signup{% endif %}" 
-       class="btn btn-large btn-primary hidden-xs" style="font-size: 30px;">
-      <i class="icon-{% if user %}flag-checkered{% else %}book{% endif %} 
-		icon-large"></i>
-      {% if user %}Submit runs now{% else %}Start tracking now{% endif %}
-    </a>
-    <a href="{% if user %}/submit{% else %}/signup{% endif %}" 
-       class="btn btn-large btn-primary visible-xs" style="font-size: 30px;">
-      <i class="icon-{% if user %}flag-checkered{% else %}book{% endif %} 
-		icon-large"></i>
-      {% if user %}Submit now{% else %}Track now{% endif %}
+       class="btn btn-large btn-primary" style="font-size: 30px;">
+      <span class="hidden-xs">
+	<i class="icon-{% if user %}flag-checkered{% else %}book{% endif %} 
+		  icon-large"></i>
+	{% if user %}Submit runs now{% else %}Start tracking now{% endif %}
+      </span>
+      <span class="visible-xs">
+	<i class="icon-{% if user %}flag-checkered{% else %}book{% endif %} 
+		  icon-large"></i>
+	{% if user %}Submit now{% else %}Track now{% endif %}
+      </span>
     </a>
   </h1>
-  </div>
-</div>
+  <ul class="list-inline front-footer">
+    <li>&bull; Created and maintained by 
+      <a href="https://twitter.com/rggibson_">rggibson</a>
+    </li>
+    <li>&bull;
+      <a href="https://github.com/rggibson/pb-tracker"><i class="icon-github"></i> GitHub open project</a>
+    </li>
+    <li>&bull; Send bugs, feature requests and box art requests 
+      <a href="mailto:<name-of-site-no-spaces>speedruns<AT>gmail<DOT>com">by 
+	email</a>
+    </li>
+  </ul>
+</center>
 
 {% endblock %}
 
