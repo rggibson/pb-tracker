@@ -15,29 +15,20 @@ class FixerUpper( handler.Handler ):
 
         self.write( "FixerUpper in progress...\n" )
 
-        # Grab the gamelist
-        j = urllib2.urlopen( 
-#            'http://www.pbtracker.net/static/json/import_games.json' ).read( )
-            'http://localhost:8080/static/json/import_games.json' ).read( )
-        gamelist = json.loads( j )
+        old_game_code = 'musya-the-classic-japanese-tail-of-horror'
+        new_game_code = 'musya-the-classic-japanese-tale-of-horror'
 
-        # Add the games, overwriting any existing versions in database
-        self.write( "Adding games to database...\n" )
-        for g in gamelist:
-            game_code = util.get_code( g['game'] )
-            gameinfolist = [ ]
-            for category in g['categories']:
-                gameinfolist.append( dict( category=category,
-                                           bk_runner=None,
-                                           bk_seconds=None,
-                                           bk_video=None,
-                                           bk_updater=None ) )
-            game_model = games.Games( game=g['game'],
-                                      info=json.dumps( gameinfolist ),
-                                      key_name=game_code,
-                                      parent=games.key() )
-            game_model.put( )
-            self.update_cache_game_model( game_code, game_model )
-        self.update_cache_all_games( None )
+        game_model = self.get_game_model( old_game_code )        
+        game = game_model.game
+        info = game_model.info
+        game_model.delete( )
+        self.update_cache_game_model( old_game_code, None )
+
+        game_model = games.Games( game = game,
+                                  info = info,
+                                  parent = games.key(),
+                                  key_name = new_game_code )
+        game_model.put( )
+        self.update_cache_game_model( new_game_code, game_model )
         
         self.write( "FixerUpper complete!\n" )

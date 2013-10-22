@@ -342,7 +342,7 @@ class RunHandler( handler.Handler ):
                         return
                 break
         logging.error( "Failed to correctly update gamepage in memcache" )
-        self.udpate_cache_gamepage( old_run['game'], None )
+        self.update_cache_gamepage( old_run['game'], None )
 
     def update_runlist_for_runner_put( self, params ):
         user = params[ 'user' ]
