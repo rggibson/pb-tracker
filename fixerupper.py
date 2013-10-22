@@ -15,20 +15,14 @@ class FixerUpper( handler.Handler ):
 
         self.write( "FixerUpper in progress...\n" )
 
-        old_game_code = 'musya-the-classic-japanese-tail-of-horror'
-        new_game_code = 'musya-the-classic-japanese-tale-of-horror'
+        game_model = self.get_game_model( 'mega-man-2' )        
+        gameinfolist = json.loads( game_model.info )
+        for i, gameinfo in enumerate( gameinfolist ):
+            if gameinfo['category'] == 'Any%, No Zips':
+                del gameinfolist[ i ]
+                break
 
-        game_model = self.get_game_model( old_game_code )        
-        game = game_model.game
-        info = game_model.info
-        game_model.delete( )
-        self.update_cache_game_model( old_game_code, None )
-
-        game_model = games.Games( game = game,
-                                  info = info,
-                                  parent = games.key(),
-                                  key_name = new_game_code )
+        game_model.info = json.dumps( gameinfolist )
         game_model.put( )
-        self.update_cache_game_model( new_game_code, game_model )
         
         self.write( "FixerUpper complete!\n" )

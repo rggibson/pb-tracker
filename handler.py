@@ -385,18 +385,20 @@ class Handler(webapp2.RequestHandler):
             # dict gives the game, game_code and number of pbs for that game.
             # The list is sorted by numbers of pbs for the game
             gamelist = [ ]
-            q = db.Query( runs.Runs, projection=['game'], distinct=True )
-            q.ancestor( runs.key() )
-            for run in q.run( limit=10000 ):
+            q = db.Query( games.Games, projection=['game'] )
+            q.ancestor( games.key() )
+            q.order( 'game' )
+            for game_model in q.run( limit=10000 ):
                 q2 = db.Query( runs.Runs, projection=('username', 'category'),
                                distinct=True )
                 q2.ancestor( runs.key() )
-                q2.filter( 'game =', run.game )
+                q2.filter( 'game =', game_model.game )
                 num_pbs = q2.count( limit=1000 )
-                gamelist.append( dict( game = run.game,
-                                       game_code = util.get_code( run.game ),
-                                       num_pbs = num_pbs ) )
-            gamelist.sort( key=itemgetter('game_code') )
+                if num_pbs > 0:
+                    gamelist.append( dict( game = game_model.game,
+                                           game_code = util.get_code( 
+                                game_model.game ),
+                                           num_pbs = num_pbs ) )
             gamelist.sort( key=itemgetter('num_pbs'), reverse=True )
             if memcache.set( key, gamelist ):
                 logging.debug( "Set gamelist in memcache" )

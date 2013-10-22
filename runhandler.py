@@ -394,7 +394,6 @@ class RunHandler( handler.Handler ):
                     q.filter( 'game =', game )
                     num_pbs = q.count( limit=1000 )
                     gamedict['num_pbs'] = num_pbs
-                    gamelist.sort( key=itemgetter('game_code') )
                     gamelist.sort( key=itemgetter('num_pbs'), 
                                    reverse=True )
                     self.update_cache_gamelist( gamelist )
@@ -403,7 +402,7 @@ class RunHandler( handler.Handler ):
                 # This game wasn't found in the gamelist, so add it
                 gamelist.append( dict( game = game, game_code = game_code,
                                        num_pbs = 1 ) )
-                gamelist.sort( key=itemgetter('game_code') )
+                gamelist.sort( key=itemgetter('game') )
                 gamelist.sort( key=itemgetter('num_pbs'), reverse=True )
                 self.update_cache_gamelist( gamelist )
 
@@ -416,7 +415,6 @@ class RunHandler( handler.Handler ):
                     gamedict['num_pbs'] -= 1
                     if gamedict['num_pbs'] <= 0:
                         del gamelist[ i ]
-                    gamelist.sort( key=itemgetter('game_code') )
                     gamelist.sort( key=itemgetter('num_pbs'), 
                                    reverse=True )
                     self.update_cache_gamelist( gamelist )
