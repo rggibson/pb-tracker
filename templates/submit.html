@@ -97,7 +97,6 @@
 {% endblock %}
 
 {% block js %}
-<!-- Disable button on submit to avoid double submissions -->
 <script src="/static/js/jquery-ui.min.js"></script>
 <!-- Have to re-include bootstrap.js, otherwise blocking double 
      submit breaks -->
@@ -106,10 +105,28 @@
 </script>
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
-  $( 'input#game' ).autocomplete( {
-  source: [ {% for g in all_games %}"{{g | safe}}"{% if not loop.last %},{% endif %}
-  {% endfor %} ] 
-  } ); 
   block_double_submit( '#submit-btn' );
+
+  $( document ).ready( function( ) {
+    var categories = {{categories | safe}};
+    /* Autocomplete game input */
+    $( 'input#game' ).autocomplete( {
+      source: keys( categories ).sort( )
+    } ); 
+
+    /* Autocomplete category input */
+    $( 'input#category' ).focus( function() {
+      var game = $( 'input#game' ).val( );
+      if( categories[ game ] ) {
+        $( 'input#category' ).autocomplete( {
+          source: categories[ game ]
+        } );
+      } else {
+        $( 'input#category' ).autocomplete( {
+          source: [ ]
+        } );
+      }
+    } );
+  } );
 </script>
 {% endblock %}

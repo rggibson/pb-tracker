@@ -123,30 +123,36 @@ class Handler(webapp2.RequestHandler):
             logging.error( "Failed to update game_model for game_code " 
                            + game_code + " in memcache" )
 
-    def get_all_games_memkey( self ):
-        return "all_games"
+    def get_categories_memkey( self ):
+        return "categories"
 
-    def get_all_games( self, no_refresh=False ):
-        key = self.get_all_games_memkey( )
-        all_games = memcache.get( key )
-        if all_games is None and not no_refresh:
-            # Not in memcache, so get all the game_models
-            all_games = [ ]
-            q = db.Query( games.Games, projection=['game'] )
+    def get_categories( self, no_refresh=False ):
+        key = self.get_categories_memkey( )
+        categories = memcache.get( key )
+        if categories is None and not no_refresh:
+            # Not in memcache, so get the categories for every game
+            categories = dict( )
+            q = db.Query( games.Games )
             q.ancestor( games.key() )
             for game_model in q.run( limit=10000 ):
-                all_games.append( game_model.game )
-            if memcache.set( key, all_games ):
+                gameinfolist = json.loads( game_model.info )
+                categories[ str( game_model.game ) ] = [ ]
+                for gameinfo in gameinfolist:
+                    categories[ str( game_model.game ) ].append( 
+                        str( gameinfo['category'] ) )
+                # Sort the categories for each game in alphabetical order
+                categories[ str( game_model.game ) ].sort( )
+            if memcache.set( key, categories ):
                 logging.debug( "Set " + key + " in memcache" )
             else:
                 logging.warning( "Failed to set " + key + " in memcache" )
-        elif games is not None:
+        elif categories is not None:
             logging.debug( "Got " + key + " from memcache" )
-        return all_games
+        return categories
 
-    def update_cache_all_games( self, all_games ):
-        key = self.get_all_games_memkey( )
-        if memcache.set( key, all_games ):
+    def update_cache_categories( self, categories ):
+        key = self.get_categories_memkey( )
+        if memcache.set( key, categories ):
             logging.debug( "Updated " + key + " in memcache" )
         else:
             logging.error( "Failed to update " + key + " in memcache" )

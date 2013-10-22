@@ -7,9 +7,9 @@ import re
 
 from google.appengine.ext import db
 
-GAME_RE = re.compile( r"^[a-zA-Z0-9 =.:!@#$%&*()'/\\-]{1,100}$" )
-def valid_game( game ):
-    return GAME_RE.match( game )
+GAME_CATEGORY_RE = re.compile( r"^[a-zA-Z0-9 +=.:!@#$%&*()'/\\-]{1,100}$" )
+def valid_game_or_category( game_or_category ):
+    return GAME_CATEGORY_RE.match( game_or_category )
 
 class Submit( runhandler.RunHandler ):
     def get( self ):
@@ -47,9 +47,9 @@ class Submit( runhandler.RunHandler ):
                 if run.version is not None:
                     params['version'] = run.version
 
-        # Grab all of the games for autocompleting
-        params['all_games'] = self.get_all_games( )
-            
+        # Grab all of the games and categories for autocompleting
+        params['categories'] = self.get_categories( )
+                    
         self.render( "submit.html", **params )
 
     def post( self ):
@@ -88,7 +88,7 @@ class Submit( runhandler.RunHandler ):
                                      + " Hit submit again to confirm." )
             params['game'] = game_model.game
             valid = False
-        elif not valid_game( game ):
+        elif not valid_game_or_category( game ):
             params['game_error'] = ( "Game name must not use any 'funny'"
                                      + " characters and can be up to 100 "
                                      + "characters long" )
@@ -117,6 +117,11 @@ class Submit( runhandler.RunHandler ):
                         params['category'] = info['category']
                         valid = False
                     break
+        if not category_found and not valid_game_or_category( category ):
+            params['category_error'] = ( "Category must not use any 'funny'"
+                                         + " characters and can be up to 100 "
+                                         + "characters long" )
+            valid = False
         params[ 'category_found' ] = category_found
 
         # Parse the time into seconds, ensure it is valid
@@ -186,7 +191,7 @@ class Submit( runhandler.RunHandler ):
         
         if not valid:
             # Grab all of the games for autocompleting
-            params['all_games'] = self.get_all_games( )
+            params['categories'] = self.get_categories( )
 
             self.render( "submit.html", **params )
             return
@@ -270,7 +275,7 @@ class Submit( runhandler.RunHandler ):
             
         if not valid:
             # Grab all of the games for autocompleting
-            params['all_games'] = self.get_all_games( )
+            params['categories'] = self.get_categories( )
 
             self.render( "submit.html", **params )
             return

@@ -47,10 +47,10 @@ class RunHandler( handler.Handler ):
 
             # Update memcache
             self.update_cache_game_model( game_code, game_model )
-            all_games = self.get_all_games( no_refresh=True )
-            if all_games is not None:
-                all_games.append( game )
-                self.update_cache_all_games( all_games )
+            categories = self.get_categories( no_refresh=True )
+            if categories is not None:
+                categories[ str( game ) ] = [ str( category ) ]
+                self.update_cache_categories( categories )
 
         elif not category_found:
             # Add a new category for this game in the database
@@ -67,7 +67,14 @@ class RunHandler( handler.Handler ):
             game_model.put( )
             logging.debug( "Added category " + category + " to game " 
                            + game + " in database." )
+
+            # Update memcache
             self.update_cache_game_model( game_code, game_model )
+            categories = self.get_categories( no_refresh=True )
+            if categories is not None:
+                categories[ str( game ) ].append( str( category ) )
+                categories[ str( game ) ].sort( )
+                self.update_cache_categories( categories )
 
         elif is_bkt:
             # Update the best known time for this game, category
