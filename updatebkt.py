@@ -14,6 +14,10 @@ class UpdateBkt( handler.Handler ):
             self.error( 404 )
             self.render( "404.html", user=user )
             return
+
+        # Have to take the code of the category code because of percent
+        # encoded plusses
+        category_code = util.get_code( category_code )
         
         # Check to make sure that the user has run this game
         game_model = self.get_game_model( game_code )
@@ -66,6 +70,10 @@ class UpdateBkt( handler.Handler ):
             self.error( 404 )
             self.render( "404.html", user=user )
             return
+        
+        # Have to take the code of the category code because of percent
+        # encoded plusses
+        category_code = util.get_code( category_code )
         
         # Check to make sure that the user has run this game
         game_model = self.get_game_model( game_code )

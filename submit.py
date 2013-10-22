@@ -7,7 +7,7 @@ import re
 
 from google.appengine.ext import db
 
-GAME_RE = re.compile( r"^[a-zA-Z0-9 .:!@#$%&*()'/\\-]{1,100}$" )
+GAME_RE = re.compile( r"^[a-zA-Z0-9 =.:!@#$%&*()'/\\-]{1,100}$" )
 def valid_game( game ):
     return GAME_RE.match( game )
 

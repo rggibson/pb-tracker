@@ -37,9 +37,13 @@ def valid_pw(name, pw, h):
 def get_code( string ):
     # First, remove apostrophes
     res = re.sub( "'", "", string )
-    # Then, substitute consecutive nonalphanumeric characters with a dash
+    # Then, substitute consecutive nonalphanumeric characters with a dash, with
+    # the exception of plusses (NG+ is a legit category).
     # Also, convert to lower case
-    res = re.sub( '[^a-zA-Z0-9]+', '-', res ).lower()
+    res = re.sub( '[^a-zA-Z0-9+]+', '-', res ).lower()
+    # We must use the percent encoding for the plus sign because it breaks
+    # query strings
+    res = re.sub( '\+', '%2B', res )
     # Finally, remove leading and trailing dashes
     res = re.sub( '^-', '', res )
     res = re.sub( '-$', '', res )
