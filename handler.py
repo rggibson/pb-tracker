@@ -472,6 +472,7 @@ class Handler(webapp2.RequestHandler):
             q.ancestor( runs.key() )
             q.filter( 'username =', username )
             q.order( '-date' )
+            q.order( '-datetime_created' )
             for run in q.run( limit = 1000 ):
                 runlist.append( dict( run_id = str( run.key().id() ),
                                       game = run.game,

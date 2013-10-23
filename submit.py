@@ -5,6 +5,7 @@ import runs
 import json
 import re
 
+from operator import itemgetter
 from datetime import date
 from google.appengine.ext import db
 
@@ -364,6 +365,7 @@ class Submit( runhandler.RunHandler ):
                     run[ 'date' ] = new_run.date
                     run[ 'video' ] = video
                     run[ 'version' ] = version
+                    runlist.sort( key=itemgetter('date'), reverse=True )
                     self.update_cache_runlist_for_runner( user.username, 
                                                           runlist )
                     break
