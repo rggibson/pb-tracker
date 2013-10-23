@@ -8,3 +8,4 @@ def key( name = 'default' ):
 class Games( db.Model ):
     game = db.StringProperty( required=True )
     info = db.TextProperty( required=True ) 
+    num_pbs = db.IntegerProperty( default=0 )

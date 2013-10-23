@@ -203,8 +203,17 @@ class Submit( runhandler.RunHandler ):
                        + ", game = " + game + ", category = " + category 
                        + ", time = " + time )
 
+        # Check whether this is the first run for this username, game,
+        # category combination.  This will determine whether we need to update
+        # the gamelist and runnerlist, as well as update the num_pbs
+        # for the game.
+        num_pbs_delta = 0
+        num_runs = self.num_runs( user.username, game, category, 2 )
+        if num_runs == 1:
+            num_pbs_delta = 1
+
         # Update games.Games
-        self.update_games( params )
+        self.update_games_put( params, num_pbs_delta )
 
         # Update memcache
         self.update_cache_run_by_id( new_run.key().id(), new_run )
@@ -217,15 +226,13 @@ class Submit( runhandler.RunHandler ):
         self.update_cache_user_has_run( user.username, game, True )
         self.update_cache_last_run( user.username, new_run )
                      
-        # Check whether this is the first run for this username, game,
-        # category combination.  This will determine whether we need to check
-        # for gamelist and runnerlist updates.
-        num_runs = self.num_runs( user.username, game, category, 2 )
         if num_runs <= 0:
             logging.error( "Unexpected count [" + str(count) 
                            + "] for number of runs for "
                            + username + ", " + game + ", " + category )
-        if num_runs == 1:
+            self.update_cache_gamelist( None )
+            self.update_cache_runnerlist( None )
+        if num_pbs_delta == 1:
             self.update_gamelist_put( params )
             self.update_runnerlist_put( params )
 
@@ -286,8 +293,21 @@ class Submit( runhandler.RunHandler ):
                        + ", time= " + time + ", run_id = " + run_id )
         params[ 'datetime_created' ] = new_run.datetime_created
 
+        # Figure out the change in num_pbs for the old and new game
+        delta_num_pbs_old = 0
+        delta_num_pbs_new = 0
+        if game != old_run['game'] or category != old_run['category']:
+            num_runs = self.num_runs( user.username, old_run[ 'game' ], 
+                                      old_run[ 'category' ], 1 )
+            if num_runs == 0:
+                delta_num_pbs_old = -1
+            num_runs = self.num_runs( user.username, game, category, 2 )
+            if num_runs == 1:
+                delta_num_pbs_new = 1
+            
         # Update games.Games
-        self.update_games( params )
+        self.update_games_delete( old_run, delta_num_pbs_old )
+        self.update_games_put( params, delta_num_pbs_new )
 
         # Update memcache with the removal of the old run and addition of the
         # new run.
@@ -303,19 +323,10 @@ class Submit( runhandler.RunHandler ):
         self.update_cache_user_has_run( user.username, game, True )
 
         # Update gamelist and runnerlist in memcache
-        num_runs = self.num_runs( user.username, old_run[ 'game' ], 
-                                  old_run[ 'category' ], 1 )
-        if num_runs <= 0:
+        if delta_num_pbs_old == -1:
             self.update_gamelist_delete( old_run )
             self.update_runnerlist_delete( user )
-        num_runs = self.num_runs( user.username, game, category, 2 )
-        if num_runs <= 0:
-            logging.error( "Unexpected count [" + str(count) 
-                           + "] for number of runs for "
-                           + username + ", " + game + ", " + category )
-            self.update_cache_gamelist( None )
-            self.update_cache_runnerlist( None )
-        elif num_runs == 1:
+        if delta_num_pbs_new == 1:
             self.update_gamelist_put( params )
             self.update_runnerlist_put( params )
 

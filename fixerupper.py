@@ -1,8 +1,11 @@
 import games
+import runs
 import util
 import handler
 import urllib2
 import json
+
+from google.appengine.ext import db
 
 class FixerUpper( handler.Handler ):
     def get( self ):
@@ -13,16 +16,15 @@ class FixerUpper( handler.Handler ):
             self.render( "404.html", user=user )
             return
 
-        self.write( "FixerUpper in progress...\n" )
+        # Recalculate num_pbs for every game
+        q = db.Query( games.Games )
+        q.ancestor( games.key() )
+        for game_model in q.run( limit=100000 ):
+            q2 = db.Query( runs.Runs, projection=('username', 'category'),
+                           distinct=True )
+            q2.ancestor( runs.key() )
+            q2.filter( 'game =', game_model.game )
+            game_model.num_pbs = q2.count( limit=1000 )
+            game_model.put( )
 
-        game_model = self.get_game_model( 'mega-man-2' )        
-        gameinfolist = json.loads( game_model.info )
-        for i, gameinfo in enumerate( gameinfolist ):
-            if gameinfo['category'] == 'Any%, No Zips':
-                del gameinfolist[ i ]
-                break
-
-        game_model.info = json.dumps( gameinfolist )
-        game_model.put( )
-        
         self.write( "FixerUpper complete!\n" )

@@ -17,7 +17,7 @@ class RunHandler( handler.Handler ):
         q.filter( 'category =', category )
         return q.count( limit=limit )
 
-    def update_games( self, params ):
+    def update_games_put( self, params, delta_num_pbs ):
         user = params['user']
         game_model = params['game_model']
         game = params['game']
@@ -39,6 +39,7 @@ class RunHandler( handler.Handler ):
                 d['bk_updater'] = user.username
             game_model = games.Games( game = game,
                                       info = json.dumps( [ d ] ),
+                                      num_pbs = 1,
                                       parent = games.key(),
                                       key_name = game_code )
             game_model.put( )
@@ -52,7 +53,11 @@ class RunHandler( handler.Handler ):
                 categories[ str( game ) ] = [ str( category ) ]
                 self.update_cache_categories( categories )
 
-        elif not category_found:
+            return
+
+        game_model.num_pbs += delta_num_pbs
+
+        if not category_found:
             # Add a new category for this game in the database
             info = json.loads( game_model.info )
             d = dict( category=category, bk_runner=None, bk_seconds=None,
@@ -76,7 +81,9 @@ class RunHandler( handler.Handler ):
                 categories[ str( game ) ].sort( )
                 self.update_cache_categories( categories )
 
-        elif is_bkt:
+            return
+
+        if is_bkt:
             # Update the best known time for this game, category
             gameinfolist = json.loads( game_model.info )
             for gameinfo in gameinfolist:
@@ -86,12 +93,23 @@ class RunHandler( handler.Handler ):
                     gameinfo['bk_video'] = video
                     gameinfo['bk_updater'] = user.username
                     game_model.info = json.dumps( gameinfolist )
-                    game_model.put( )
                     logging.debug( "Updated best known time for game "
                                    + game + ", category " + category 
                                    + " in database" )
-                    self.update_cache_game_model( game_code, game_model )
                     break
+
+        if is_bkt or delta_num_pbs != 0:
+            # We made some changes, so store in db and update memcache
+            game_model.put( )
+            self.update_cache_game_model( game_code, game_model )
+
+    def update_games_delete( self, old_run, delta_num_pbs ):
+        if delta_num_pbs != 0:
+            game_code = util.get_code( old_run['game'] )
+            game_model = self.get_game_model( game_code )
+            game_model.num_pbs += delta_num_pbs
+            game_model.put( )
+            self.update_cache_game_model( game_code, game_model )
 
     def update_runinfo_put( self, params ):
         user = params[ 'user' ]
@@ -386,14 +404,7 @@ class RunHandler( handler.Handler ):
             for gamedict in gamelist:
                 if( gamedict['game_code'] == game_code ):
                     found_game = True
-                    # We may have a stale number for pbs, so recount
-                    q = db.Query( runs.Runs, 
-                                  projection=('username', 'category'),
-                                  distinct=True )
-                    q.ancestor( runs.key() )
-                    q.filter( 'game =', game )
-                    num_pbs = q.count( limit=1000 )
-                    gamedict['num_pbs'] = num_pbs
+                    gamedict['num_pbs'] += 1
                     gamelist.sort( key=itemgetter('num_pbs'), 
                                    reverse=True )
                     self.update_cache_gamelist( gamelist )
@@ -430,14 +441,7 @@ class RunHandler( handler.Handler ):
             for runnerdict in runnerlist:
                 if( runnerdict['username'] == user.username ):
                     found_runner = True
-                    # Memcache could be stale, so recalculate num_pbs
-                    q = db.Query( runs.Runs, 
-                                  projection=('game', 'category'),
-                                  distinct = True )
-                    q.ancestor( runs.key() )
-                    q.filter( 'username =', user.username )
-                    num_pbs = q.count( limit=1000 )
-                    runnerdict['num_pbs'] = num_pbs
+                    runnerdict['num_pbs'] += 1
                     runnerlist.sort( key=itemgetter('username') )
                     runnerlist.sort( key=itemgetter('num_pbs'), 
                                      reverse=True )
