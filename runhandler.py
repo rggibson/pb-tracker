@@ -117,6 +117,7 @@ class RunHandler( handler.Handler ):
         category = params[ 'category' ]
         seconds = params[ 'seconds' ]
         time = params[ 'time' ]
+        date = params[ 'date' ]
         video = params[ 'video' ]
         version = params[ 'version' ]
 
@@ -136,6 +137,7 @@ class RunHandler( handler.Handler ):
             # We need to update pb as well
             runinfo['pb_seconds'] = seconds
             runinfo['pb_time'] = time
+            runinfo['pb_date'] = date
             runinfo['video'] = video
             runinfo['version'] = version
         self.update_cache_runinfo( user.username, game, category, runinfo )
@@ -164,19 +166,20 @@ class RunHandler( handler.Handler ):
                 runinfo['avg_seconds'] )
             if( runinfo['pb_seconds'] == old_run['seconds'] ):
                 # We need to replace the pb too
-                q = db.Query( runs.Runs, projection=('seconds', 'video', 
-                                                     'version') )
+                q = db.Query( runs.Runs, projection=('seconds', 'date', 
+                                                     'video', 'version') )
                 q.ancestor( runs.key() )
                 q.filter( 'username =', user.username )
                 q.filter( 'game =', old_run['game'] )
                 q.filter( 'category =', old_run['category'] )
                 q.order( 'seconds' )
-                q.order( 'datetime_created' )
+                q.order( 'date' )
                 pb_run = q.get( )
                 if pb_run:
                     runinfo['pb_seconds'] = pb_run.seconds
                     runinfo['pb_time'] = util.seconds_to_timestr( 
                         pb_run.seconds )
+                    runinfo['pb_date'] = pb_run.date
                     runinfo['video'] = pb_run.video
                     runinfo['version'] = pb_run.version
                 else:
@@ -199,6 +202,7 @@ class RunHandler( handler.Handler ):
                                                  old_run['category'] ),
                                              pb_seconds=None,
                                              pb_time=None,
+                                             pb_date=None,
                                              num_runs=0,
                                              avg_seconds=0,
                                              avg_time='0:00',
@@ -377,7 +381,7 @@ class RunHandler( handler.Handler ):
         time = params[ 'time' ]
         video = params[ 'video' ]
         version = params[ 'version' ]
-        datetime_created = params[ 'datetime_created' ]
+        date = params[ 'date' ]
         run_id = params[ 'run_id' ]
 
         # Update runlist for runner in memcache
@@ -387,10 +391,10 @@ class RunHandler( handler.Handler ):
             runlist.insert( 0, dict( run_id = run_id,
                                      game = game, game_code = game_code,
                                      category = category, time = time, 
-                                     date = datetime_created.strftime(
-                                         "%a %b %d %H:%M:%S %Y" ),
+                                     date = date,
                                      video = video,
                                      version = version ) )
+            runlist.sort( key=itemgetter('date'), reverse=True )
             self.update_cache_runlist_for_runner( user.username, runlist )
 
     def update_gamelist_put( self, params ):

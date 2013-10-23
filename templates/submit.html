@@ -48,6 +48,17 @@
     </div>
     <div class="col-lg-4 col-md-4 error">{{time_error}}</div>
   </div>
+  <div class="form-group{% if date_error %} has-error{% endif %}">
+    <label for="date" class="col-lg-4 col-md-4 control-label">
+      <i class="icon-calendar icon-large"></i> Date
+    </label>
+    <div class="col-lg-4 col-md-4">
+      <input type="text" class="form-control" id="date" name="date"
+	     placeholder="e.g. 12/31/2012" 
+	     value="{{date.strftime( '%m/%d/%Y' )}}">
+    </div>
+    <div class="col-lg-4 col-md-4 error">{{date_error}}</div>
+  </div>
   <div class="form-group{% if version_error %} has-error{% endif %}">
     <label for="version" class="col-lg-4 col-md-4 control-label">
       <i class="icon-desktop icon-large"></i> 
@@ -126,6 +137,13 @@
           source: [ ]
         } );
       }
+    } );
+
+    /* Date picker */
+    $( 'input#date' ).datepicker( {
+      changeMonth: true,
+      changeYear: true,
+      maxDate: 0
     } );
   } );
 </script>

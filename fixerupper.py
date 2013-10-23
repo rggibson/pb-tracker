@@ -16,15 +16,22 @@ class FixerUpper( handler.Handler ):
             self.render( "404.html", user=user )
             return
 
-        # Recalculate num_pbs for every game
-        q = db.Query( games.Games )
-        q.ancestor( games.key() )
-        for game_model in q.run( limit=100000 ):
-            q2 = db.Query( runs.Runs, projection=('username', 'category'),
-                           distinct=True )
-            q2.ancestor( runs.key() )
-            q2.filter( 'game =', game_model.game )
-            game_model.num_pbs = q2.count( limit=1000 )
-            game_model.put( )
+        # # Recalculate num_pbs for every game
+        # q = db.Query( games.Games )
+        # q.ancestor( games.key() )
+        # for game_model in q.run( limit=100000 ):
+        #     q2 = db.Query( runs.Runs, projection=('username', 'category'),
+        #                    distinct=True )
+        #     q2.ancestor( runs.key() )
+        #     q2.filter( 'game =', game_model.game )
+        #     game_model.num_pbs = q2.count( limit=1000 )
+        #     game_model.put( )
+
+        # Auto-populate all run dates with the datetime_created
+        q = db.Query( runs.Runs )
+        q.ancestor( runs.key() )
+        for run in q.run( limit=100000 ):
+            run.date = run.datetime_created.date( )
+            run.put( )
 
         self.write( "FixerUpper complete!\n" )

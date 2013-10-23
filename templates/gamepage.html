@@ -39,11 +39,12 @@
   <thead>
     <tr>
       <th width="5%" class="hidden-xs"></th>
-      <th width="25%"><i class="icon-user icon-large"></i> Runner</th>
-      <th width="15%"><i class="icon-star icon-large"></i> PB</th>
+      <th width="20%"><i class="icon-user icon-large"></i> Runner</th>
+      <th width="10%"><i class="icon-star icon-large"></i> PB</th>
+      <th width="15%"><i class="icon-calendar icon-large"></i> Date</th>
       <th width="25%"><i class="icon-desktop icon-large"></i> Version</th>
       <th width="15%"><i class="icon-flag-checkered icon-large"></i> Runs</th>
-      <th width="15%"><i class="icon-time icon-large"></i> Avg Time</th>
+      <th width="10%"><i class="icon-time icon-large"></i> Avg Time</th>
     </tr>
   </thead>
   {% for run in d['infolist'] %}
@@ -61,6 +62,7 @@
     <td>{% if run['video'] %}<a href="{{run['video']}}">{% endif %}
 	{{run['pb_time']}}{% if run['video'] %}</a>{% endif %}
     </td>
+    <td>{{run['pb_date'].strftime( "%b %d %Y" )}}</td>
     <td>{% if run['version'] %}{{run['version']}}{% else %}-{% endif %}</td>
     <td>{{run['num_runs']}}</td>
     <td>{{run['avg_time']}}</td>

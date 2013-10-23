@@ -16,6 +16,7 @@
       <th><i class="icon-gamepad icon-large"></i> Game</th>
       <th><i class="icon-compass icon-large"></i> Category</th>
       <th><i class="icon-star icon-large"></i> PB</th>
+      <th><i class="icon-calendar icon-large"></i> Date</th>
       <th><i class="icon-flag-checkered icon-large"></i> Runs</th>
       <th><i class="icon-time icon-large"></i> Avg Time</th>
       <th><i class="icon-trophy icon-large"></i> Best Known Time</th>
@@ -48,6 +49,7 @@
 	{% if info['video'] %}<a href="{{info['video']}}">{% endif %}
 	  {{info['pb_time']}}{% if info['video'] %}</a>{% endif %}
       </td>
+      <td>{{info['pb_date'].strftime( "%b %d %Y" )}}</td>
       <td>{{info['num_runs']}}</td>
       <td>{{info['avg_time']}}</td>
       <td>{% if info['bk_time'] %}

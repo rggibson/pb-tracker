@@ -5,6 +5,7 @@ import runs
 import json
 import re
 
+from datetime import date
 from google.appengine.ext import db
 
 GAME_CATEGORY_RE = re.compile( r"^[a-zA-Z0-9 +=.:!@#$%&*()'/\\-]{1,100}$" )
@@ -32,6 +33,7 @@ class Submit( runhandler.RunHandler ):
             params[ 'game' ] = run.game
             params[ 'category' ] = run.category
             params[ 'time' ] = util.seconds_to_timestr( run.seconds )
+            params[ 'date' ] = run.date
             params[ 'run_id' ] = run_id
             if run.video is not None:
                 params[ 'video' ] = run.video
@@ -39,11 +41,12 @@ class Submit( runhandler.RunHandler ):
                 params[ 'version' ] = run.version
         else:
             # Start with the game, category and version from this user's 
-            # last run
+            # last run, as well as the current day
             run = self.get_last_run( user.username )
             if run is not None:
                 params['game'] = run.game
                 params['category'] = run.category
+                params['date'] = date.today( )
                 if run.version is not None:
                     params['version'] = run.version
 
@@ -61,6 +64,7 @@ class Submit( runhandler.RunHandler ):
         game = self.request.get( 'game' )
         category = self.request.get( 'category' )
         time = self.request.get( 'time' )
+        datestr = self.request.get( 'date' )
         video = self.request.get( 'video' )
         version = self.request.get( 'version' )
         is_bkt = self.request.get( 'bkt', default_value="no" )
@@ -71,8 +75,8 @@ class Submit( runhandler.RunHandler ):
         run_id = self.request.get( 'edit' )
 
         params = dict( user = user, game = game, category = category, 
-                       time = time, video = video, version = version,
-                       run_id = run_id, is_bkt = is_bkt )
+                       time = time, video = video, 
+                       version = version, run_id = run_id, is_bkt = is_bkt )
 
         valid = True
 
@@ -135,6 +139,24 @@ class Submit( runhandler.RunHandler ):
             params[ 'time' ] = time
             params[ 'seconds' ] = seconds
 
+        # Parse the date, ensure it is valid
+        parts = datestr.split( '/' )
+        if len( parts ) != 3:
+            params['date_error'] = "Bad date format: should be mm/dd/yyyy"
+            params['date'] = date.today( )
+            valid = False
+        else:
+            try:
+                params['date'] = date( int( parts[ 2 ] ), int( parts[ 0 ] ), 
+                                       int( parts[ 1 ] ) )
+                if params['date'] > date.today( ):
+                    params['date_error'] = "That date is in the future!"
+                    valid = False
+            except ValueError:
+                params['date_error'] = "Invalid date"
+                params['date'] = date.today( )
+                valid = False
+                
         # Check that if this is a best known time, that it beats the old
         # best known time
         if is_bkt and game_model is not None:
@@ -178,6 +200,7 @@ class Submit( runhandler.RunHandler ):
                                  game = game,
                                  category = category,
                                  seconds = seconds,
+                                 date = params['date'],
                                  version = version,
                                  parent = runs.key() )
             try:
@@ -198,7 +221,6 @@ class Submit( runhandler.RunHandler ):
 
         new_run.put( )
         params[ 'run_id' ] = str( new_run.key().id() )
-        params[ 'datetime_created' ] = new_run.datetime_created
         logging.debug( "Put new run for runner " + user.username
                        + ", game = " + game + ", category = " + category 
                        + ", time = " + time )
@@ -268,6 +290,7 @@ class Submit( runhandler.RunHandler ):
             new_run.game = game
             new_run.category = category
             new_run.seconds = seconds
+            new_run.date = params['date']
             new_run.version = version
         except db.BadValueError:
             valid = False
@@ -291,7 +314,6 @@ class Submit( runhandler.RunHandler ):
         logging.debug( "Put updated run for runner " + user.username
                        + ", game = " + game + ", category = " + category
                        + ", time= " + time + ", run_id = " + run_id )
-        params[ 'datetime_created' ] = new_run.datetime_created
 
         # Figure out the change in num_pbs for the old and new game
         delta_num_pbs_old = 0
@@ -339,6 +361,7 @@ class Submit( runhandler.RunHandler ):
                     run[ 'game_code' ] = game_code
                     run[ 'category' ] = category
                     run[ 'time' ] = time
+                    run[ 'date' ] = new_run.date
                     run[ 'video' ] = video
                     run[ 'version' ] = version
                     self.update_cache_runlist_for_runner( user.username, 

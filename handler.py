@@ -196,7 +196,7 @@ class Handler(webapp2.RequestHandler):
         if runinfo is None and not no_refresh:
             # Not in memcache, so constrcut the runinfo dictionary
             q = db.Query( runs.Runs, 
-                          projection=('seconds', 'video', 'version') )
+                          projection=('seconds', 'date', 'video', 'version') )
             q.ancestor( runs.key() )
             q.filter('username =', username)
             q.filter('game =', game)
@@ -209,7 +209,9 @@ class Handler(webapp2.RequestHandler):
                 num_runs += 1
                 avg_seconds += ( 1.0 / num_runs ) * ( 
                     run.seconds - avg_seconds )
-                if not pb_run or run.seconds <= pb_run.seconds:
+                if( pb_run is None or run.seconds < pb_run.seconds
+                    or ( run.seconds == pb_run.seconds 
+                         and run.date < pb_run.date ) ):
                     pb_run = run
 
             runinfo = dict( username = username,
@@ -218,6 +220,7 @@ class Handler(webapp2.RequestHandler):
                             category_code = util.get_code( category ),
                             pb_seconds = None,
                             pb_time = None,
+                            pb_date = None,
                             num_runs = num_runs,
                             avg_seconds = avg_seconds,
                             avg_time = util.seconds_to_timestr( avg_seconds ),
@@ -226,6 +229,7 @@ class Handler(webapp2.RequestHandler):
             if pb_run:
                 runinfo['pb_seconds'] = pb_run.seconds
                 runinfo['pb_time'] = util.seconds_to_timestr( pb_run.seconds )
+                runinfo['pb_date'] = pb_run.date
                 runinfo['video'] = pb_run.video
                 runinfo['version'] = pb_run.version
                 
@@ -467,7 +471,7 @@ class Handler(webapp2.RequestHandler):
             q = runs.Runs.all( )
             q.ancestor( runs.key() )
             q.filter( 'username =', username )
-            q.order( '-datetime_created' )
+            q.order( '-date' )
             for run in q.run( limit = 1000 ):
                 runlist.append( dict( run_id = str( run.key().id() ),
                                       game = run.game,
@@ -475,8 +479,7 @@ class Handler(webapp2.RequestHandler):
                                       category = run.category,
                                       time = util.
                                       seconds_to_timestr( run.seconds ),
-                                      date = run.datetime_created.strftime(
-                                          "%a %b %d %H:%M:%S %Y" ),
+                                      date = run.date,
                                       video = run.video,
                                       version = run.version ) )
 

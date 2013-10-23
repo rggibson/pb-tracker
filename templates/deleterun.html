@@ -32,7 +32,7 @@
 	  {{time}}{% if run.video %}</a>{% endif %}      
       </td>
       <td>{% if run.version %}{{run.version}}{% else %}-{% endif %}</td>
-      <td>{{run.datetime_created.strftime("%a %b %d %H:%M:%S %Y")}}</td>
+      <td>{{run.date.strftime("%a %b %d %Y")}}</td>
     </tr>
   </tbody>
 </table>
