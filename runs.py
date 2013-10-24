@@ -9,7 +9,8 @@ class Runs( db.Model ):
     game = db.StringProperty( required = True )
     category = db.StringProperty( required = True )
     seconds = db.IntegerProperty( required = True )
-    date = db.DateProperty( default = date( 2013, 01, 01 ) )
-    datetime_created = db.DateTimeProperty( auto_now_add = True )
+    date = db.DateProperty( required = False )
+    datetime_created = db.DateTimeProperty( required = True, 
+                                            auto_now_add = True )
     version = db.StringProperty( required = False )
     video = db.LinkProperty( required = False )

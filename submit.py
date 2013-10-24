@@ -142,7 +142,9 @@ class Submit( runhandler.RunHandler ):
 
         # Parse the date, ensure it is valid
         parts = datestr.split( '/' )
-        if len( parts ) != 3:
+        if len( datestr ) <= 0:
+            params[ 'date' ] = None
+        elif len( parts ) != 3:
             params['date_error'] = "Bad date format: should be mm/dd/yyyy"
             params['date'] = date.today( )
             valid = False
@@ -213,7 +215,7 @@ class Submit( runhandler.RunHandler ):
                                  game = game,
                                  category = category,
                                  seconds = seconds,
-                                 date = params['date'],
+                                 date = params[ 'date' ],
                                  version = version,
                                  parent = runs.key() )
             try:
@@ -377,7 +379,8 @@ class Submit( runhandler.RunHandler ):
                     run[ 'date' ] = new_run.date
                     run[ 'video' ] = video
                     run[ 'version' ] = version
-                    runlist.sort( key=itemgetter('date'), reverse=True )
+                    runlist.sort( key=lambda x: util.get_valid_date( 
+                        x['date'] ), reverse=True )
                     self.update_cache_runlist_for_runner( user.username, 
                                                           runlist )
                     break

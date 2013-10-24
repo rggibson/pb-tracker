@@ -6,6 +6,8 @@ import logging
 import re
 import secret
 
+from datetime import date
+
 # Hashing utility functions
 def hash_str(s):
     return hmac.new(secret.SECRET, s).hexdigest()
@@ -109,3 +111,10 @@ def get_gravatar_url( gravatar, size=80 ):
                  + str( size ) )
     else:
         return ''
+
+# Function to provide a default date
+def get_valid_date( d ):
+    if d is not None:
+        return d
+    else:
+        return date( 1970, 1, 1 )

@@ -201,17 +201,15 @@ class Handler(webapp2.RequestHandler):
             q.filter('username =', username)
             q.filter('game =', game)
             q.filter('category =', category)
-            q.order('-datetime_created') # Cut off old runs
+            q.order('-date') # Cut off old runs
             pb_run = None
             avg_seconds = 0
             num_runs = 0
-            for run in q.run( limit = 10000 ):
+            for run in q.run( limit = 100000 ):
                 num_runs += 1
                 avg_seconds += ( 1.0 / num_runs ) * ( 
                     run.seconds - avg_seconds )
-                if( pb_run is None or run.seconds < pb_run.seconds
-                    or ( run.seconds == pb_run.seconds 
-                         and run.date < pb_run.date ) ):
+                if( pb_run is None or run.seconds <= pb_run.seconds ):
                     pb_run = run
 
             runinfo = dict( username = username,

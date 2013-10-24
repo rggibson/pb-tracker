@@ -399,10 +399,11 @@ class RunHandler( handler.Handler ):
             runlist.insert( 0, dict( run_id = run_id,
                                      game = game, game_code = game_code,
                                      category = category, time = time, 
-                                     date = date,
+                                     date = date, 
                                      video = video,
                                      version = version ) )
-            runlist.sort( key=itemgetter('date'), reverse=True )
+            runlist.sort( key=lambda x: util.get_valid_date( x['date'] ),
+                          reverse=True )
             self.update_cache_runlist_for_runner( user.username, runlist )
 
     def update_gamelist_put( self, params ):
