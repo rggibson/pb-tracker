@@ -267,6 +267,7 @@ class Handler(webapp2.RequestHandler):
             q.ancestor( runs.key() )
             q.filter( 'username =', username )
             q.order( 'game' )
+            q.order( 'category' )
             cur_game = None
             for run in q.run( limit = 1000 ):
                 if run.game != cur_game:

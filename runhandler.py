@@ -226,11 +226,13 @@ class RunHandler( handler.Handler ):
         for pb in pblist:
             if( pb['game'] == game ):
                 pb['num_runs'] += 1
+                pblist.sort( key=itemgetter('game') )
                 pblist.sort( key=itemgetter('num_runs'), reverse=True )
                 for i, info in enumerate( pb['infolist'] ):
                     if( info['category'] == category ):
                         pb['infolist'][i] = self.get_runinfo( user.username, 
                                                               game, category )
+                        pb['infolist'].sort( key=itemgetter('category') )
                         pb['infolist'].sort( key=itemgetter('num_runs'),
                                              reverse=True )
                         self.update_cache_pblist( user.username, pblist )
@@ -240,6 +242,8 @@ class RunHandler( handler.Handler ):
                 # Add the run to the pblist and update memcache.
                 runinfo = self.get_runinfo( user.username, game, category )
                 pb['infolist'].append( runinfo )
+                pb['infolist'].sort( key=itemgetter('category') )
+                pb['infolist'].sort( key=itemgetter('num_runs') )
                 self.update_cache_pblist( user.username, pblist )
                 return
 
@@ -250,6 +254,8 @@ class RunHandler( handler.Handler ):
                              game_code = game_code,
                              num_runs = 1,
                              infolist = [ runinfo ] ) )
+        pblist.sort( key=itemgetter('game') )
+        pblist.sort( key=itemgetter('num_runs'), reverse=True )
         self.update_cache_pblist( user.username, pblist )
 
     def update_pblist_delete( self, user, old_run ):
@@ -273,8 +279,10 @@ class RunHandler( handler.Handler ):
                             del pb[ 'infolist' ][ j ]
                             if len( pb[ 'infolist' ] ) <= 0:
                                 del pblist[ i ]
+                        pb['infolist'].sort( key=itemgetter('category') )
                         pb['infolist'].sort( key=itemgetter('num_runs'),
                                              reverse=True )
+                        pblist.sort( key=itemgetter('game') )
                         pblist.sort( key=itemgetter('num_runs'), 
                                      reverse=True )
                         self.update_cache_pblist( user.username, pblist )
