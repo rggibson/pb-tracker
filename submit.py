@@ -44,10 +44,10 @@ class Submit( runhandler.RunHandler ):
             # Start with the game, category and version from this user's 
             # last run, as well as the current day
             run = self.get_last_run( user.username )
+            params['date'] = date.today( )
             if run is not None:
                 params['game'] = run.game
                 params['category'] = run.category
-                params['date'] = date.today( )
                 if run.version is not None:
                     params['version'] = run.version
 
