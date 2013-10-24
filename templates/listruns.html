@@ -34,7 +34,7 @@
 	  {{run['time']}}{% if run['video'] %}</a>{% endif %}      
       </td>
       <td>{% if run['version'] %}{{run['version']}}{% else %}-{% endif %}</td>
-      <td>{{run['date'].strftime( "%a %b %d %Y" )}}</td>
+      <td>{% if run['date'] %}{{run['date'].strftime( "%a %b %d %Y" )}}{% else %}-{% endif %}</td>
       {% if user.username == runner.username %}
       <td>
 	<a href="/submit?edit={{run['run_id']}}"><i class="icon-edit"></i></a>  

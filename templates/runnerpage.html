@@ -49,7 +49,7 @@
 	{% if info['video'] %}<a href="{{info['video']}}">{% endif %}
 	  {{info['pb_time']}}{% if info['video'] %}</a>{% endif %}
       </td>
-      <td>{{info['pb_date'].strftime( "%b %d %Y" )}}</td>
+      <td>{% if info['pb_date'] %}{{info['pb_date'].strftime( "%b %d %Y" )}}{% else %}-{% endif %}</td>
       <td>{{info['num_runs']}}</td>
       <td>{{info['avg_time']}}</td>
       <td>{% if info['bk_time'] %}

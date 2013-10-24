@@ -62,7 +62,7 @@
     <td>{% if run['video'] %}<a href="{{run['video']}}">{% endif %}
 	{{run['pb_time']}}{% if run['video'] %}</a>{% endif %}
     </td>
-    <td>{{run['pb_date'].strftime( "%b %d %Y" )}}</td>
+    <td>{% if run['pb_date'] %}{{run['pb_date'].strftime( "%b %d %Y" )}}{% else %}-{% endif %}</td>
     <td>{% if run['version'] %}{{run['version']}}{% else %}-{% endif %}</td>
     <td>{{run['num_runs']}}</td>
     <td>{{run['avg_time']}}</td>
