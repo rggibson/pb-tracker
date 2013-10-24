@@ -76,6 +76,8 @@
 {% block js %}
 <script src="/static/js/jquery.lazyload.min.js"></script>
 <script type="text/javascript">
-  $( "img.lazy" ).lazyload( );
+  $( "img.lazy" ).lazyload( {
+    skip_invisible: false
+  } );  
 </script>
 {% endblock %}

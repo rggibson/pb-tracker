@@ -355,8 +355,11 @@ class Handler(webapp2.RequestHandler):
                 info = self.get_runinfo( run.username, game, run.category )
                 d['infolist'].append( info )
 
-            # For each category, sort the runlist by seconds
+            # For each category, sort the runlist by seconds, breaking ties
+            # by date
             for runlist in gamepage:
+                runlist['infolist'].sort( key=lambda x: util.get_valid_date(
+                        x['pb_date'] ) )
                 runlist['infolist'].sort( key=itemgetter('pb_seconds') )
             
             # Sort the categories by number of runners

@@ -61,6 +61,8 @@
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
   block_double_submit( '#submit-btn' );
-  $( "img.lazy" ).lazyload( );
+  $( "img.lazy" ).lazyload( {
+    skip_invisible: false
+  } );  
 </script>
 {% endblock %}
