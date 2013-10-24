@@ -147,11 +147,23 @@ class Submit( runhandler.RunHandler ):
             params['date'] = date.today( )
             valid = False
         else:
+            # strftime breaks with dates before 1900, but JayFermont suggested
+            # they break before 1970, so let's disallow anything before 1970.
+            # To help users out, let's change two-digit dates to the 1900/2000
+            # equivalent.
+            year = int( parts[ 2 ] )
+            if year >= 0 and year <= 69:
+                year += 2000
+            elif year >= 70 and year < 100:
+                year += 1900
             try:
-                params['date'] = date( int( parts[ 2 ] ), int( parts[ 0 ] ), 
+                params['date'] = date( year, int( parts[ 0 ] ), 
                                        int( parts[ 1 ] ) )
                 if params['date'] > date.today( ):
                     params['date_error'] = "That date is in the future!"
+                    valid = False
+                elif year < 1970:
+                    params['date_error'] = "Date must be after Dec 31 1969"
                     valid = False
             except ValueError:
                 params['date_error'] = "Invalid date"
