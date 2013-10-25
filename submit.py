@@ -34,7 +34,8 @@ class Submit( runhandler.RunHandler ):
             params[ 'game' ] = run.game
             params[ 'category' ] = run.category
             params[ 'time' ] = util.seconds_to_timestr( run.seconds )
-            params[ 'date' ] = run.date
+            if run.date is not None:
+                params[ 'datestr' ] = run.date.strftime( "%m/%d/%Y" );
             params[ 'run_id' ] = run_id
             if run.video is not None:
                 params[ 'video' ] = run.video
@@ -42,9 +43,9 @@ class Submit( runhandler.RunHandler ):
                 params[ 'version' ] = run.version
         else:
             # Start with the game, category and version from this user's 
-            # last run, as well as the current day
+            # last run
             run = self.get_last_run( user.username )
-            params['date'] = date.today( )
+            params['set_date_to_today'] = True;
             if run is not None:
                 params['game'] = run.game
                 params['category'] = run.category
@@ -144,7 +145,6 @@ class Submit( runhandler.RunHandler ):
         ( params['date'], params['date_error'] ) = util.datestr_to_date( 
             datestr )
         if params['date_error']:
-            params['date'] = date.today( )
             params['date_error'] = "Invalid date: " + params['date_error']
             valid = False
                 

@@ -145,6 +145,6 @@ def datestr_to_date( datestr ):
         elif year < 1970:
             return ( None, "date must be after Dec 31 1969" )
     except ValueError:
-        return ( None, 'that day might not exist' )
+        return ( None, 'that day is not on our calendar' )
 
     return ( d, '' )

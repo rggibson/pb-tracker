@@ -66,7 +66,8 @@
 	</label>
 	<div class="col-lg-6 col-md-6">
 	  <input type="text" class="form-control" id="date" name="date"
-		 placeholder="e.g. 12/31/2012" value="{{datestr}}">
+		 placeholder="e.g. 12/31/2012" 
+		 value="{% if datestr %}{{datestr}}{% endif %}">
 	</div>
 	<div class="col-lg-6 col-md-6 col-lg-offset-6 col-md-offset-6 error">
 	  {{date_error}}
@@ -79,7 +80,7 @@
 	<div class="col-lg-6 col-md-6">
 	  <input type="text" class="form-control" id="video" name="video"
 		 placeholder="e.g. http://www.youtube.com/watch?v=oLXNOHdo8s8" 
-		 value="{{video}}">
+		 value="{% if video %}{{video}}{% endif %}">
 	</div>
 	<div class="col-lg-6 col-md-6 col-lg-offset-6 col-md-offset-6 error">
 	  {{video_error}}

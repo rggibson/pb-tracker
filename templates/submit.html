@@ -54,8 +54,7 @@
     </label>
     <div class="col-lg-4 col-md-4">
       <input type="text" class="form-control" id="date" name="date"
-	     placeholder="e.g. 12/31/2012" 
-	     value="{% if date %}{{date.strftime( '%m/%d/%Y' )}}{% endif %}">
+	     placeholder="e.g. 12/31/2012" value="{{datestr}}">
     </div>
     <div class="col-lg-4 col-md-4 error">{{date_error}}</div>
   </div>
@@ -117,6 +116,15 @@
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
   block_double_submit( '#submit-btn' );
+
+  {% if set_date_to_today %}
+  var d = new Date( );
+  var month = d.getMonth( ) + 1;
+  var day = d.getDate( );
+  var datestr = ((''+month).length<2 ? '0' : '') + month + '/' +
+    ((''+day).length<2 ? '0' : '') + day + '/' + d.getFullYear( );
+  $( 'input#date' ).val( datestr );
+  {% endif %}
 
   $( document ).ready( function( ) {
     var categories = {{categories | safe}};
