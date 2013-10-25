@@ -317,6 +317,8 @@ class RunHandler( handler.Handler ):
                         # User has run this category before
                         d['infolist'][i] = self.get_runinfo( user.username, 
                                                              game, category )
+                        d['infolist'].sort( key=lambda x: util.get_valid_date(
+                                x['pb_date'] ) )
                         d['infolist'].sort( key=itemgetter('pb_seconds') )
                         self.update_cache_gamepage( game, gamepage )
                         return
@@ -324,6 +326,8 @@ class RunHandler( handler.Handler ):
                 # Category found, but user has not prev. run this category
                 runinfo = self.get_runinfo( user.username, game, category )
                 d['infolist'].append( runinfo )
+                d['infolist'].sort( key=lambda x: util.get_valid_date(
+                        x['pb_date'] ) )                
                 d['infolist'].sort( key=itemgetter('pb_seconds') )
                 gamepage.sort( key=lambda x: len(x['infolist']), reverse=True )
                 self.update_cache_gamepage( game, gamepage )
