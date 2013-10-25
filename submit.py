@@ -9,7 +9,7 @@ from operator import itemgetter
 from datetime import date
 from google.appengine.ext import db
 
-GAME_CATEGORY_RE = re.compile( r"^[a-zA-Z0-9 +=.:!@#$%&*()'/\\-]{1,100}$" )
+GAME_CATEGORY_RE = re.compile( r"^[a-zA-Z0-9 +=,.:!@#$%&*()'/\\-]{1,100}$" )
 def valid_game_or_category( game_or_category ):
     return GAME_CATEGORY_RE.match( game_or_category )
 
@@ -76,7 +76,7 @@ class Submit( runhandler.RunHandler ):
         run_id = self.request.get( 'edit' )
 
         params = dict( user = user, game = game, category = category, 
-                       time = time, video = video, 
+                       time = time, datestr = datestr, video = video, 
                        version = version, run_id = run_id, is_bkt = is_bkt )
 
         valid = True
@@ -141,36 +141,12 @@ class Submit( runhandler.RunHandler ):
             params[ 'seconds' ] = seconds
 
         # Parse the date, ensure it is valid
-        parts = datestr.split( '/' )
-        if len( datestr ) <= 0:
-            params[ 'date' ] = None
-        elif len( parts ) != 3:
-            params['date_error'] = "Bad date format: should be mm/dd/yyyy"
+        ( params['date'], params['date_error'] ) = util.datestr_to_date( 
+            datestr )
+        if params['date_error']:
             params['date'] = date.today( )
+            params['date_error'] = "Invalid date: " + params['date_error']
             valid = False
-        else:
-            # strftime breaks with dates before 1900, but JayFermont suggested
-            # they break before 1970, so let's disallow anything before 1970.
-            # To help users out, let's change two-digit dates to the 1900/2000
-            # equivalent.
-            year = int( parts[ 2 ] )
-            if year >= 0 and year <= 69:
-                year += 2000
-            elif year >= 70 and year < 100:
-                year += 1900
-            try:
-                params['date'] = date( year, int( parts[ 0 ] ), 
-                                       int( parts[ 1 ] ) )
-                if params['date'] > date.today( ):
-                    params['date_error'] = "That date is in the future!"
-                    valid = False
-                elif year < 1970:
-                    params['date_error'] = "Date must be after Dec 31 1969"
-                    valid = False
-            except ValueError:
-                params['date_error'] = "Invalid date"
-                params['date'] = date.today( )
-                valid = False
                 
         # Check that if this is a best known time, that it beats the old
         # best known time

@@ -1,5 +1,13 @@
 {% extends "base.html" %}
 
+{% block morehead %}
+
+<link rel="stylesheet" 
+      href="/static/css/jquery-ui.min.css"/>
+
+{% endblock %}
+
+
 {% block content %}
 
 <script type="text/javascript">
@@ -52,6 +60,18 @@
 	  {{time_error}}
 	</div>
       </div>
+      <div class="form-group{% if date_error %} has-error{% endif %}">
+	<label for="date" class="col-lg-6 col-md-6 control-label">
+	  <i class="icon-calendar icon-large"></i> Date (optional)
+	</label>
+	<div class="col-lg-6 col-md-6">
+	  <input type="text" class="form-control" id="date" name="date"
+		 placeholder="e.g. 12/31/2012" value="{{datestr}}">
+	</div>
+	<div class="col-lg-6 col-md-6 col-lg-offset-6 col-md-offset-6 error">
+	  {{date_error}}
+	</div>
+      </div>
       <div class="form-group{% if video_error %} has-error{% endif %}">
 	<label for="video" class="col-lg-6 col-md-6 control-label">
 	  <i class="icon-facetime-video icon-large"></i> Video (optional)
@@ -82,7 +102,12 @@
 {% endblock %}
 
 {% block js %}
-<!-- Disable button on submit to avoid double submissions -->
+<script src="/static/js/jquery-ui.min.js"></script>
+<!-- Have to re-include bootstrap.js, otherwise blocking double 
+     submit breaks -->
+<script 
+   src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js">
+</script>
 <script src="/static/js/jquery.lazyload.min.js"></script>
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
@@ -90,5 +115,15 @@
     skip_invisible: false
   } );  
   block_double_submit( '#submit-btn' );
+
+  $( document ).ready( function( ) {
+    /* Date picker */
+    $( 'input#date' ).datepicker( {
+      changeMonth: true,
+      changeYear: true,
+      minDate: new Date( 1970, 0, 1 ),
+      maxDate: 0
+    } );
+  } );
 </script>
 {% endblock %}

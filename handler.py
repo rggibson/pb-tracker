@@ -348,6 +348,8 @@ class Handler(webapp2.RequestHandler):
                             d['bk_runner'] = gameinfo.get( 'bk_runner' )
                             d['bk_time'] = util.seconds_to_timestr(
                                 gameinfo.get( 'bk_seconds' ) )
+                            d['bk_date'] = util.datestr_to_date( 
+                                gameinfo.get( 'bk_datestr' ) )[ 0 ]
                             d['bk_video'] = gameinfo.get( 'bk_video' )
                             break
 

@@ -7,6 +7,7 @@ import re
 import secret
 
 from datetime import date
+from datetime import timedelta
 
 # Hashing utility functions
 def hash_str(s):
@@ -112,9 +113,38 @@ def get_gravatar_url( gravatar, size=80 ):
     else:
         return ''
 
-# Function to provide a default date
+# Date utility functions
 def get_valid_date( d ):
     if d is not None:
         return d
     else:
         return date( 1970, 1, 1 )
+
+def datestr_to_date( datestr ):
+    if datestr is None or len( datestr ) <= 0:
+        return ( None, '' )
+
+    parts = datestr.split( '/' )
+    if len( parts ) != 3:
+        return ( None, "format should be mm/dd/yyyy" )
+
+    # strftime breaks with dates before 1900, but JayFermont suggested
+    # they break before 1970, so let's disallow anything before 1970.
+    # To help users out, let's change two-digit dates to the 1900/2000
+    # equivalent.
+    year = int( parts[ 2 ] )
+    if year >= 0 and year <= 69:
+        year += 2000
+    elif year >= 70 and year < 100:
+        year += 1900
+    try:
+        d = date( year, int( parts[ 0 ] ), int( parts[ 1 ] ) )
+        # Add a day to today to account for timezone problems
+        if d > date.today( ) + timedelta( days=1 ): 
+            return ( None, "that date is in the future!" )
+        elif year < 1970:
+            return ( None, "date must be after Dec 31 1969" )
+    except ValueError:
+        return ( None, 'that day might not exist' )
+
+    return ( d, '' )

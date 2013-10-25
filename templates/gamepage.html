@@ -23,6 +23,9 @@
   {% if d['bk_video'] %}<a href="{{d['bk_video']}}">{% endif %}
     {{d['bk_time']}}{% if d['bk_video'] %}</a>{% endif %} 
   by {{d['bk_runner']}}
+  {% if d['bk_date'] %}
+  on {{d['bk_date'].strftime( "%b %d %Y" )}}
+  {% endif %}
   {% if user_has_run %}
   <a href="/game/{{game_code}}/update-bkt?c={{d['category_code']}}">
     <i class="icon-edit"></i>

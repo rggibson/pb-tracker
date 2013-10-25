@@ -45,11 +45,13 @@ class UpdateBkt( handler.Handler ):
         if params['username'] is None:
             params['username'] = ''
             params['time'] = ''
+            params['datestr'] = ''
             params['video'] = ''
             params['updating'] = False
         else:
             params['time'] = util.seconds_to_timestr( 
                 gameinfo.get( 'bk_seconds' ) )
+            params['datestr'] = gameinfo.get( 'bk_datestr' )
             params['video'] = gameinfo.get( 'bk_video' )
             params['updating'] = True
 
@@ -98,11 +100,12 @@ class UpdateBkt( handler.Handler ):
         # Get the inputs
         username = self.request.get( 'username' )
         time = self.request.get( 'time' )
+        datestr = self.request.get( 'date' )
         video = self.request.get( 'video' )
 
         params = dict( user=user, game=game_model.game, game_code=game_code,
                        category=gameinfo['category'], username=username,
-                       time=time, video=video )
+                       time=time, datestr=datestr, video=video )
 
         # Are we updating?
         if gameinfo.get( 'bk_runner' ) is None:
@@ -119,9 +122,10 @@ class UpdateBkt( handler.Handler ):
         else:
             params['from_runnerpage'] = False
 
-        if not username and not time and not video:
+        if not username and not time and not datestr and not video:
             gameinfo['bk_runner'] = None
             gameinfo['bk_seconds'] = None
+            gameinfo['bk_datestr'] = None
             gameinfo['bk_video'] = None
         else:
             # Make sure we got a username
@@ -135,6 +139,12 @@ class UpdateBkt( handler.Handler ):
                 params['time_error'] = "Invalid time: " + time_error
                 valid = False
 
+            # Pase the date, ensure it is valid
+            ( date, date_error ) = util.datestr_to_date( datestr )
+            if date_error:
+                params['date_error'] = "Invalid date: " + date_error
+                valid = False
+
             if not valid:
                 self.render( "updatebkt.html", **params )
                 return
@@ -145,6 +155,7 @@ class UpdateBkt( handler.Handler ):
             # Store the best known time
             gameinfo['bk_runner'] = username
             gameinfo['bk_seconds'] = seconds
+            gameinfo['bk_datestr'] = datestr
             gameinfo['bk_video'] = video
 
         gameinfo['bk_updater'] = user.username
@@ -162,6 +173,7 @@ class UpdateBkt( handler.Handler ):
                     d['bk_runner'] = gameinfo['bk_runner']
                     d['bk_time'] = util.seconds_to_timestr( 
                         gameinfo['bk_seconds'] )
+                    d['bk_date'] = date
                     d['bk_video'] = gameinfo['bk_video']
                     break
             self.update_cache_gamepage( game_model.game, gamepage )

@@ -25,16 +25,18 @@ class RunHandler( handler.Handler ):
         game_code = params['game_code']
         category_found = params['category_found']
         seconds = params['seconds']
+        datestr = params['datestr']
         video = params['video']
         is_bkt = params['is_bkt']
 
         if game_model is None:
             # Add a new game to the database
             d = dict( category=category, bk_runner=None, bk_seconds=None,
-                      bk_video=None, bk_updater=None )
+                      bk_datestr=None, bk_video=None, bk_updater=None )
             if is_bkt:
                 d['bk_runner'] = user.username
                 d['bk_seconds'] = seconds
+                d['bk_datestr'] = datestr
                 d['bk_video'] = video
                 d['bk_updater'] = user.username
             game_model = games.Games( game = game,
@@ -65,6 +67,7 @@ class RunHandler( handler.Handler ):
             if is_bkt:
                 d['bk_runner'] = user.username
                 d['bk_seconds'] = seconds
+                d['bk_datestr'] = datestr
                 d['bk_video'] = video
                 d['bk_updater'] = user.username
             info.append( d )
@@ -90,6 +93,7 @@ class RunHandler( handler.Handler ):
                 if gameinfo['category'] == category:
                     gameinfo['bk_runner'] = user.username
                     gameinfo['bk_seconds'] = seconds
+                    gameinfo['bk_datestr'] = datestr
                     gameinfo['bk_video'] = video
                     gameinfo['bk_updater'] = user.username
                     game_model.info = json.dumps( gameinfolist )
@@ -297,6 +301,7 @@ class RunHandler( handler.Handler ):
         category = params[ 'category' ]
         seconds = params[ 'seconds' ]
         time = params[ 'time' ]
+        date = params[ 'date' ]
         video = params[ 'video' ]
         is_bkt = params[ 'is_bkt' ]
 
@@ -311,6 +316,7 @@ class RunHandler( handler.Handler ):
                     # Update best known time for this category
                     d['bk_runner'] = user.username
                     d['bk_time'] = util.seconds_to_timestr( seconds )
+                    d['bk_date'] = date
                     d['bk_video'] = video
                 for i, runinfo in enumerate( d['infolist'] ):
                     if runinfo['username'] == user.username:
@@ -351,6 +357,8 @@ class RunHandler( handler.Handler ):
                 d['bk_runner'] = gameinfo.get( 'bk_runner' )
                 d['bk_time'] = util.seconds_to_timestr( 
                         gameinfo.get( 'bk_seconds' ) )
+                d['bk_date'] = util.datestr_to_date( 
+                    gameinfo.get( 'bk_datestr' ) )[ 0 ]
                 d['bk_video'] = gameinfo.get( 'bk_video' )
                 break
         gamepage.append( d )
