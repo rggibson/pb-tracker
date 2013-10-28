@@ -2,13 +2,20 @@ import handler
 import runners
 import util
 
-class Login(handler.Handler):
-    def get(self):
-        self.render("login.html")
+class Login( handler.Handler ):
+    def get( self ):
+        return_url = self.request.get( 'from' )
+        if not return_url:
+            return_url = "/"
 
-    def post(self):
-        username = self.request.get('username')
-        password = self.request.get('password')
+        self.render( "login.html", return_url=return_url )
+
+    def post( self ):
+        username = self.request.get( 'username' )
+        password = self.request.get( 'password' )
+        return_url = self.request.get( 'from' )
+        if not return_url:
+            return_url = "/"
         username_code = util.get_code( username )
 
         # Find the user in the database
@@ -16,13 +23,13 @@ class Login(handler.Handler):
                                                 parent=runners.key() )
         if not user:
             self.render( "login.html", username=username, 
-                         error="Invalid login" )
+                         return_url=return_url, error="Invalid login" )
             return
 
         # Check for valid password
         if util.valid_pw( username_code, password, user.password ):
             self.login( username_code )
-            self.goto_return_url( )
+            self.redirect( return_url )
         else:
             self.render( "login.html", username=username, 
-                         error="Invalid login" )
+                         return_url=return_url, error="Invalid login" )

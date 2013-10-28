@@ -7,6 +7,9 @@ import handler
 class UpdateBkt( handler.Handler ):
     def get( self, game_code ):
         user = self.get_user( )
+        return_url = self.request.get( 'from' )
+        if not return_url:
+            return_url = "/"
 
         # Get the category
         category_code = self.request.get( 'c' )
@@ -40,7 +43,7 @@ class UpdateBkt( handler.Handler ):
             return
 
         params = dict( user=user, game=game_model.game, game_code=game_code, 
-                       category=gameinfo['category'] )
+                       category=gameinfo['category'], return_url=return_url )
         params['username'] = gameinfo.get( 'bk_runner' )
         if params['username'] is None:
             params['username'] = ''
@@ -55,7 +58,6 @@ class UpdateBkt( handler.Handler ):
             params['video'] = gameinfo.get( 'bk_video' )
             params['updating'] = True
 
-        return_url = self.get_return_url( )
         if return_url[ 0 : len( '/runner/' ) ] == '/runner/':
             params['from_runnerpage'] = True
         else:
@@ -65,6 +67,9 @@ class UpdateBkt( handler.Handler ):
 
     def post( self, game_code ):
         user = self.get_user( )
+        return_url = self.request.get( 'from' )
+        if not return_url:
+            return_url = "/"
 
         # Get the category
         category_code = self.request.get( 'c' )
@@ -105,7 +110,8 @@ class UpdateBkt( handler.Handler ):
 
         params = dict( user=user, game=game_model.game, game_code=game_code,
                        category=gameinfo['category'], username=username,
-                       time=time, datestr=datestr, video=video )
+                       time=time, datestr=datestr, video=video, 
+                       return_url=return_url )
 
         # Are we updating?
         if gameinfo.get( 'bk_runner' ) is None:
@@ -116,7 +122,6 @@ class UpdateBkt( handler.Handler ):
         valid = True
 
         # Check for where we came from
-        return_url = self.get_return_url( )
         if return_url[ 0 : len( '/runner/' ) ] == '/runner/':
             params['from_runnerpage'] = True
         else:
@@ -179,4 +184,4 @@ class UpdateBkt( handler.Handler ):
             self.update_cache_gamepage( game_model.game, gamepage )
 
         # All dun
-        self.goto_return_url( )
+        self.redirect( return_url )

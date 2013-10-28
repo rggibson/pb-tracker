@@ -15,3 +15,15 @@ function keys( obj ) {
 
     return keys;
 }
+
+function set_nav_return_urls( from, have_user ) {
+    if( have_user ) {
+	$( '#nav-logout-a' ).attr( "href", $( '#nav-logout-a' ).attr( "href" )
+				   + "?from=" + from );	
+    } else {
+	$( '#nav-signup-a' ).attr( "href", $( '#nav-signup-a' ).attr( "href" )
+				   + "?from=" + from );	
+	$( '#nav-login-a' ).attr( "href", $( '#nav-login-a' ).attr( "href" )
+				  + "?from=" + from );	
+    }
+}

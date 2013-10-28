@@ -249,8 +249,8 @@ class Submit( runhandler.RunHandler ):
             self.update_gamelist_put( params )
             self.update_runnerlist_put( params )
 
-        self.redirect( "/runner/" + util.get_code( user.username ) )
-
+        self.redirect( "/runner/" + util.get_code( user.username )
+                       + "?q=view-all" )
 
     def put_existing_run( self, params ):
         user = params[ 'user' ]

@@ -45,22 +45,6 @@ class Handler(webapp2.RequestHandler):
                 return runners.Runners.get_by_key_name( username_code, 
                                                         parent=runners.key() )
 
-    # Return url stuff
-    def set_return_url( self, url ):
-        cookie = 'return_url=' + url + ';Path=/'
-        self.response.headers.add_header( 'Set-Cookie', cookie )        
-
-    def get_return_url( self ):
-        return self.request.cookies.get( 'return_url' )
-        
-    def goto_return_url( self ):
-        url = self.get_return_url( )
-        if url:
-            self.redirect( str(url) )
-        else:
-            logging.warning( "No return_url found; redirecting to root page" )
-            self.redirect( "/" )
-
     # Memcache / Datastore functions
     def get_runner_memkey( self, username_code ):
         return username_code + ":runner"

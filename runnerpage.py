@@ -8,12 +8,6 @@ class RunnerPage( handler.Handler ):
         user = self.get_user( )
         q = self.request.get( 'q', default_value=None )
 
-        # Set this page to be the return page after a login/logout/signup
-        return_url = '/runner/' + username_code
-        if q:
-            return_url += '?q=' + str( q )
-        self.set_return_url( return_url )
-
         # Make sure the runner exists
         runner = self.get_runner( username_code )
         if runner is None:
