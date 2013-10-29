@@ -1,3 +1,12 @@
+# handler.py
+# Author: Richard Gibson
+#
+# The base class for all the other handlers.  Contains some useful rendering
+# and login functions.  The majority of the class contains functions that
+# perform common queries throughout the code, many of which are explained in 
+# their needed classes. 
+#
+
 import webapp2
 import os
 import jinja2

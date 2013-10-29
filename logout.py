@@ -1,3 +1,10 @@
+# logout.py
+# Author: Richard Gibson
+#
+# Logs the user out and redirects them back to where they came from as
+# specified by the 'from' query parameter.
+#
+
 import handler
 
 class Logout( handler.Handler ):

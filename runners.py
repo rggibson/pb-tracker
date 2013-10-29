@@ -1,3 +1,11 @@
+# runners.py
+# Author: Richard Gibson
+#
+# Stores runner (user) info.  Passwords are stored encrypted with sha256 and 
+# salt (see util.make_pw_hash), while Gravatar emails are also stored 
+# encrypted with md5 as needed for Gravatar usage.
+#
+
 from google.appengine.ext import db
 
 def key( name = 'default' ):

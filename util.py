@@ -1,3 +1,11 @@
+# util.py
+# Author: Richard Gibson
+#
+# A collection of useful functions that perform a variety of helpful things,
+# including secure cookie generation, password hashing / validation, time and
+# date conversions, and string coding. 
+#
+
 import hmac
 import hashlib
 import random

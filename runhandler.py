@@ -1,3 +1,15 @@
+# runhandler.py
+# Author: Richard Gibson
+#
+# A base class for the submit.Submit and deleterun.DeleteRun classes.  The 
+# majority of the functions in this class contain functions that update 
+# memcache upon deletion / insertion of runs into the database.  If we didn't
+# care about datastore reads/writes, this class would not be necessary. 
+# However, I would like to continue to use the free tier usage of GAE as long
+# as possible, hence these optimization routines to stay off the database as
+# much as possible. 
+#
+
 import handler
 import util
 import games
