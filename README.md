@@ -22,5 +22,5 @@ Contact
 -------
 
  * Email: [{name-of-site-no-spaces}speedruns{AT}gmail{DOT}com](mailto:<name-of-site-no-spaces>speedruns<AT>gmail<DOT>com)
- * Twitter: [@PBTracking](https://twitter.com/pbtracking)
+ * Twitter: [@rggibson_](https://twitter.com/rggibson_)
 
