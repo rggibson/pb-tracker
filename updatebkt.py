@@ -1,3 +1,16 @@
+# updatebky.py
+# Author: Richard Gibson
+#
+# Handles updates to the best known times.  Games are specified through the 
+# URL, while categories are specified through the 'c' query parameter.  
+# Currently, updates can be made by anyone who has run the game, and any 
+# update that fills in the necessary inputs is valid.  This means that 
+# malicious users could really cause problems if they wanted to by overwriting
+# best known times with worse times, but I'm putting a bit of trust on the 
+# users here.  If something like this becomes a problem, I'll have to cross 
+# that bridge and come up with a better solution here.
+#
+
 import util
 import logging
 import games
@@ -13,7 +26,7 @@ class UpdateBkt( handler.Handler ):
 
         # Get the category
         category_code = self.request.get( 'c' )
-        if user is None or category_code is None:
+        if user is None or not category_code:
             self.error( 404 )
             self.render( "404.html", user=user )
             return

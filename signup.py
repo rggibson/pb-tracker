@@ -1,3 +1,11 @@
+# signup.py
+# Author: Richard Gibson
+#
+# Handles user registration and creates runners.Runners entities.  Upon 
+# successful signup, the user is redirected to his or her previous page
+# stored in the 'from' query parameter.
+#
+
 import handler
 import runners
 import re

@@ -1,3 +1,10 @@
+# deleterun.py
+# Author: Richard Gibson
+#
+# Handles deletion of runs previously submitted.  Removes the deleted run
+# from the datastore and calls the appropriate memcache update functions.  
+#
+
 import runhandler
 import runs
 import util

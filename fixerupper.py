@@ -1,3 +1,15 @@
+# fixerupper.py
+# Author: Richard Gibson
+#
+# An admin-only handler for managing one-time clean-up tasks.  Currently, this
+# is the best way to clean up some of the extra games and categories that have
+# been submitted that (hopefully unintentionally) have duplicated other
+# games.Games entries.  I should probably come up with a better way to 
+# manage this, but this class will do the job for now.  I've also used this 
+# to fix some of the database entries after a bug was discovered (like bad
+# dates on runs). 
+# 
+
 import games
 import runs
 import util

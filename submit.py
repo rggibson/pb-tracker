@@ -1,3 +1,21 @@
+# submit.py
+# Author: Richard Gibson
+#
+# Writes runs submitted by users to the database and updates common queries 
+# stored in memcache.  Before any render, handler.get_categories is called to
+# retrieve a dictionary, indexed by game name, of all the categories contained
+# in the games.Games entities.  This dictionary is used for auto-completion of
+# both the game and category inputs using jQuery's ui-autocomplete feature
+# (see templates/submit.html).  On a successful POST, the run is put in the
+# database and several update_memcache functions are run to ensure that the
+# memcache is not stale.
+#
+# submit.py also handles run editing through the '?edit=<run_id>' query string.
+# Most of the handling is the same as for submitting a new run, except 
+# extra memcache update functions that delete the old run must first be run
+# before updating the memcache with the new run.  
+#
+
 import runhandler
 import util
 import logging

@@ -1,3 +1,9 @@
+# front.py
+# Author: Richard Gibson
+#
+# The homepage for the app.  Nothing special here.
+#
+
 import handler
 
 class Front( handler.Handler ):

@@ -1,3 +1,9 @@
+# runs.py
+# Author: Richard Gibson
+#
+# Stores submitted runs.  Run times are stored in seconds and converted to 
+# hh:mm:ss with util.seconds_to_timestr when required.
+
 from google.appengine.ext import db
 from datetime import date
 

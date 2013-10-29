@@ -1,3 +1,9 @@
+# gamelist.py
+# Author: Richard Gibson
+#
+# Similar to `runnerlist.py`, but lists games instead of runners.
+#
+
 import handler
 
 class GameList( handler.Handler ):

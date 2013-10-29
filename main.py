@@ -1,3 +1,10 @@
+# main.py
+# Author: Richard Gibson
+#
+# Launch point for the app.  Defines all of the URL handles, including an 
+# error handler for all non-matching URLs.
+#
+
 import webapp2
 import front
 import signup
@@ -10,7 +17,7 @@ import handler
 import gamelist
 import runnerlist
 import deleterun
-import fixerupper
+#import fixerupper
 import updatebkt
 
 DEBUG = True
@@ -35,6 +42,6 @@ app = webapp2.WSGIApplication( [ ('/', front.Front),
                                   updatebkt.UpdateBkt),
                                  ('/game/' + MY_RE, gamepage.GamePage),
                                  ('/delete/' + RUN_RE, deleterun.DeleteRun),
-                                 ('/fixerupper', fixerupper.FixerUpper),
+#                                 ('/fixerupper', fixerupper.FixerUpper),
                                  ('/' + r'.*', Error) ],
                                debug=DEBUG)

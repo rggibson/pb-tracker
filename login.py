@@ -1,3 +1,12 @@
+# login.py
+# Author: Richard Gibson
+#
+# Handles user logins.  Upon successful login, a 'user_id' cookie is set that
+# stores the user's name and an encrypted authentication token (see 
+# util.make_secure_val).  The user is then redirected to their previous page
+# that is indicated by the 'from' query parameter.
+#
+
 import handler
 import runners
 import util
