@@ -32,7 +32,8 @@ class Login( handler.Handler ):
                                                 parent=runners.key() )
         if not user:
             self.render( "login.html", username=username, 
-                         return_url=return_url, error="Invalid login" )
+                         return_url=return_url, 
+                         user_error="Username not found" )
             return
 
         # Check for valid password
@@ -41,4 +42,4 @@ class Login( handler.Handler ):
             self.redirect( return_url )
         else:
             self.render( "login.html", username=username, 
-                         return_url=return_url, error="Invalid login" )
+                         return_url=return_url, pass_error="Invalid password" )
