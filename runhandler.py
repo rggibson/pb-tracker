@@ -413,6 +413,7 @@ class RunHandler( handler.Handler ):
         time = params[ 'time' ]
         video = params[ 'video' ]
         version = params[ 'version' ]
+        notes = params[ 'notes' ]
         date = params[ 'date' ]
         run_id = params[ 'run_id' ]
 
@@ -425,7 +426,8 @@ class RunHandler( handler.Handler ):
                                      category = category, time = time, 
                                      date = date, 
                                      video = video,
-                                     version = version ) )
+                                     version = version,
+                                     notes = notes ) )
             runlist.sort( key=lambda x: util.get_valid_date( x['date'] ),
                           reverse=True )
             self.update_cache_runlist_for_runner( user.username, runlist )

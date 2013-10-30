@@ -31,14 +31,18 @@
       <td>{{run['category']}}</td>
       <td>
 	{% if run['video'] %}<a href="{{run['video']}}">{% endif %}
-	  {{run['time']}}{% if run['video'] %}</a>{% endif %}      
+	  {{run['time']}}{% if run['video'] %}</a>{% endif %}
+	{% if run['notes'] %}
+	<a data-toggle="popover" data-content="{{run['notes']}}" href="#"
+	   data-original-title 
+	   title><i class="icon-comment"></i>{% endif %}
       </td>
       <td>{% if run['version'] %}{{run['version']}}{% else %}-{% endif %}</td>
       <td>{% if run['date'] %}{{run['date'].strftime( "%a %b %d %Y" )}}{% else %}-{% endif %}</td>
       {% if user.username == runner.username %}
       <td>
-	<a href="/submit?edit={{run['run_id']}}"><i class="icon-edit"></i></a>  
-      <a href="/delete/{{run['run_id']}}"><i class="icon-trash"></i></a></td>
+	<a href="/submit?edit={{run['run_id']}}"><i class="icon-edit icon-large"></i></a>  
+      <a href="/delete/{{run['run_id']}}"><i class="icon-trash icon-large"></i></a></td>
       {% endif %}
     </tr>
     {% endfor %}
@@ -50,3 +54,7 @@
 <!-- Total hack to get the query string in the return urls -->
 {% block query_string_1 %}?q=view-all{% endblock %}
 {% block query_string_2 %}?q=view-all{% endblock %}
+
+{% block runner_js %}
+$( "[data-toggle=popover]" ).popover( );
+{% endblock %}

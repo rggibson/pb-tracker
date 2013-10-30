@@ -59,6 +59,8 @@ class Submit( runhandler.RunHandler ):
                 params[ 'video' ] = run.video
             if run.version is not None:
                 params[ 'version' ] = run.version
+            if run.notes is not None:
+                params[ 'notes' ] = run.notes
         else:
             # Start with the game, category and version from this user's 
             # last run
@@ -87,6 +89,7 @@ class Submit( runhandler.RunHandler ):
         datestr = self.request.get( 'date' )
         video = self.request.get( 'video' )
         version = self.request.get( 'version' )
+        notes = self.request.get( 'notes' )
         is_bkt = self.request.get( 'bkt', default_value="no" )
         if is_bkt == "yes":
             is_bkt = True
@@ -96,7 +99,8 @@ class Submit( runhandler.RunHandler ):
 
         params = dict( user = user, game = game, category = category, 
                        time = time, datestr = datestr, video = video, 
-                       version = version, run_id = run_id, is_bkt = is_bkt )
+                       version = version, notes = notes, run_id = run_id, 
+                       is_bkt = is_bkt )
 
         valid = True
 
@@ -185,6 +189,11 @@ class Submit( runhandler.RunHandler ):
                         valid = False
                     break
 
+        # Make sure that the notes are not too long
+        if len( notes ) > 140:
+            params['notes_error'] = "Notes must be at most 140 characters"
+            valid = False
+
         params['valid'] = valid
         
         if run_id:
@@ -201,6 +210,7 @@ class Submit( runhandler.RunHandler ):
         time = params[ 'time' ]
         video = params[ 'video' ]
         version = params[ 'version' ]
+        notes = params[ 'notes' ]
         valid = params[ 'valid' ]
 
         # Add a new run to the database
@@ -211,6 +221,7 @@ class Submit( runhandler.RunHandler ):
                                  seconds = seconds,
                                  date = params[ 'date' ],
                                  version = version,
+                                 notes = notes,
                                  parent = runs.key() )
             try:
                 if video:
@@ -279,6 +290,7 @@ class Submit( runhandler.RunHandler ):
         time = params[ 'time' ]
         video = params[ 'video' ]
         version = params[ 'version' ]
+        notes = params[ 'notes' ]
         valid = params[ 'valid' ]
         run_id = params[ 'run_id' ]
 
@@ -301,6 +313,7 @@ class Submit( runhandler.RunHandler ):
             new_run.seconds = seconds
             new_run.date = params['date']
             new_run.version = version
+            new_run.notes = notes
         except db.BadValueError:
             valid = False
         if video:
@@ -373,6 +386,7 @@ class Submit( runhandler.RunHandler ):
                     run[ 'date' ] = new_run.date
                     run[ 'video' ] = video
                     run[ 'version' ] = version
+                    run[ 'notes' ] = notes
                     runlist.sort( key=lambda x: util.get_valid_date( 
                         x['date'] ), reverse=True )
                     self.update_cache_runlist_for_runner( user.username, 

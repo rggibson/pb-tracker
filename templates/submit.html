@@ -90,6 +90,18 @@
     </div>
     <div class="col-lg-4 col-md-4 error">{{bkt_error}}</div>
   </div>
+  <div class="form-group{% if notes_error %} has-error{% endif %}">
+    <label for="notes" class="col-lg-4 col-md-4 control-label">
+      <i class="icon-comment icon-large"></i> 
+      Notes (optional, max 140 characters)
+    </label>
+    <div class="col-lg-4 col-md-4">
+      <textarea class="form-control" id="notes" name="notes" rows="3" 
+		maxlength="140" placeholder="e.g. This run was poop"
+		>{% if notes %}{{notes}}{% endif %}</textarea>
+    </div>
+    <div class="col-lg-4 col-md-4 error">{{notes_error}}</div>
+  </div>
   <div class="form-group">
     <div class="col-lg-offset-4 col-md-offset-4 col-lg-4 col-md-4">
       <button id="submit-btn" class="btn btn-lg btn-primary" type="submit"

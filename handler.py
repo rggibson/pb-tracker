@@ -479,7 +479,8 @@ class Handler(webapp2.RequestHandler):
                                       seconds_to_timestr( run.seconds ),
                                       date = run.date,
                                       video = run.video,
-                                      version = run.version ) )
+                                      version = run.version,
+                                      notes = run.notes ) )
 
             if memcache.set( key, runlist ):
                 logging.debug( "Set " + key + " in memcache" )

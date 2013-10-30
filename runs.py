@@ -20,3 +20,4 @@ class Runs( db.Model ):
                                             auto_now_add = True )
     version = db.StringProperty( required = False )
     video = db.LinkProperty( required = False )
+    notes = db.TextProperty( required = False )

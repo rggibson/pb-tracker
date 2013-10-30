@@ -58,5 +58,7 @@
   } );  
   set_nav_return_urls( "/runner/{{username_code}}{% block query_string_2 %}{% endblock %}",
                        {% if user %}true{% else %}false{% endif %} );  
+  {% block runner_js %}
+  {% endblock %}
 </script>
 {% endblock %}
