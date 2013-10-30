@@ -27,7 +27,7 @@
   on {{d['bk_date'].strftime( "%b %d %Y" )}}
   {% endif %}
   {% if user_has_run %}
-  <a href="/game/{{game_code}}/update-bkt?c={{d['category_code']}}">
+  <a href="/game/{{game_code}}/update-bkt?c={{d['category_code']}}&from=/game/{{game_code}}">
     <i class="icon-edit"></i>
   </a>
   {% endif %}
@@ -35,7 +35,7 @@
 {% elif user_has_run %}
 <h4>
   <i class="icon-trophy"></i> Best known time: 
-  <a href="/game/{{game_code}}/update-bkt?c={{d['category_code']}}"><i class="icon-edit"></i></a>
+  <a href="/game/{{game_code}}/update-bkt?c={{d['category_code']}}&from=/game/{{game_code}}"><i class="icon-edit"></i></a>
 </h4>
 {% endif %}
 <table class="table table-striped table-bordered">
@@ -78,9 +78,12 @@
 
 {% block js %}
 <script src="/static/js/jquery.lazyload.min.js"></script>
+<script src="/static/js/util.js"></script>
 <script type="text/javascript">
   $( "img.lazy" ).lazyload( {
     skip_invisible: false
   } );  
+  set_nav_return_urls( "/game/{{game_code}}", 
+                       {% if user %}true{% else %}false{% endif %} );
 </script>
 {% endblock %}

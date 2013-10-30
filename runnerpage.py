@@ -1,3 +1,22 @@
+# runnerpage.py
+# Author: Richard Gibson
+#
+# Renders individual runner pages at /runner/<username_code>, where 
+# username_code is the runner's username converted to lower case with most 
+# non-alphanumeric characters replaced with dashes (see util.get_code).  
+#
+# There are two versions of runner pages.  The default version renders a 
+# table of PBs submitted by the runner, ordered by number of runs.  
+# The content of this table is aquired through handler.get_pblist() that 
+# returns a list of dictionaries, one for each game.  For each dictionary d, 
+# d['infolist'] is itself another list of dictionaries, one for each category 
+# the runner has run for the given game.  These dictionaries are acquired 
+# through handler.get_runinfo(). The alternative runner page is rendered 
+# given the query string '?q=view-all' and lists all of the runner's runs, 
+# ordered by run date, acquired through handler.get_runlist_for_runner().  
+# This function returns its own list of dictionaries.
+#
+
 import handler
 import logging
 import json
@@ -7,12 +26,6 @@ class RunnerPage( handler.Handler ):
     def get( self, username_code ):
         user = self.get_user( )
         q = self.request.get( 'q', default_value=None )
-
-        # Set this page to be the return page after a login/logout/signup
-        return_url = '/runner/' + username_code
-        if q:
-            return_url += '?q=' + str( q )
-        self.set_return_url( return_url )
 
         # Make sure the runner exists
         runner = self.get_runner( username_code )

@@ -82,9 +82,9 @@
 	    </a>
 	  </li>
 	  {% endif %}
-	  <li id="nav-blog" class="hidden-sm">
-	    <a href="http://richardggibson.appspot.com/blog">
-	      <i class="icon-comment icon-large"></i> Blog
+	  <li id="nav-faq" class="hidden-sm">
+	    <a href="/faq">
+	      <i class="icon-question icon-large"></i> FAQ
 	    </a>
 	  </li>
 	</ul>
@@ -96,18 +96,19 @@
 	    </a>
 	  </li>
 	  <li id="nav-logout">
-	    <a href="/logout">
+	    <a id="nav-logout-a" href="/logout">
 	      <i class="icon-signout icon-large"></i> Log out
 	    </a>
 	  </li>
 	  {% else %}
 	  <li id="nav-signup">
-	    <a href="/signup">
+	    <a id="nav-signup-a" href="/signup">
 	      <i class="icon-book icon-large"></i> Sign up
 	    </a>
 	  </li>
 	  <li id="nav-login">
-	    <a href="/login"><i class="icon-signin icon-large"></i> Log in</a>
+	    <a id="nav-login-a" href="/login">
+	      <i class="icon-signin icon-large"></i> Log in</a>
 	  </li>
 	  {% endif %}
 	</ul>
@@ -122,6 +123,9 @@
 
     <footer>
       <center>
+	<p class="visible-sm">
+	  <a href="/faq"><i class="icon-question"></i> FAQ</a>
+	</p>
 	<p>&copy; Copyright 2013 
 	  <a href="mailto:<name-of-site-no-spaces>speedruns<AT>gmail<DOT>com">
 	    PB Tracker

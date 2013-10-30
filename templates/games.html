@@ -35,9 +35,12 @@
 
 {% block js %}
 <script src="/static/js/jquery.lazyload.min.js"></script>
+<script src="/static/js/util.js"></script>
 <script type="text/javascript">
   $( "img.lazy" ).lazyload( {
     skip_invisible: false
   } );  
+  set_nav_return_urls( "/games", 
+                       {% if user %}true{% else %}false{% endif %} );  
 </script>
 {% endblock %}

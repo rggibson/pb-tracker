@@ -21,7 +21,7 @@
     <h1>
       {{runner.username}} 
       {% if runner.username == user.username %}
-      <a href="/signup">
+      <a href="/signup?from=/runner/{{username_code}}{% block query_string_1 %}{% endblock %}">
 	<i class="icon-edit"></i>
       </a>
       {% endif %}
@@ -51,9 +51,12 @@
 
 {% block js %}
 <script src="/static/js/jquery.lazyload.min.js"></script>
+<script src="/static/js/util.js"></script>
 <script type="text/javascript">
   $( "img.lazy" ).lazyload( {
     skip_invisible: false
   } );  
+  set_nav_return_urls( "/runner/{{username_code}}{% block query_string_2 %}{% endblock %}",
+                       {% if user %}true{% else %}false{% endif %} );  
 </script>
 {% endblock %}

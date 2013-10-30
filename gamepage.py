@@ -1,3 +1,15 @@
+# gamepage.py
+# Author: Richard Gibson
+#
+# Renders individual game pages at /game/<game_code>, where game_code is the 
+# game converted through util.get_code().  For each category of the game run, 
+# a table lists the PBs for each runner, sorted by time.  The tables 
+# themselves are sorted by number of PBs.  These tables are filled through 
+# handler.get_gamepage() that returns a list of dictionaries, one for each 
+# category run.  Similar to runnerpage.py, for each dictionary d, 
+# d['infolist'] is itself a list of dictionaries, one for each runner.
+#
+
 import handler
 import runs
 import util
@@ -7,9 +19,6 @@ from google.appengine.ext import db
 class GamePage( handler.Handler ):
     def get( self, game_code ):
         user = self.get_user( )
-
-        # Set this page to be the return page after a login/logout/signup
-        self.set_return_url( '/game/' + game_code )
 
         # Make sure this game exists
         game_model = self.get_game_model( game_code )

@@ -99,7 +99,7 @@
 </form>
 {% if not user %}
 <center>
-  <p class="lead">Already signed up?  Then <a href="/login">log in</a>.
+  <p class="lead">Already signed up?  Then <a href="/login?from={{return_url}}">log in</a>.
 </center>
 {% endif %}
 
@@ -110,5 +110,6 @@
 <script type="text/javascript">
   /* Disable button on submit to avoid double submissions */
   block_double_submit( '#submit-btn' );
+  set_nav_return_urls( "{{return_url}}", false );
 </script>
 {% endblock %}

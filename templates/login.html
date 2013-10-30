@@ -19,7 +19,9 @@
 			     Logging in">
     <i class="icon-signin icon-large"></i> Log in
   </button>
-  <p class="lead">New user?  Then <a href="/signup">sign up</a>.
+  <p class="lead">New user?  Then 
+    <a href="/signup?from={{return_url}}">sign up</a>.
+  </p>
 </form>
 
 {% endblock %}
@@ -29,5 +31,6 @@
 <script type="text/javascript">
   /* Disable button on submit to avoid double submissions */
   block_double_submit( '#submit-btn' );
+  set_nav_return_urls( "{{return_url}}", false );
 </script>
 {% endblock %}

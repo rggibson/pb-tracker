@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<script type="text/javascript">
+  document.getElementById("nav-faq").setAttribute("class", "active");
+</script>
+
+<div class="panel-group" id="accordion" style="padding-bottom: 10px;">
+  {% for faq in faqs %}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+	<a class="accordion-toggle" data-toggle="collapse" 
+	   data-parent="#accordion" href="#collapse-{{loop.index}}">
+	  {{faq['title']}}
+	</a>
+      </h4>
+    </div>
+    <div id="collapse-{{loop.index}}" class="panel-collapse collapse">
+      <div class="panel-body">
+	{{faq['content'] | safe}}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript" src="/static/js/util.js"></script>
+<script type="text/javascript">
+  set_nav_return_urls( "/faq", {% if user %}true{% else %}false{% endif %} );
+</script>
+{% endblock %}

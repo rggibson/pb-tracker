@@ -1,3 +1,11 @@
+# signup.py
+# Author: Richard Gibson
+#
+# Handles user registration and creates runners.Runners entities.  Upon 
+# successful signup, the user is redirected to his or her previous page
+# stored in the 'from' query parameter.
+#
+
 import handler
 import runners
 import re
@@ -20,18 +28,22 @@ def valid_email( email ):
 class Signup( handler.Handler ):
     def get( self ):
         user = self.get_user( )
+        return_url = self.request.get( 'from' )
+        if not return_url:
+            return_url = "/"
         if user:
             # Editing profile
             params = dict( user=user,
                            twitter=user.twitter,
                            youtube=user.youtube,
-                           twitch=user.twitch )
+                           twitch=user.twitch,
+                           return_url=return_url )
             if user.gravatar:
                 params['gravatar'] = '<private email>'
             self.render( "signup.html", **params )
         else:
             # New user
-            self.render( "signup.html" )
+            self.render( "signup.html", return_url=return_url )
 
     def post( self ):
         user = self.get_user( )
@@ -47,6 +59,9 @@ class Signup( handler.Handler ):
         twitch = twitch.split( '/' )[ -1 ]
         gravatar = self.request.get( 'gravatar' )
         username_code = util.get_code( username )
+        return_url = self.request.get( 'from' )
+        if not return_url:
+            return_url = "/"
 
         params = dict( user = user,
                        username = username,
@@ -55,7 +70,8 @@ class Signup( handler.Handler ):
                        twitter = twitter,
                        youtube = youtube,
                        twitch = twitch,
-                       gravatar = gravatar )
+                       gravatar = gravatar,
+                       return_url = return_url )
 
         valid = True
 
@@ -155,4 +171,4 @@ class Signup( handler.Handler ):
                             break
                     self.update_cache_runnerlist( runnerlist )
 
-        self.goto_return_url( )
+        self.redirect( return_url )
