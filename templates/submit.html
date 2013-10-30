@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block subtitle %}
+{% if run_id %}Edit Run{% else %}Submit Run{% endif %}
+{% endblock %}
+
 {% block morehead %}
 
 <link rel="stylesheet" 

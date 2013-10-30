@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block subtitle %}
+{% if username %}Sign up{% else %}Edit Profile{% endif %}
+{% endblock %}
+
 {% block content %}
 
 <script type="text/javascript">

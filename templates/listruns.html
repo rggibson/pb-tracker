@@ -1,5 +1,7 @@
 {% extends "runnerpage_base.html" %}
 
+{% block subtitle %}{{runner.username}} Runs{% endblock %}
+
 {% block runner_content %}
 
 <a href="/runner/{{username_code}}">View PBs</a>
