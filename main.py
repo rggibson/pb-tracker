@@ -1,8 +1,8 @@
 # main.py
 # Author: Richard Gibson
 #
-# Launch point for the app.  Defines all of the URL handles, including an 
-# error handler for all non-matching URLs.
+# Launch point for the app.  Defines all of the URL handles, including a
+# default handler for all non-matching URLs.
 #
 
 import webapp2
@@ -19,11 +19,12 @@ import runnerlist
 import deleterun
 #import fixerupper
 import updatebkt
+import faq
 
 DEBUG = True
 
-class Error( handler.Handler ):
-    def get( self ):
+class Default( handler.Handler ):
+    def get( self, url ):
         user = self.get_user()
         self.error( 404 )
         self.render( "404.html", user=user )
@@ -42,6 +43,7 @@ app = webapp2.WSGIApplication( [ ('/', front.Front),
                                   updatebkt.UpdateBkt),
                                  ('/game/' + MY_RE, gamepage.GamePage),
                                  ('/delete/' + RUN_RE, deleterun.DeleteRun),
+                                 ('/faq', faq.Faq),
 #                                 ('/fixerupper', fixerupper.FixerUpper),
-                                 ('/' + r'.*', Error) ],
+                                 ('/' + r'(.*)', Default) ],
                                debug=DEBUG)

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<faqs>
+
+<faq>
+<title>What is PB Tracker?</title>
+<content><![CDATA[
+PB Tracker is a web app for tracking <a href=http://en.wikipedia.org/wiki/Speedrun>speedrunning</a> times, personal bests (PBs) and viewing other runner's PBs. 
+Runners sign up and submit their times to populate their very own personal runner page. 
+This runner page is the main feature of PB Tracker, providing a useful reference point for looking up a runner's best times. 
+]]></content>
+</faq>
+
+<faq>
+<title>I cannot find game X and category Y on PB Tracker. Where is it?</title>
+<content><![CDATA[
+While PB Tracker does contain a healthy database of games and run categories, not every game and category is listed. 
+However, users may submit times for any game and category they wish. 
+If the game or category does not exist, PB Tracker will create a page for the game and add the category to the database. 
+So, feel free to add run times to any games and categories you wish!
+]]></content>
+</faq>
+
+<faq>
+<title>I made a mistake when I submitted a run.  How can I fix it?</title>
+<content><![CDATA[
+When logged in, head to your runner page by clicking on your username in the top navigation bar. 
+From there, there will be a link to view and edit your runs. 
+This will bring up a table of all of your runs, sorted by date. 
+Find the run you wish to edit or delete and click the appropriate icon in the far right column of the table. 
+]]></content>
+</faq>
+
+<faq>
+<title>Isn't there a blog about PB Tracker?</title>
+<content><![CDATA[
+Yes there is! 
+You can find it at <a href="http://richardggibson.appspot.com/blog">http://richardggibson.appspot.com/blog</a>.
+]]></content>
+</faq>
+
+<faq>
+<title>How can I request a feature or report a problem?</title>
+<content><![CDATA[
+You can send an <a href="mailto:[name-of-site-no-spaces]speedruns[AT]gmail[DOT]com">email</a> or contact <a href="https://twitter.com/rggibson_">@rggibson_</a> on Twitter. 
+]]></content>
+</faq>
+
+<faq>
+<title>How can I contribute?</title>
+<content><![CDATA[
+The code for PB Tracker is open-source, so anyone is welcome to work on the site. 
+Check out the <a href="https://github.com/rggibson/pb-tracker/issues?direction=asc&sort=created&state=open">issues</a> and let <a href="https://twitter.com/rggibson_">rggibson</a> know if you want to work on any of them. 
+He is happy to take pull requests from anyone willing to put in the time to come up with a workable solution. 
+If you have a feature that you want to work on for PB Tracker and it is not listed on the issues page, <a href="mailto:[name-of-site-no-spaces]speedruns[AT]gmail[DOT]com">drop us a line</a> to make sure that it is a suitable feature for PB Tracker.
+]]></content>
+</faq>
+
+<faq>
+<title>Where is the box art for game X?</title>
+<content><![CDATA[
+While we are trying to keep up with all of the games being added to PB Tracker, sometimes the box art for certain games are missing, particularly games recently added. 
+In fact, the easiest way that you can help contribute to the site is to add the box art images to the /static/boxart/ directory in the <a href="https://github.com/rggibson/pb-tracker">open-source GitHub repository</a> and send a pull request. 
+Make sure the box art image filename is [game_code].jpg, where http://www.pbtracker.net/game/[game_code] is the URL for the game page. 
+]]></content>
+</faq>
+
+</faqs>
