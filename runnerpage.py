@@ -63,6 +63,11 @@ class RunnerPage( handler.Handler ):
                             runinfo['bk_video'] = gameinfo.get( 'bk_video' )
                             break
 
+            if runner.visible_columns:
+                visible_columns = json.loads( runner.visible_columns )
+            else:
+                visible_columns = util.get_default_visible_columns( )
+
             self.render( "runnerpage.html", user=user, runner=runner,
                          username_code=username_code, pblist=pblist,
-                         gravatar=gravatar )
+                         gravatar=gravatar, visible_columns=visible_columns )

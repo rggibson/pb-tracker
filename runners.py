@@ -3,7 +3,9 @@
 #
 # Stores runner (user) info.  Passwords are stored encrypted with sha256 and 
 # salt (see util.make_pw_hash), while Gravatar emails are also stored 
-# encrypted with md5 as needed for Gravatar usage.
+# encrypted with md5 as needed for Gravatar usage.  Visible columns is a 
+# dictionary of booleans, stored in JSON, that determine which columns are
+# visible on the runner's default page.
 #
 
 from google.appengine.ext import db
@@ -19,3 +21,4 @@ class Runners( db.Model ):
     twitch = db.StringProperty( required = False )
     gravatar = db.StringProperty( required = False )
     datetime_created = db.DateTimeProperty( auto_now_add = True )
+    visible_columns = db.TextProperty( required = False )

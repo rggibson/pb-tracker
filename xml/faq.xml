@@ -70,7 +70,7 @@ If you have a feature that you want to work on for PB Tracker and it is not list
 <title>Where is the box art for game X?</title>
 <content><![CDATA[
 While we are trying to keep up with all of the games being added to PB Tracker, sometimes the box art for certain games are missing, particularly games recently added. 
-In fact, the easiest way that you can help contribute to the site is to add the box art images to the /static/boxart/ directory in the <a href="https://github.com/rggibson/pb-tracker">open-source GitHub repository</a> and send a pull request. 
+In fact, the easiest way that you can help contribute to the site is to add the box art images to the /static/boxart/ directory in the <a href="https://github.com/rggibson/pb-tracker">open-source GitHub repository</a> and send a <a href="https://help.github.com/articles/fork-a-repo">pull request</a>. 
 Make sure the box art image filename is [game_code].jpg, where http://www.pbtracker.net/game/[game_code] is the URL for the game page. 
 ]]></content>
 </faq>

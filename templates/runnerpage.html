@@ -14,20 +14,38 @@
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="hidden-xs"></th>
+      {% if visible_columns['boxart'] %}<th class="hidden-xs"></th>{% endif %}
+      {% if visible_columns['game'] %}
       <th><i class="icon-gamepad icon-large"></i> Game</th>
+      {% endif %}
+      {% if visible_columns['category'] %}
       <th><i class="icon-compass icon-large"></i> Category</th>
+      {% endif %}
+      {% if visible_columns['pb'] %}
       <th><i class="icon-star icon-large"></i> PB</th>
+      {% endif %}
+      {% if visible_columns['date'] %}
       <th><i class="icon-calendar icon-large"></i> Date</th>
+      {% endif %}
+      {% if visible_columns['version'] %}
+      <th><i class="icon-desktop icon-large"></i> Version</th>
+      {% endif %}
+      {% if visible_columns['runs'] %}
       <th><i class="icon-flag-checkered icon-large"></i> Runs</th>
+      {% endif %}
+      {% if visible_columns['avg_time'] %}
       <th><i class="icon-time icon-large"></i> Avg Time</th>
+      {% endif %}
+      {% if visible_columns['bkt'] %}
       <th><i class="icon-trophy icon-large"></i> Best Known Time</th>
+      {% endif %}
     </tr>
   </thead>
   <tbody>
     {% for pb in pblist %}
     {% set outer_loop = loop %}
     <tr class="{{ outer_loop.cycle('active', '') }}">
+      {% if visible_columns['boxart'] %}
       <td rowspan="{{pb['infolist']|length}}" class="hidden-xs">
 	<center>
 	  <a href="/game/{{pb['game_code']}}">
@@ -37,23 +55,40 @@
 	  </a>
 	</center>
       </td>
+      {% endif %}
+      {% if visible_columns['game'] %}
       <td rowspan="{{pb['infolist']|length}}">
 	<a href="/game/{{pb['game_code']}}">
 	  {{pb['game']}}
 	</a>
       </td>
+      {% endif %}
       {% for info in pb['infolist'] %}
       {% if not loop.first %}
     <tr class="{{ outer_loop.cycle('active', '') }}">
       {% endif %}
+      {% if visible_columns['category'] %}
       <td>{{info['category']}}</td>
+      {% endif %}
+      {% if visible_columns['pb'] %}
       <td>
 	{% if info['video'] %}<a href="{{info['video']}}">{% endif %}
 	  {{info['pb_time']}}{% if info['video'] %}</a>{% endif %}
       </td>
+      {% endif %}
+      {% if visible_columns['date'] %}
       <td>{% if info['pb_date'] %}{{info['pb_date'].strftime( "%b %d %Y" )}}{% else %}-{% endif %}</td>
+      {% endif %}
+      {% if visible_columns['version'] %}
+      <td>{% if info['version'] %}{{info['version']}}{% else %}-{% endif %}</td>
+      {% endif %}
+      {% if visible_columns['runs'] %}
       <td>{{info['num_runs']}}</td>
+      {% endif %}
+      {% if visible_columns['avg_time'] %}
       <td>{{info['avg_time']}}</td>
+      {% endif %}
+      {% if visible_columns['bkt'] %}
       <td>{% if info['bk_time'] %}
 	{% if info['bk_video'] %}<a href="{{info['bk_video']}}">{% endif %}
 	  {{info['bk_time']}}{% if info['bk_video'] %}</a>{% endif %} 
@@ -69,6 +104,7 @@
 	{% endif %}
 	{% endif %}
       </td>
+      {% endif %}
     </tr>
     {% endfor %}
     {% endfor %}

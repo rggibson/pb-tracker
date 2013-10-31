@@ -156,3 +156,15 @@ def datestr_to_date( datestr ):
         return ( None, 'that day is not on our calendar' )
 
     return ( d, '' )
+
+# Function for getting the default visible columns on PB page
+def get_default_visible_columns( ):
+    return dict( boxart=True,
+                 game=True,
+                 category=True,
+                 pb=True,
+                 date=True,
+                 version=False,
+                 runs=True,
+                 avg_time=True,
+                 bkt=True )

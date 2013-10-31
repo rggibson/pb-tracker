@@ -11,6 +11,7 @@ import runners
 import re
 import util
 import hashlib
+import json
 
 USER_RE = re.compile( r"^[a-zA-Z0-9_-]{1,20}$" )
 def valid_username( username ):
@@ -40,10 +41,16 @@ class Signup( handler.Handler ):
                            return_url=return_url )
             if user.gravatar:
                 params['gravatar'] = '<private email>'
-            self.render( "signup.html", **params )
+            if user.visible_columns:
+                visible_columns = json.loads( user.visible_columns )
+            else:
+                visible_columns = util.get_default_visible_columns( )
+            self.render( "signup.html", visible_columns=visible_columns,
+                         **params )
         else:
             # New user
-            self.render( "signup.html", return_url=return_url )
+            self.render( "signup.html", return_url=return_url,
+                         visible_columns=util.get_default_visible_columns( ) )
 
     def post( self ):
         user = self.get_user( )
@@ -58,6 +65,16 @@ class Signup( handler.Handler ):
         twitch = self.request.get( 'twitch' )
         twitch = twitch.split( '/' )[ -1 ]
         gravatar = self.request.get( 'gravatar' )
+
+        # Get the visible columns
+        visible_columns = util.get_default_visible_columns( )
+        for key in visible_columns:
+            checked = self.request.get( key + '_visible', default_value="no" )
+            if checked == "yes":
+                visible_columns[ key ] = True
+            else:
+                visible_columns[ key ] = False
+
         username_code = util.get_code( username )
         return_url = self.request.get( 'from' )
         if not return_url:
@@ -104,17 +121,20 @@ class Signup( handler.Handler ):
                 valid = False
 
         if not valid:
-            self.render( "signup.html", **params )
+            self.render( "signup.html", visible_columns=visible_columns,
+                         **params )
             return
 
         if not user:
             # Add a new runner to the database
             runner = runners.Runners( username = username, 
                                       password = util.make_pw_hash( 
-                                          username_code, password ),
+                    username_code, password ),
                                       twitter = twitter,
                                       youtube = youtube,
                                       twitch = twitch,
+                                      visible_columns = json.dumps( 
+                    visible_columns ),
                                       parent = runners.key(),
                                       key_name = username_code )
             if gravatar:
@@ -154,6 +174,7 @@ class Signup( handler.Handler ):
                 user.gravatar = hashlib.md5( gravatar.lower( ) ).hexdigest( )
             elif not gravatar:
                 user.gravatar = None
+            user.visible_columns = json.dumps( visible_columns )
             
             user.put( )
 
