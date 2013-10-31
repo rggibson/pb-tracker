@@ -116,6 +116,7 @@ class Signup( handler.Handler ):
                                       twitter = twitter,
                                       youtube = youtube,
                                       twitch = twitch,
+                                      num_pbs = 0,
                                       parent = runners.key(),
                                       key_name = username_code )
             if gravatar:

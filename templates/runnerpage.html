@@ -7,7 +7,7 @@
 <a href="/runner/{{username_code}}?q=view-all" data-toggle="tooltip"
    title="List {% if user.username == runner.username %}/ edit{% else %}all{% endif%} runs"><i class="icon-list icon-large"></i></a>
 {% if user.username == runner.username %}
-<a href="/runner/rggibson/edit-table" data-toggle="tooltip"
+<a href="/runner/{{username_code}}/edit-table" data-toggle="tooltip"
    title="Edit PB table columns"><i class="icon-columns icon-large"></i></a>
 {% endif %}
 

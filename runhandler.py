@@ -29,6 +29,13 @@ class RunHandler( handler.Handler ):
         q.filter( 'category =', category )
         return q.count( limit=limit )
 
+    def update_runner( self, runner, delta_num_pbs ):
+        if delta_num_pbs != 0:
+            runner.num_pbs += delta_num_pbs
+            runner.put( )
+            self.update_cache_runner( util.get_code( runner.username ),
+                                      runner )
+
     def update_games_put( self, params, delta_num_pbs ):
         user = params['user']
         game_model = params['game_model']

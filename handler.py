@@ -424,23 +424,17 @@ class Handler(webapp2.RequestHandler):
             # The list is sorted by numbers of pbs for the user.
             runnerlist = [ ]
             q = db.Query( runners.Runners, 
-                          projection=('username', 'gravatar') )
+                          projection=('username', 'gravatar', 'num_pbs') )
             q.ancestor( runners.key() )
+            q.order( '-num_pbs' )
             q.order( 'username' )
             for runner in q.run( limit=100000 ):
-                q2 = db.Query( runs.Runs, 
-                               projection=('game', 'category'),
-                               distinct=True )
-                q2.ancestor( runs.key() )
-                q2.filter('username =', runner.username)
-                num_pbs = q2.count( limit=1000 )
                 runnerlist.append( 
                     dict( username = runner.username, 
                           username_code = util.get_code( runner.username ),
-                          num_pbs = num_pbs,
+                          num_pbs = runner.num_pbs,
                           gravatar_url = util.get_gravatar_url( 
                               runner.gravatar ) ) )
-            runnerlist.sort( key=itemgetter('num_pbs'), reverse=True )
             if memcache.set( key, runnerlist ):
                 logging.debug( "Set runnerlist in memcache" )
             else:
