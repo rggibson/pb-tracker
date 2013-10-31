@@ -4,7 +4,8 @@
 
 {% block runner_content %}
 
-<a href="/runner/{{username_code}}">View PBs</a>
+<a href="/runner/{{username_code}}" data-toggle="tooltip" 
+   title="View PB table"><i class="icon-table icon-large"></i></a>
 <table class="table table-striped table-bordered">
   <thead>
     <tr>
@@ -32,7 +33,8 @@
       <td><a href="/game/{{run['game_code']}}">{{run['game']}}</a></td>
       <td>{{run['category']}}</td>
       <td>
-	{% if run['video'] %}<a href="{{run['video']}}">{% endif %}
+	{% if run['video'] %}
+	<a href="{{run['video']}}" data-toggle="tooltip" title="See video">{% endif %}
 	  {{run['time']}}{% if run['video'] %}</a>{% endif %}
 	{% if run['notes'] %}
 	<a data-toggle="popover" data-content="{{run['notes']}}" href="#"
@@ -43,8 +45,10 @@
       <td>{% if run['date'] %}{{run['date'].strftime( "%a %b %d %Y" )}}{% else %}-{% endif %}</td>
       {% if user.username == runner.username %}
       <td>
-	<a href="/submit?edit={{run['run_id']}}"><i class="icon-edit icon-large"></i></a>  
-      <a href="/delete/{{run['run_id']}}"><i class="icon-trash icon-large"></i></a></td>
+	<a href="/submit?edit={{run['run_id']}}" data-toggle="tooltip"
+	   title="Edit run"><i class="icon-edit icon-large"></i></a>  
+      <a href="/delete/{{run['run_id']}}" data-toggle="tooltip"
+	 title="Delete run"><i class="icon-trash icon-large"></i></a></td>
       {% endif %}
     </tr>
     {% endfor %}

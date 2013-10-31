@@ -44,7 +44,7 @@ class Signup( handler.Handler ):
             self.render( "signup.html", **params )
         else:
             # New user
-            self.render( "signup.html", return_url=return_ur )
+            self.render( "signup.html", return_url=return_url )
 
     def post( self ):
         user = self.get_user( )
