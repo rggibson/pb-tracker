@@ -41,16 +41,10 @@ class Signup( handler.Handler ):
                            return_url=return_url )
             if user.gravatar:
                 params['gravatar'] = '<private email>'
-            if user.visible_columns:
-                visible_columns = json.loads( user.visible_columns )
-            else:
-                visible_columns = util.get_default_visible_columns( )
-            self.render( "signup.html", visible_columns=visible_columns,
-                         **params )
+            self.render( "signup.html", **params )
         else:
             # New user
-            self.render( "signup.html", return_url=return_url,
-                         visible_columns=util.get_default_visible_columns( ) )
+            self.render( "signup.html", return_url=return_ur )
 
     def post( self ):
         user = self.get_user( )
@@ -65,16 +59,6 @@ class Signup( handler.Handler ):
         twitch = self.request.get( 'twitch' )
         twitch = twitch.split( '/' )[ -1 ]
         gravatar = self.request.get( 'gravatar' )
-
-        # Get the visible columns
-        visible_columns = util.get_default_visible_columns( )
-        for key in visible_columns:
-            checked = self.request.get( key + '_visible', default_value="no" )
-            if checked == "yes":
-                visible_columns[ key ] = True
-            else:
-                visible_columns[ key ] = False
-
         username_code = util.get_code( username )
         return_url = self.request.get( 'from' )
         if not return_url:
@@ -121,8 +105,7 @@ class Signup( handler.Handler ):
                 valid = False
 
         if not valid:
-            self.render( "signup.html", visible_columns=visible_columns,
-                         **params )
+            self.render( "signup.html", **params )
             return
 
         if not user:
@@ -133,8 +116,6 @@ class Signup( handler.Handler ):
                                       twitter = twitter,
                                       youtube = youtube,
                                       twitch = twitch,
-                                      visible_columns = json.dumps( 
-                    visible_columns ),
                                       parent = runners.key(),
                                       key_name = username_code )
             if gravatar:
@@ -174,7 +155,6 @@ class Signup( handler.Handler ):
                 user.gravatar = hashlib.md5( gravatar.lower( ) ).hexdigest( )
             elif not gravatar:
                 user.gravatar = None
-            user.visible_columns = json.dumps( visible_columns )
             
             user.put( )
 

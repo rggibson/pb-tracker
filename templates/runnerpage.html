@@ -11,10 +11,17 @@
   View all runs
   {% endif %}
 </a>
+{% if user.username == runner.username %}
+<br>
+<a href="/runner/rggibson/edit-table">Edit PB table</a>
+{% endif %}
+
 <table class="table table-bordered">
   <thead>
     <tr>
-      {% if visible_columns['boxart'] %}<th class="hidden-xs"></th>{% endif %}
+      {% if visible_columns['boxart'] %}
+      <th class="hidden-xs"></th>
+      {% endif %}
       {% if visible_columns['game'] %}
       <th><i class="icon-gamepad icon-large"></i> Game</th>
       {% endif %}

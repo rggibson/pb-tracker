@@ -20,6 +20,7 @@ import deleterun
 #import fixerupper
 import updatebkt
 import faq
+import edit_table
 
 DEBUG = True
 
@@ -39,6 +40,8 @@ app = webapp2.WSGIApplication( [ ('/', front.Front),
                                  ('/games', gamelist.GameList),
                                  ('/runners', runnerlist.RunnerList),
                                  ('/runner/' + MY_RE, runnerpage.RunnerPage),
+                                 ('/runner/' + MY_RE + '/edit-table',
+                                  edit_table.EditTable),
                                  ('/game/' + MY_RE + '/update-bkt', 
                                   updatebkt.UpdateBkt),
                                  ('/game/' + MY_RE, gamepage.GamePage),
