@@ -54,7 +54,8 @@ class DeleteRun( runhandler.RunHandler ):
         num_runs = self.num_runs( user.username, run.game, run.category, 1 )
         if num_runs == 0:
             delta_num_pbs = -1
-        self.update_games_delete( old_run, delta_num_pbs )
+        self.update_games_delete( self.get_game_model( 
+                util.get_code( old_run['game'] ) ), delta_num_pbs )
 
         # Must update runinfo before pblist and gamepage because pblist and
         # gamepage rely on accurate runinfo

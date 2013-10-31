@@ -296,7 +296,7 @@ class Submit( runhandler.RunHandler ):
 
         # Grab the old run, which we will update to be the new run
         new_run = self.get_run_by_id( run_id )
-        if not new_run or new_run.username != user.username:
+        if new_run is None or new_run.username != user.username:
             self.error( 404 )
             self.render( "404.html", user=user )
             return
@@ -350,7 +350,7 @@ class Submit( runhandler.RunHandler ):
                 delta_num_pbs_new = 1
             
         # Update games.Games
-        self.update_games_delete( old_run, delta_num_pbs_old )
+        self.update_games_delete( params['game_model'], delta_num_pbs_old )
         self.update_games_put( params, delta_num_pbs_new )
 
         # Update memcache with the removal of the old run and addition of the

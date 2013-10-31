@@ -119,13 +119,12 @@ class RunHandler( handler.Handler ):
             game_model.put( )
             self.update_cache_game_model( game_code, game_model )
 
-    def update_games_delete( self, old_run, delta_num_pbs ):
+    def update_games_delete( self, game_model, delta_num_pbs ):
         if delta_num_pbs != 0:
-            game_code = util.get_code( old_run['game'] )
-            game_model = self.get_game_model( game_code )
             game_model.num_pbs += delta_num_pbs
             game_model.put( )
-            self.update_cache_game_model( game_code, game_model )
+            self.update_cache_game_model( util.get_code( game_model.game ), 
+                                          game_model )
 
     def update_runinfo_put( self, params ):
         user = params[ 'user' ]

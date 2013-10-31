@@ -14,10 +14,7 @@ import games
 import runs
 import util
 import handler
-import urllib2
-import json
 
-from datetime import date
 from google.appengine.ext import db
 
 class FixerUpper( handler.Handler ):
@@ -29,37 +26,45 @@ class FixerUpper( handler.Handler ):
             self.render( "404.html", user=user )
             return
 
-        # # Recalculate num_pbs for every game
-        # q = db.Query( games.Games )
-        # q.ancestor( games.key() )
-        # for game_model in q.run( limit=100000 ):
-        #     q2 = db.Query( runs.Runs, projection=('username', 'category'),
-        #                    distinct=True )
-        #     q2.ancestor( runs.key() )
-        #     q2.filter( 'game =', game_model.game )
-        #     game_model.num_pbs = q2.count( limit=1000 )
-        #     game_model.put( )
+        # Recalculate num_pbs for every game
+        q = db.Query( games.Games )
+        q.ancestor( games.key() )
+        for game_model in q.run( limit=100000 ):
+            q2 = db.Query( runs.Runs, projection=('username', 'category'),
+                           distinct=True )
+            q2.ancestor( runs.key() )
+            q2.filter( 'game =', game_model.game )
+            num_pbs = q2.count( limit=1000 )
+            if int( game_model.num_pbs ) != int( num_pbs ):
+                self.write( game_model.game + ": " + str( game_model.num_pbs )
+                            + " -> " + str( num_pbs ) + "<br>" )
+                game_model.num_pbs = num_pbs
+                game_model.put( )
+                # Update memcache
+                self.update_cache_game_model( util.get_code( game_model.game ),
+                                              game_model )
+                self.update_cache_gamelist( None )
 
-        # Fix all the two-digit dates
-        q = db.Query( runs.Runs )
-        q.ancestor( runs.key() )
-        q.order( 'date' )
-        for run in q.run( limit=100000 ):
-            if run.date.year >= 1970:
-                break
-            if run.date.year >= 0 and run.date.year <= 13:
-                self.write( "Replacing year " + str( run.date.year ) 
-                            + " for run with id " 
-                            + str( run.key().id() ) + "<br>" )
-                run.date = run.date.replace( year=(run.date.year + 2000) )
-                run.put( )
-            elif run.date.year >= 70 and run.date.year < 100:
-                self.write( "Replacing year for run with id " 
-                            + str( run.key().id() ) + "<br>" )
-                run.date = run.date.replace( year=(run.date.year + 1900) )
-                run.put( )
-            else:
-                self.write( "Run with id " + str( run.key().id() ) 
-                            + " has bad year " + str( run.date.year ) + "<br>" )
+        # # Fix all the two-digit dates
+        # q = db.Query( runs.Runs )
+        # q.ancestor( runs.key() )
+        # q.order( 'date' )
+        # for run in q.run( limit=100000 ):
+        #     if run.date.year >= 1970:
+        #         break
+        #     if run.date.year >= 0 and run.date.year <= 13:
+        #         self.write( "Replacing year " + str( run.date.year ) 
+        #                     + " for run with id " 
+        #                     + str( run.key().id() ) + "<br>" )
+        #         run.date = run.date.replace( year=(run.date.year + 2000) )
+        #         run.put( )
+        #     elif run.date.year >= 70 and run.date.year < 100:
+        #         self.write( "Replacing year for run with id " 
+        #                     + str( run.key().id() ) + "<br>" )
+        #         run.date = run.date.replace( year=(run.date.year + 1900) )
+        #         run.put( )
+        #     else:
+        #         self.write( "Run with id " + str( run.key().id() ) 
+        #                     + " has bad year " + str( run.date.year ) + "<br>" )
 
         self.write( "FixerUpper complete!<br>" )
