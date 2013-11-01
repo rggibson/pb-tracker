@@ -2,11 +2,18 @@
 
 {% block subtitle %}{{runner.username}} Runs{% endblock %}
 
+{% block morehead %}
+<link rel="stylesheet" type="text/css" 
+      href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css">
+{% endblock %}
+
 {% block runner_content %}
 
 <a href="/runner/{{username_code}}" data-toggle="tooltip" 
-   title="View PB table"><i class="icon-table icon-large"></i></a>
-<table class="table table-striped table-bordered">
+   title="View PB table"><i class="icon-table icon-2x"></i></a>
+
+<div class="row">
+<table class="table table-striped table-bordered" id="listruns-table">
   <thead>
     <tr>
       <th class="hidden-xs"></th>
@@ -15,6 +22,7 @@
       <th><i class="icon-time icon-large"></i> Time</th>
       <th><i class="icon-desktop icon-large"></i> Version</th>
       <th><i class="icon-calendar icon-large"></i> Date</th>
+      <th><i class="icon-calendar icon-large"></i> Date Submitted (UTC)</th>
       {% if user.username == runner.username %}<th></th>{% endif %}
     </tr>
   </thead>
@@ -43,6 +51,8 @@
       </td>
       <td>{% if run['version'] %}{{run['version']}}{% else %}-{% endif %}</td>
       <td>{% if run['date'] %}{{run['date'].strftime( "%a %b %d %Y" )}}{% else %}-{% endif %}</td>
+      <td>{% if run['datetime_created'] %}
+	{{run['datetime_created'].strftime( "%a %b %d %Y %H:%M:%S" )}}{% else %}-{% endif %}</td>
       {% if user.username == runner.username %}
       <td>
 	<a href="/submit?edit={{run['run_id']}}" data-toggle="tooltip"
@@ -54,7 +64,7 @@
     {% endfor %}
   </tbody>
 </table>
-
+</div>
 {% endblock %}
 
 <!-- Total hack to get the query string in the return urls -->
@@ -62,5 +72,33 @@
 {% block query_string_2 %}?q=view-all{% endblock %}
 
 {% block runner_js %}
-$( "[data-toggle=popover]" ).popover( );
+<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="/static/js/listruns.js"></script>
+<script type="text/javascript">
+  $( document ).ready( function( ) {
+    $( "[data-toggle=popover]" ).popover( );
+
+    /* datatables.net */
+    var oTable = $( ".table" ).dataTable( {
+      "bSortClasses": false, /* Don't add some of the extra css classes */
+      "asStripClasses": [ ], /* Remove table-striping classes */
+      "bAutoWidth": false,
+      "bPaginate": false,
+      "bProcessing": true, /* Display a processing message when thinking */
+      "aoColumnDefs": [
+        { "bSearchable": false, 
+          "aTargets": [ 0, 3, 5, 6{% if user.username == runner.username %}, 7{% endif %} ] },
+        { "bSortable": false,
+          "aTargets": [ 0{% if user.username == runner.username %}, 7{% endif %} ] },
+        { "bVisible": false, "aTargets": [ 6 ] },
+        { "aDataSort": [ 5, 6 ], "aTargets": [ 5 ] }, /* Break ties for date */
+        { "sType": "time", "aTargets": [ 3 ] }
+      ],
+      "oLanguage": { "sSearch": "Filter game and/or category:" }
+    } );
+
+    /* Set default sort on page ready */
+    oTable.fnSort( [ [ 5, 'desc' ], [ 6, 'desc' ] ] ); 
+  } );
+</script>
 {% endblock %}

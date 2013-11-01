@@ -70,3 +70,12 @@ a > i:hover {
     background: #DD4814;
     background: linear-gradient(20deg, #BB380C 30%, #DD4814 60%, #FF581C 100%);
 }
+
+/* datatables.net */
+#listruns-table_filter {
+    float: right;
+}
+
+.sorting_asc, .sorting_desc {
+    background-color: #dff0d8; /* This is the "success" color for United */
+}

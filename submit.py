@@ -241,6 +241,7 @@ class Submit( runhandler.RunHandler ):
 
         new_run.put( )
         params[ 'run_id' ] = str( new_run.key().id() )
+        params[ 'datetime_created' ] = new_run.datetime_created
         logging.debug( "Put new run for runner " + user.username
                        + ", game = " + game + ", category = " + category 
                        + ", time = " + time )

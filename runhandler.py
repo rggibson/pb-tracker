@@ -421,6 +421,7 @@ class RunHandler( handler.Handler ):
         version = params[ 'version' ]
         notes = params[ 'notes' ]
         date = params[ 'date' ]
+        datetime_created = params[ 'datetime_created' ]
         run_id = params[ 'run_id' ]
 
         # Update runlist for runner in memcache
@@ -428,9 +429,12 @@ class RunHandler( handler.Handler ):
                                                no_refresh=True )
         if runlist is not None:
             runlist.insert( 0, dict( run_id = run_id,
-                                     game = game, game_code = game_code,
-                                     category = category, time = time, 
+                                     game = game, 
+                                     game_code = game_code,
+                                     category = category, 
+                                     time = time,
                                      date = date, 
+                                     datetime_created = datetime_created,
                                      video = video,
                                      version = version,
                                      notes = notes ) )

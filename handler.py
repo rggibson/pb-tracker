@@ -472,6 +472,7 @@ class Handler(webapp2.RequestHandler):
                                       time = util.
                                       seconds_to_timestr( run.seconds ),
                                       date = run.date,
+                                      datetime_created = run.datetime_created,
                                       video = run.video,
                                       version = run.version,
                                       notes = run.notes ) )

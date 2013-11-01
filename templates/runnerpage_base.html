@@ -61,8 +61,8 @@
                        {% if user %}true{% else %}false{% endif %} );  
   $( document ).ready( function( ) {
     $( "[data-toggle=tooltip]" ).tooltip( );
-    {% block runner_js %}
-    {% endblock %}
   } );
 </script>
+{% block runner_js %}
+{% endblock %}
 {% endblock %}
