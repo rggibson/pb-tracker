@@ -1,5 +1,13 @@
+function strip( html ) {
+    var tmp = document.createElement("DIV");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
+}
+
 function timestr_to_secs( timestr ) {
-    var parts = timestr.split( ":" );
+    /* Must strip out html tags before split */
+    timetext = strip( timestr );
+    var parts = timetext.split( ":" );
     if( parts.length == 1 ) {
 	return parseInt( parts[ 0 ], 10 );
     } else if( parts.length == 2 ) {
