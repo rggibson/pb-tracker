@@ -44,7 +44,7 @@ class Signup( handler.Handler ):
             self.render( "signup.html", **params )
         else:
             # New user
-            self.render( "signup.html", return_url=return_ur )
+            self.render( "signup.html", return_url=return_url )
 
     def post( self ):
         user = self.get_user( )
@@ -116,6 +116,7 @@ class Signup( handler.Handler ):
                                       twitter = twitter,
                                       youtube = youtube,
                                       twitch = twitch,
+                                      num_pbs = 0,
                                       parent = runners.key(),
                                       key_name = username_code )
             if gravatar:

@@ -5,7 +5,10 @@
 # salt (see util.make_pw_hash), while Gravatar emails are also stored 
 # encrypted with md5 as needed for Gravatar usage.  Visible columns is a 
 # dictionary of booleans, stored in JSON, that determine which columns are
-# visible on the runner's default page.
+# visible on the runner's default page.  Finally, similar to games.py, Runners
+# also stores the number of pbs tracked for each runner.  This is an 
+# optimization measure as the query required to calculate this number is
+# expensive.
 #
 
 from google.appengine.ext import db
@@ -22,3 +25,4 @@ class Runners( db.Model ):
     gravatar = db.StringProperty( required = False )
     datetime_created = db.DateTimeProperty( auto_now_add = True )
     visible_columns = db.TextProperty( required = False )
+    num_pbs = db.IntegerProperty( default = 0 )

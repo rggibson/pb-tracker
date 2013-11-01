@@ -4,16 +4,11 @@
 
 {% block runner_content %}
 
-<a href="/runner/{{username_code}}?q=view-all">
-  {% if user.username == runner.username %}
-  View / edit runs
-  {% else %}
-  View all runs
-  {% endif %}
-</a>
+<a href="/runner/{{username_code}}?q=view-all" data-toggle="tooltip"
+   title="List {% if user.username == runner.username %}/ edit{% else %}all{% endif%} runs"><i class="icon-list icon-large"></i></a>
 {% if user.username == runner.username %}
-<br>
-<a href="/runner/rggibson/edit-table">Edit PB table</a>
+<a href="/runner/{{username_code}}/edit-table" data-toggle="tooltip"
+   title="Edit PB table columns"><i class="icon-columns icon-large"></i></a>
 {% endif %}
 
 <table class="table table-bordered">
@@ -79,7 +74,8 @@
       {% endif %}
       {% if visible_columns['pb'] %}
       <td>
-	{% if info['video'] %}<a href="{{info['video']}}">{% endif %}
+	{% if info['video'] %}
+	<a href="{{info['video']}}" data-toggle="tooltip" title="See video">{% endif %}
 	  {{info['pb_time']}}{% if info['video'] %}</a>{% endif %}
       </td>
       {% endif %}
@@ -97,15 +93,18 @@
       {% endif %}
       {% if visible_columns['bkt'] %}
       <td>{% if info['bk_time'] %}
-	{% if info['bk_video'] %}<a href="{{info['bk_video']}}">{% endif %}
+	{% if info['bk_video'] %}
+	<a href="{{info['bk_video']}}" data-toggle="tooltip" title="See video">{% endif %}
 	  {{info['bk_time']}}{% if info['bk_video'] %}</a>{% endif %} 
 	by {{info['bk_runner']}} 
 	{% if user.username == runner.username %}
-	<a href="/game/{{pb['game_code']}}/update-bkt?c={{info['category_code']}}&from=/runner/{{username_code}}"><i class="icon-edit"></i></a>
+	<a href="/game/{{pb['game_code']}}/update-bkt?c={{info['category_code']}}&from=/runner/{{username_code}}" data-toggle="tooltip" 
+	   title="Update best known time"><i class="icon-edit"></i></a>
 	{% endif %}
 	{% else %}
 	{% if user.username == runner.username %}
-	<a href="/game/{{pb['game_code']}}/update-bkt?c={{info['category_code']}}&from=/runner/{{username_code}}"><i class="icon-edit"></i></a>
+	<a href="/game/{{pb['game_code']}}/update-bkt?c={{info['category_code']}}&from=/runner/{{username_code}}" data-toggle="tooltip"
+	   title="Set best known time"><i class="icon-edit"></i></a>
 	{% else %}
 	-
 	{% endif %}

@@ -21,7 +21,8 @@
     <h1>
       {{runner.username}} 
       {% if runner.username == user.username %}
-      <a href="/signup?from=/runner/{{username_code}}{% block query_string_1 %}{% endblock %}">
+      <a href="/signup?from=/runner/{{username_code}}{% block query_string_1 %}{% endblock %}"
+	 data-toggle="tooltip" title="Edit profile">
 	<i class="icon-edit"></i>
       </a>
       {% endif %}
@@ -58,7 +59,10 @@
   } );  
   set_nav_return_urls( "/runner/{{username_code}}{% block query_string_2 %}{% endblock %}",
                        {% if user %}true{% else %}false{% endif %} );  
-  {% block runner_js %}
-  {% endblock %}
+  $( document ).ready( function( ) {
+    $( "[data-toggle=tooltip]" ).tooltip( );
+    {% block runner_js %}
+    {% endblock %}
+  } );
 </script>
 {% endblock %}

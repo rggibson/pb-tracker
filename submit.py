@@ -248,14 +248,15 @@ class Submit( runhandler.RunHandler ):
         # Check whether this is the first run for this username, game,
         # category combination.  This will determine whether we need to update
         # the gamelist and runnerlist, as well as update the num_pbs
-        # for the game.
-        num_pbs_delta = 0
+        # for the game and runner.
+        delta_num_pbs = 0
         num_runs = self.num_runs( user.username, game, category, 2 )
         if num_runs == 1:
-            num_pbs_delta = 1
+            delta_num_pbs = 1
 
-        # Update games.Games
-        self.update_games_put( params, num_pbs_delta )
+        # Update games.Games, runners.Runners
+        self.update_runner( user, delta_num_pbs )
+        self.update_games_put( params, delta_num_pbs )
 
         # Update memcache
         self.update_cache_run_by_id( new_run.key().id(), new_run )
@@ -274,7 +275,7 @@ class Submit( runhandler.RunHandler ):
                            + username + ", " + game + ", " + category )
             self.update_cache_gamelist( None )
             self.update_cache_runnerlist( None )
-        if num_pbs_delta == 1:
+        if delta_num_pbs == 1:
             self.update_gamelist_put( params )
             self.update_runnerlist_put( params )
 
@@ -296,7 +297,7 @@ class Submit( runhandler.RunHandler ):
 
         # Grab the old run, which we will update to be the new run
         new_run = self.get_run_by_id( run_id )
-        if not new_run or new_run.username != user.username:
+        if new_run is None or new_run.username != user.username:
             self.error( 404 )
             self.render( "404.html", user=user )
             return
@@ -337,7 +338,8 @@ class Submit( runhandler.RunHandler ):
                        + ", game = " + game + ", category = " + category
                        + ", time= " + time + ", run_id = " + run_id )
 
-        # Figure out the change in num_pbs for the old and new game
+        # Figure out the change in num_pbs for the old and new game, as well
+        # as the runner
         delta_num_pbs_old = 0
         delta_num_pbs_new = 0
         if game != old_run['game'] or category != old_run['category']:
@@ -349,8 +351,9 @@ class Submit( runhandler.RunHandler ):
             if num_runs == 1:
                 delta_num_pbs_new = 1
             
-        # Update games.Games
-        self.update_games_delete( old_run, delta_num_pbs_old )
+        # Update games.Games and runners.Runners
+        self.update_runner( user, delta_num_pbs_old + delta_num_pbs_new )
+        self.update_games_delete( params['game_model'], delta_num_pbs_old )
         self.update_games_put( params, delta_num_pbs_new )
 
         # Update memcache with the removal of the old run and addition of the
