@@ -13,7 +13,9 @@ from string import letters
 import logging
 import re
 import secret
+import json
 
+from datetime import datetime
 from datetime import date
 from datetime import timedelta
 
@@ -168,3 +170,13 @@ def get_default_visible_columns( ):
                  runs=True,
                  avg_time=True,
                  bkt=True )
+
+# Enable JSON serialization of datetime objects
+class MyJSONEncoder( json.JSONEncoder ):
+    def default( self, obj ):
+        if isinstance( obj, datetime ):
+            return obj.isoformat( )
+        elif isinstance( obj, date ):
+            return obj.isoformat( )
+        else:
+            return super( MyJSONEncoder, self ).default( obj )

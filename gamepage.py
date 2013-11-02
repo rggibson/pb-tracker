@@ -44,6 +44,9 @@ class GamePage( handler.Handler ):
                     run['gravatar_url'] = util.get_gravatar_url( 
                         runner.gravatar, size=20 )
 
-        self.render( "gamepage.html", user=user, game=game_model.game, 
-                     game_code=game_code, gamepage=gamepage,
-                     user_has_run=user_has_run )
+        if self.format == 'html':
+            self.render( "gamepage.html", user=user, game=game_model.game, 
+                         game_code=game_code, gamepage=gamepage,
+                         user_has_run=user_has_run )
+        elif self.format == 'json':
+            self.render_json( gamepage )

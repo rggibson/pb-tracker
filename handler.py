@@ -40,6 +40,19 @@ class Handler(webapp2.RequestHandler):
     def render(self, template, **kw):
         self.write(self.render_str(template, **kw))
 
+    def render_json( self, obj ):
+        self.response.headers[ 'Content-Type' ] = ( 'application/json; ' 
+                                                    + 'charset=UTF-8' )
+        self.write( json.dumps( obj, cls = util.MyJSONEncoder ) )
+
+    # Helpful override to determine the format of the output
+    def initialize( self, *a, **kw ):
+        webapp2.RequestHandler.initialize( self, *a, **kw )
+        if self.request.path.endswith( '.json' ):
+            self.format = 'json'
+        else:
+            self.format = 'html'
+
     # User login functions, including where to return after a login/signup
     def login(self, user_id):
         cookie = 'user_id={0};Path=/'.format(util.make_secure_val

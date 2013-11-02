@@ -15,4 +15,7 @@ class RunnerList( handler.Handler ):
 
         runnerlist = self.get_runnerlist( )
 
-        self.render( "runners.html", user=user, runnerlist=runnerlist )
+        if self.format == 'html':
+            self.render( "runners.html", user=user, runnerlist=runnerlist )
+        elif self.format == 'json':
+            self.render_json( runnerlist )

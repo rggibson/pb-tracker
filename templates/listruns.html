@@ -72,6 +72,11 @@
 {% block query_string_1 %}?q=view-all{% endblock %}
 {% block query_string_2 %}?q=view-all{% endblock %}
 
+{% block morefoot %}
+<a href="/runner/{{username_code}}.json?q=view-all">
+  <i class="icon-rss icon-large"></i></a>
+{% endblock %}
+
 {% block runner_js %}
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
 <script type="text/javascript" src="/static/js/listruns.js"></script>

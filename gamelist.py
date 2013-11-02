@@ -12,4 +12,7 @@ class GameList( handler.Handler ):
 
         gamelist = self.get_gamelist( )
 
-        self.render( "games.html", user=user, gamelist=gamelist )
+        if self.format == 'html':
+            self.render( "games.html", user=user, gamelist=gamelist )
+        elif self.format == 'json':
+            self.render_json( gamelist )

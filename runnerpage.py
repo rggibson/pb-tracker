@@ -39,9 +39,12 @@ class RunnerPage( handler.Handler ):
         if q == 'view-all':
             # List all runs for this runner
             runlist = self.get_runlist_for_runner( username )
-            self.render( "listruns.html", user=user, runner=runner,
-                         username_code=username_code, runlist=runlist,
-                         gravatar=gravatar )
+            if self.format == 'html':
+                self.render( "listruns.html", user=user, runner=runner,
+                             username_code=username_code, runlist=runlist,
+                             gravatar=gravatar )
+            elif self.format == 'json':
+                self.render_json( runlist )
         else:
             # By default, list pbs for this runner
             pblist = self.get_pblist( username )
@@ -68,6 +71,10 @@ class RunnerPage( handler.Handler ):
             else:
                 visible_columns = util.get_default_visible_columns( )
 
-            self.render( "runnerpage.html", user=user, runner=runner,
-                         username_code=username_code, pblist=pblist,
-                         gravatar=gravatar, visible_columns=visible_columns )
+            if self.format == 'html':
+                self.render( "runnerpage.html", user=user, runner=runner,
+                             username_code=username_code, pblist=pblist,
+                             gravatar=gravatar, 
+                             visible_columns=visible_columns )
+            elif self.format == 'json':
+                self.render_json( pblist )
