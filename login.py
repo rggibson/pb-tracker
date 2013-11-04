@@ -25,21 +25,12 @@ class Login( handler.Handler ):
         return_url = self.request.get( 'from' )
         if not return_url:
             return_url = "/"
-        username_code = util.get_code( username )
 
-        # Find the user in the database
-        user = runners.Runners.get_by_key_name( username_code,
-                                                parent=runners.key() )
-        if not user:
-            self.render( "login.html", username=username, 
-                         return_url=return_url, 
-                         user_error="Username not found" )
-            return
-
-        # Check for valid password
-        if util.valid_pw( username_code, password, user.password ):
-            self.login( username_code )
-            self.redirect( return_url )
+        ( valid, errors ) = self.verify_login( username, password )
+        if not valid:
+            self.render( "login.html", username=username,
+                         return_url=return_url, **errors )
         else:
-            self.render( "login.html", username=username, 
-                         return_url=return_url, pass_error="Invalid password" )
+            # Success!
+            self.login( util.get_code( username ) )
+            self.redirect( return_url )

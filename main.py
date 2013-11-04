@@ -17,10 +17,11 @@ import handler
 import gamelist
 import runnerlist
 import deleterun
-import fixerupper
 import updatebkt
 import faq
 import edit_table
+import asup
+#import fixerupper
 
 DEBUG = True
 
@@ -50,6 +51,7 @@ app = webapp2.WSGIApplication( [ ('/', front.Front),
                                   gamepage.GamePage),
                                  ('/delete/' + RUN_RE, deleterun.DeleteRun),
                                  ('/faq', faq.Faq),
-                                 ('/fixerupper', fixerupper.FixerUpper),
+                                 ('/asup', asup.Asup),
+#                                 ('/fixerupper', fixerupper.FixerUpper),
                                  ('/' + r'(.*)', Default) ],
                                debug=DEBUG)

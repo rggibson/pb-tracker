@@ -54,7 +54,7 @@ class FixerUpper( handler.Handler ):
             q2.ancestor( runs.key() )
             q2.filter( 'username =', runner.username )
             num_pbs = q2.count( limit=1000 )
-            if runner.num_pbs != num_pbs:
+            if num_pbs == 0 or runner.num_pbs != num_pbs:
                 self.write( runner.username + ": " + str( runner.num_pbs )
                             + " -> " + str( num_pbs ) + "<br>" )
                 runner.num_pbs = num_pbs

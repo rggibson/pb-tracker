@@ -54,13 +54,28 @@ class Handler(webapp2.RequestHandler):
             self.format = 'html'
 
     # User login functions, including where to return after a login/signup
-    def login(self, user_id):
-        cookie = 'user_id={0};Path=/'.format(util.make_secure_val
-                                             (str(user_id)))
-        self.response.headers.add_header('Set-Cookie', cookie)
+    def verify_login( self, username, password ):
+        username_code = util.get_code( username )
+        
+        # Find the user in the database
+        user = runners.Runners.get_by_key_name( username_code, 
+                                                parent=runners.key() )
+        if not user:
+            return False, dict( user_error="Username not found" )
+
+        # Check for valid password
+        if util.valid_pw( username_code, password, user.password ):
+            return True, dict( )
+        else:
+            return False, dict( pass_error="Invalid password" )
+
+    def login( self, user_id ):
+        cookie = 'user_id={0};Path=/'.format( util.make_secure_val
+                                              ( str(user_id) ) )
+        self.response.headers.add_header( 'Set-Cookie', cookie )
 
     def get_user( self ):
-        cookie_val = self.request.cookies.get('user_id')
+        cookie_val = self.request.cookies.get( 'user_id' )
         if cookie_val:
             username_code = util.check_secure_val( cookie_val )
             if username_code:
