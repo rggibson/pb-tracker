@@ -91,7 +91,8 @@ def timestr_to_seconds( time ):
         return (None, "too many colons")
 
     try:
-        seconds = int( parts[ -1 ] )
+        # Truncate off fractions of seconds
+        seconds = int( float( parts[ -1 ] ) )
     except ValueError:
         return (None, "bad seconds value [" + parts[ -1 ] + "]")
     if( seconds < 0 or seconds >= 60 ):
