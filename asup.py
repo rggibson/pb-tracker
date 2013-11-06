@@ -10,7 +10,8 @@ import runhandler
 import json
 import util
 
-from datetime import date
+from datetime import datetime
+from pytz.gae import pytz
 
 class Asup( runhandler.RunHandler ):
     def get_success_response( self, data=None ):
@@ -157,10 +158,18 @@ class Asup( runhandler.RunHandler ):
                 return self.get_fail_response( 'Comment is too long; must be '
                                                + 'at most 140 characters.' )
 
+            # Figure out current date in user's local timezone
+            user = self.get_runner( util.get_code( username ) )
+            if user.timezone:
+                tz = pytz.timezone( user.timezone )
+                local_today = datetime.now( pytz.utc ).astimezone( tz )
+            else:
+                # UTC by default
+                local_today = datetime.now( pytz.utc )
+            date = local_today.date( )
+
             # Load up the needed parameters and put a new run
-            # TODO: Fix timezone problem?  Right now, this gives UTC date
-            today = date.today( )
-            params = dict( user=self.get_runner( util.get_code( username ) ),
+            params = dict( user=user,
                            game=game_model.game,
                            game_code=game_code,
                            game_model=game_model,
@@ -172,8 +181,8 @@ class Asup( runhandler.RunHandler ):
                            version=version,
                            notes=notes,
                            valid=True,
-                           date=today,
-                           datestr=today.strftime( "%m/%d/%Y" ),
+                           date=date,
+                           datestr=date.strftime( "%m/%d/%Y" ),
                            is_bkt=False ) 
             if self.put_new_run( params ):
                 return self.get_success_response( )

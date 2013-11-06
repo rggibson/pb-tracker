@@ -10,7 +10,6 @@
 # optimization measure as the query required to calculate this number is
 # expensive.
 #
-
 from google.appengine.ext import db
 
 def key( name = 'default' ):
@@ -26,3 +25,4 @@ class Runners( db.Model ):
     datetime_created = db.DateTimeProperty( auto_now_add = True )
     visible_columns = db.TextProperty( required = False )
     num_pbs = db.IntegerProperty( default = 0 )
+    timezone = db.TextProperty( required = False ) # Only used for asup

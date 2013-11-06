@@ -13,6 +13,8 @@ import util
 import hashlib
 import json
 
+from pytz.gae import pytz
+
 USER_RE = re.compile( r"^[a-zA-Z0-9_-]{1,20}$" )
 def valid_username( username ):
     return USER_RE.match( username )
@@ -32,6 +34,7 @@ class Signup( handler.Handler ):
         return_url = self.request.get( 'from' )
         if not return_url:
             return_url = "/"
+            
         if user:
             # Editing profile
             params = dict( user=user,
@@ -41,10 +44,14 @@ class Signup( handler.Handler ):
                            return_url=return_url )
             if user.gravatar:
                 params['gravatar'] = '<private email>'
-            self.render( "signup.html", **params )
+            if user.timezone is not None:
+                params['timezone'] = user.timezone
+            self.render( "signup.html", timezones=pytz.common_timezones,
+                         **params )
         else:
             # New user
-            self.render( "signup.html", return_url=return_url )
+            self.render( "signup.html", return_url=return_url,
+                         timezones=pytz.common_timezones )
 
     def post( self ):
         user = self.get_user( )
@@ -58,6 +65,7 @@ class Signup( handler.Handler ):
         youtube = youtube.split( '/' )[ -1 ]
         twitch = self.request.get( 'twitch' )
         twitch = twitch.split( '/' )[ -1 ]
+        timezone = self.request.get( 'timezone' )
         gravatar = self.request.get( 'gravatar' )
         username_code = util.get_code( username )
         return_url = self.request.get( 'from' )
@@ -72,6 +80,7 @@ class Signup( handler.Handler ):
                        youtube = youtube,
                        twitch = twitch,
                        gravatar = gravatar,
+                       timezone = timezone,
                        return_url = return_url )
 
         valid = True
@@ -104,8 +113,13 @@ class Signup( handler.Handler ):
                 params['gravatar_error'] = "That's not a valid email."
                 valid = False
 
+        if timezone != '' and timezone not in pytz.common_timezones:
+            params['timezone_error'] = "Invalid timezone."
+            valid = False
+
         if not valid:
-            self.render( "signup.html", **params )
+            self.render( "signup.html", timezones=pytz.common_timezones,
+                         **params )
             return
 
         if not user:
@@ -116,6 +130,7 @@ class Signup( handler.Handler ):
                                       twitter = twitter,
                                       youtube = youtube,
                                       twitch = twitch,
+                                      timezone = timezone,
                                       num_pbs = 0,
                                       parent = runners.key(),
                                       key_name = username_code )
@@ -152,6 +167,7 @@ class Signup( handler.Handler ):
             user.twitter = twitter
             user.youtube = youtube
             user.twitch = twitch
+            user.timezone = timezone
             if gravatar and gravatar != '<private email>':
                 user.gravatar = hashlib.md5( gravatar.lower( ) ).hexdigest( )
             elif not gravatar:
