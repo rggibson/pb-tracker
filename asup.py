@@ -6,11 +6,39 @@
 # https://docs.google.com/document/d/13UAc4CQTSMBAiEHm7xNdJYT8v27VZY1GJc2aYsaFVu0/edit#
 #
 
-import handler
+import runhandler
 import json
 import util
 
-class Asup( handler.Handler ):
+from datetime import date
+
+class Asup( runhandler.RunHandler ):
+    def get_success_response( self, data=None ):
+        response = dict( result='success' )
+        if data is not None:
+            response['data'] = data
+        return response
+
+    def get_fail_response( self, message ):
+        return dict( result='fail', message=message )
+
+    def verify_login( self, body ):
+        username = body.get( 'username' )
+        password = body.get( 'password' )
+        if username is None:
+            return False, self.get_fail_response( 'No username specified' )
+        elif password is None:
+            return False, self.get_fail_response( 'No password specified' )
+        else:
+            ( valid, errors ) = self.is_valid_login( username, password )
+            if not valid:
+                message = ''
+                for error_type, error in errors.iteritems( ):
+                    message += error + ' '
+                return False, self.get_fail_response( message )
+
+        return True, self.get_success_response( )
+
     def get( self ):
         # By default, return success, a link to the handler, and a link to
         # the protocol doc
@@ -25,31 +53,21 @@ class Asup( handler.Handler ):
         # Fetch the posted data
         body_json = self.request.body        
         body = json.loads( body_json )
+
+        # Render the response
+        self.render_json( self.get_response( body ) )
+
+    def get_response( self, body ):
         body_type = body.get( 'type' )
 
         # Currently 5 types: verifylogin, gamelist, categories, gamecategories
         # and submitrun
-        response = dict( result="success" )
         if body_type is None:
-            response['result'] = "fail"
-            response['message'] = "No type given."
+            return self.get_fail_response( "No type given." )
         
         elif body_type == 'verifylogin':
-            username = body.get( 'username' )
-            password = body.get( 'password' )
-            if username is None:
-                response['result'] = 'fail'
-                response['message'] = 'No username specified.'
-            elif password is None:
-                response['result'] = 'fail'
-                response['message'] = 'No password specified.'
-            else:
-                ( valid, errors ) = self.verify_login( username, password )
-                if not valid:
-                    response['result'] = 'fail'
-                    response['message'] = ''
-                    for error_type, error in errors.iteritems( ):
-                        response['message'] += error + ' '
+            ( valid, response ) = self.verify_login( body )
+            return response
 
         elif body_type == 'gamelist':
             # Note that this is a different type of gamelist than the one
@@ -58,7 +76,7 @@ class Asup( handler.Handler ):
             d = dict( )
             for game in categories.keys( ):
                 d[ util.get_code( game ) ] = game
-            response['data'] = d
+            return self.get_success_response( data=d )
 
         elif body_type == 'categories':
             categories = self.get_categories( )
@@ -69,28 +87,98 @@ class Asup( handler.Handler ):
                     category_code = util.get_code( category )
                     d[ game_code + ':' + category_code ] = ( game + ' - ' 
                                                              + category )
-            response['data'] = d
+            return self.get_success_response( data=d )
 
         elif body_type == 'gamecategories':
             game_code = body.get( 'game' )
             game_model = self.get_game_model( game_code )
             if game_code is None:
-                response['result'] = 'fail'
-                response['message'] = 'No game specified.'
+                return self.get_fail_response( 'No game specified' )
             elif game_model is None:
-                response['result'] = 'fail'
-                response['message'] = 'Unknown game [' + game_code + '].'
+                return self.get_fail_response( 'Unknown game [' 
+                                               + game_code + '].' )
             else:
                 d = dict( )
                 gameinfolist = json.loads( game_model.info )
                 for gameinfo in gameinfolist:
                     category = gameinfo['category']
                     d[ util.get_code( category ) ] = category
-                response['data'] = d
-        
-        else:
-            response['result'] = 'fail'
-            response['message'] = "Unknown type [" + body_type + "]."
+                return self.get_success_response( data=d )
 
-        # All dun
-        self.render_json( response )
+        elif body_type == 'submitrun':
+            # First, verify login credentials
+            ( valid, response ) = self.verify_login( body )
+            if not valid:
+                return response
+
+            # Grab the params from the body
+            username = body.get( 'username' )
+            game_code = body.get( 'game' )
+            category_code = body.get( 'category' )
+            version = body.get( 'version' )
+            time = body.get( 'runtime' )
+            notes = body.get( 'comment' )
+            splits = body.get( 'splits' )
+
+            # Make sure the game and category exist (can't handle new games
+            # and categories just yet)
+            if game_code is None:
+                return self.get_fail_response( 'No game given' )
+            game_model = self.get_game_model( game_code )
+            if game_model is None:
+                return self.get_fail_response( 'Unknown game [' 
+                                               + game_code + '].' )
+            if category_code is None:
+                return self.get_fail_response( 'No category specified' )
+            gameinfolist = json.loads( game_model.info )
+            category = None
+            for gameinfo in gameinfolist:
+                if category_code == util.get_code( gameinfo['category'] ):
+                    category = gameinfo['category']
+                    break
+            if category is None:
+                return self.get_fail_response( 'Unknown category [' 
+                                               + category_code 
+                                               + '] for game [' 
+                                               + game_code + '].' )
+
+            # Parse the time into seconds and ensure it is valid
+            if time is None:
+                return self.get_fail_response( 'No runtime given' )
+            ( seconds, time_error ) = util.timestr_to_seconds( time )
+            if seconds is None:
+                return self.get_fail_response( 'Bad runtime [' + time 
+                                               + '] given: ' + time_error )
+            # Ensure standard format
+            time = util.seconds_to_timestr( seconds )
+
+            # Make sure that the notes are not too long
+            if notes is not None and len( notes ) > 140:
+                return self.get_fail_response( 'Comment is too long; must be '
+                                               + 'at most 140 characters.' )
+
+            # Load up the needed parameters and put a new run
+            # TODO: Fix timezone problem?  Right now, this gives UTC date
+            today = date.today( )
+            params = dict( user=self.get_runner( util.get_code( username ) ),
+                           game=game_model.game,
+                           game_code=game_code,
+                           game_model=game_model,
+                           category=category,
+                           category_found=True,
+                           seconds=seconds,
+                           time=time,
+                           video='',
+                           version=version,
+                           notes=notes,
+                           valid=True,
+                           date=today,
+                           datestr=today.strftime( "%m/%d/%Y" ),
+                           is_bkt=False ) 
+            if self.put_new_run( params ):
+                return self.get_success_response( )
+            else:
+                return self.get_fail_response( 'Sorry, an unknown error '
+                                               + 'occurred.' )
+                    
+        return self.get_fail_response( "Unknown type [" + body_type + "]." )

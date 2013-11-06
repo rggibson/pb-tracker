@@ -54,7 +54,7 @@ class Handler(webapp2.RequestHandler):
             self.format = 'html'
 
     # User login functions, including where to return after a login/signup
-    def verify_login( self, username, password ):
+    def is_valid_login( self, username, password ):
         username_code = util.get_code( username )
         
         # Find the user in the database

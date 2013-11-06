@@ -26,7 +26,7 @@ class Login( handler.Handler ):
         if not return_url:
             return_url = "/"
 
-        ( valid, errors ) = self.verify_login( username, password )
+        ( valid, errors ) = self.is_valid_login( username, password )
         if not valid:
             self.render( "login.html", username=username,
                          return_url=return_url, **errors )

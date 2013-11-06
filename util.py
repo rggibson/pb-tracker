@@ -129,7 +129,7 @@ def get_valid_date( d ):
         return d
     else:
         return date( 1970, 1, 1 )
-
+    
 def datestr_to_date( datestr ):
     if datestr is None or len( datestr ) <= 0:
         return ( None, '' )
@@ -140,7 +140,7 @@ def datestr_to_date( datestr ):
 
     # strftime breaks with dates before 1900, but JayFermont suggested
     # they break before 1970, so let's disallow anything before 1970.
-    # To help users out, let's change two-digit dates to the 1900/2000
+    # To help users out, let's change two-digit years to the 1900/2000
     # equivalent.
     year = int( parts[ 2 ] )
     if year >= 0 and year <= 69:

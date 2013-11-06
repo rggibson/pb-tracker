@@ -21,7 +21,7 @@ import updatebkt
 import faq
 import edit_table
 import asup
-#import fixerupper
+import fixerupper
 
 DEBUG = True
 
@@ -34,24 +34,25 @@ class Default( handler.Handler ):
 MY_RE = r'([a-zA-Z0-9_-]+)'
 RUN_RE = r'([0-9]+)'
 app = webapp2.WSGIApplication( [ ('/', front.Front), 
-                                 ('/signup', signup.Signup),
-                                 ('/login', login.Login),
-                                 ('/logout', logout.Logout),
-                                 ('/submit', submit.Submit),
-                                 ('/games(?:\.json)?', gamelist.GameList),
-                                 ('/runners(?:\.json)?', 
+                                 ('/signup/?', signup.Signup),
+                                 ('/login/?', login.Login),
+                                 ('/logout/?', logout.Logout),
+                                 ('/submit/?', submit.Submit),
+                                 ('/games(?:\.json)?/?', gamelist.GameList),
+                                 ('/runners(?:\.json)?/?', 
                                   runnerlist.RunnerList),
-                                 ('/runner/' + MY_RE + '(?:\.json)?', 
+                                 ('/runner/' + MY_RE + '(?:\.json)?/?', 
                                   runnerpage.RunnerPage),
-                                 ('/runner/' + MY_RE + '/edit-table',
+                                 ('/runner/' + MY_RE + '/edit-table/?',
                                   edit_table.EditTable),
-                                 ('/game/' + MY_RE + '/update-bkt', 
+                                 ('/game/' + MY_RE + '/update-bkt/?', 
                                   updatebkt.UpdateBkt),
-                                 ('/game/' + MY_RE + '(?:\.json)?', 
+                                 ('/game/' + MY_RE + '(?:\.json)?/?', 
                                   gamepage.GamePage),
-                                 ('/delete/' + RUN_RE, deleterun.DeleteRun),
-                                 ('/faq', faq.Faq),
-                                 ('/asup', asup.Asup),
-#                                 ('/fixerupper', fixerupper.FixerUpper),
+                                 ('/delete/' + RUN_RE + '/?', 
+                                  deleterun.DeleteRun),
+                                 ('/faq/?', faq.Faq),
+                                 ('/asup/?', asup.Asup),
+                                 ('/fixerupper', fixerupper.FixerUpper),
                                  ('/' + r'(.*)', Default) ],
                                debug=DEBUG)
