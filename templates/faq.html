@@ -19,7 +19,8 @@
 	</a>
       </h4>
     </div>
-    <div id="collapse-{{loop.index}}" class="panel-collapse collapse">
+    <div id="collapse-{{loop.index}}" 
+	 class="panel-collapse collapse{% if loop.index == q %} in{% endif %}">
       <div class="panel-body">
 	{{faq['content'] | safe}}
       </div>
