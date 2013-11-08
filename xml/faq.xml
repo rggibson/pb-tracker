@@ -42,6 +42,33 @@ Find the run you wish to edit or delete and click the appropriate icon in the fa
 </faq>
 
 <faq>
+<title>How does auto-submission with Time Split Tracker work?</title>
+<content><![CDATA[
+<p>
+<a href="https://forum.speeddemosarchive.com/post/timerstopwatch_program_376.html#timerstopwatch_program_376">Time Split Tracker</a> is a splits program by <a href="https://twitter.com/dunnius">dunnius</a> for speedrunning and is a useful tool to keep track of level completion times during a run. 
+Time Split Tracker supports auto-submission of runs to PB Tracker. 
+To enable this feature, click options and go down to enable auto-upload. 
+Enter your credentials and the game info on the menu that pops up. 
+Note that new games and categories currently cannot be auto-submitted and the first run of a new game or category must be submitted manually on the web. 
+Also note that the game and category info must currently be changed manually every time you change games or categories and open a new splits file.
+Once enabled, on completion of a run (after the final split is hit), your run time will be automatically submitted to PB Tracker. 
+If a mistake was made in the auto-submitted time (such as the final split was hit too late), you may always edit your runs from your list / edit runs page. 
+</p>
+<p>
+Here are some useful tips for getting started with Time Split Tracker:
+<ol>
+<li>Download <a href="https://forum.speeddemosarchive.com/post/timerstopwatch_program_376.html#timerstopwatch_program_376">Time Split Tracker</a> and extract the files to a local directory.</li>
+<li>For basic splits, copy and rename the "Sample No Comparison Times.txt" file to something more appropriate (such as "mega-man-2.txt").</li>
+<li>Open the new copy in a text editor.  Replace "No Comparison" with the title of your run (such as "Mega Man 2 - Any% (Normal)").  Replace "Point 1," "Point 2," etc. with better split labels (such as "Flash Man," "Heat Man," etc.). Add, remove, or replace the paths to the image files for each split. Save the text file.</li>
+<li>Open the Time Split Tracker executable, go to "Open splits," and select your saved file.</li>
+<li>Finally, go to Options -> Enable auto-upload, select PB Tracker as the server, and enter the appropriate information.</li>
+</ol>
+Once again, don't forget to update the auto-upload information manually every time you change games or categories and open a new splits file. 
+</p>
+]]></content>
+</faq>
+
+<faq>
 <title>Isn't there a blog about PB Tracker?</title>
 <content><![CDATA[
 Yes there is! 
@@ -53,6 +80,14 @@ You can find it at <a href="http://richardggibson.appspot.com/blog">http://richa
 <title>How can I request a feature or report a problem?</title>
 <content><![CDATA[
 You can send an <a href="mailto:[name-of-site-no-spaces]speedruns[AT]gmail[DOT]com">email</a> or contact <a href="https://twitter.com/rggibson_">rggibson</a> on Twitter. 
+]]></content>
+</faq>
+
+<faq>
+<title>Some of the games and categories are mislabelled and thus are not merged properly.  How can this be fixed?</title>
+<content><![CDATA[
+You can let <a href="https://twitter.com/rggibson_">rggibson</a> know of any problems like this that you find.  
+However, a better approach might be to send a friendly message to the runner if you believe they have mislabelled a game or category and ask them to edit their run. 
 ]]></content>
 </faq>
 
