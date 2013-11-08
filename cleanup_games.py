@@ -23,18 +23,21 @@ class CleanupGames( handler.Handler ):
         categories = self.get_categories( )
         categories_modified = False
 
+        games_to_delete = [ ]
         for game, categorylist in categories.iteritems( ):
             # Grab the game model
             game_code = util.get_code( game )
             game_model = self.get_game_model( game_code )
             gameinfolist = json.loads( game_model.info )
             game_model_modified = False
-            for i, gameinfo in enumerate( gameinfolist) :
+            glist = [ ( i, gameinfo ) 
+                      for i, gameinfo in enumerate( gameinfolist ) ]
+            for i, gameinfo in reversed( glist ):
                 # Leave it if the category is marked as a base category
                 if gameinfo.get( 'is_base_category' ):
                     continue
                 # Check if there is a run for this game and category
-                q = db.Query( runs.Runs, projection=( 'game', 'category' ) )
+                q = db.Query( runs.Runs, keys_only=True )
                 q.ancestor( runs.key() )
                 q.filter( 'game =', game )
                 q.filter( 'category =', gameinfo['category'] )
@@ -56,6 +59,7 @@ class CleanupGames( handler.Handler ):
             # Remove the game if no more categories exist
             if len( gameinfolist ) == 0:
                 game_model.delete( )
+                games_to_delete.append( game )
                 logging.debug( game + " deleted" )
                 self.update_cache_game_model( game_code, None )
             # Update database and memcache if necessary
@@ -66,4 +70,6 @@ class CleanupGames( handler.Handler ):
         
         # Finally, update categories in memcache if necessary
         if categories_modified:
+            for game in games_to_delete:
+                del categories[ game ]
             self.update_cache_categories( categories )

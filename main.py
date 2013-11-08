@@ -21,7 +21,7 @@ import updatebkt
 import faq
 import edit_table
 import asup
-#import cleanup_games
+import cleanup_games
 import fixerupper
 
 DEBUG = True
@@ -54,8 +54,8 @@ app = webapp2.WSGIApplication( [ ('/', front.Front),
                                   deleterun.DeleteRun),
                                  ('/faq/?', faq.Faq),
                                  ('/asup/?', asup.Asup),
-#                                 ('/cleanup-games', 
-#                                  cleanup_games.CleanupGames),
+                                 ('/cleanup-games', 
+                                  cleanup_games.CleanupGames),
                                  ('/fixerupper', fixerupper.FixerUpper),
                                  ('/' + r'(.*)', Default) ],
                                debug=DEBUG)
