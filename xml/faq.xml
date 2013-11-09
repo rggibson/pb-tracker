@@ -52,6 +52,7 @@ Enter your credentials and the game info on the menu that pops up.
 Note that new games and categories currently cannot be auto-submitted and the first run of a new game or category must be submitted manually on the web. 
 Once enabled, on completion of a run (after the final split is hit), your run time will be automatically submitted to PB Tracker. 
 If a mistake was made in the auto-submitted time (such as the final split was hit too late), you may always edit your runs from your list / edit runs page. 
+Note that the date of the run will be the current day in UTC unless you update your time zone information on your edit profile page. 
 </p>
 <p>
 Here are some useful tips for getting started with Time Split Tracker:
@@ -60,7 +61,8 @@ Here are some useful tips for getting started with Time Split Tracker:
 <li>For basic splits, copy and rename the "Sample No Comparison Times.txt" file to something more appropriate (such as "mega-man-2.txt").</li>
 <li>Open the Time Split Tracker executable, go to "Open splits," and select your new file.</li>
 <li>Right-click on various parts of the Time Split Tracker window to bring up contextual menus and edit the appropriate labels, add or remove split rows, change row images, etc.</li>
-<li>Finally, go to Options -> Enable auto-upload, select PB Tracker as the server, and enter the appropriate information.</li>
+<li>Go to Options -> Enable auto-upload, select PB Tracker as the server, and enter the appropriate information.</li>
+<li>Finally, Time Split Tracker offers several advanced features, including comparison against multiple split columns.  If you prefer a simpler, single column of splits, you can edit your preferences yourself or download <a href="/static/time-split-tracker.ini" download="Time Split Tracker.ini">this configuration file</a> and overwrite the existing file in your Time Split Tracker directory.</li>
 </ol>
 </p>
 ]]></content>
