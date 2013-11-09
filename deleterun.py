@@ -18,7 +18,8 @@ class DeleteRun( runhandler.RunHandler ):
 
         # Get the run
         run = self.get_run_by_id( run_id )
-        if not run or run.username != user.username:
+        if( not run or 
+            ( not user.is_mod and run.username != user.username ) ):
             self.error( 404 )
             self.render( "404.html", user=user )
             return
@@ -36,10 +37,17 @@ class DeleteRun( runhandler.RunHandler ):
 
         # Get the run
         run = runs.Runs.get_by_id( long( run_id ), parent=runs.key() )
-        if not run or run.username != user.username:
+        if( not run or 
+            ( not user.is_mod and run.username != user.username ) ):
             self.error( 404) 
             self.render( "404.html", user=user )
             return
+
+        # Grab the owner of the run
+        if run.username == user.username:
+            runner = user
+        else:
+            runner = self.get_runner( util.get_code( run.username ) )
 
         # Delete the run
         run.delete( )
@@ -51,39 +59,39 @@ class DeleteRun( runhandler.RunHandler ):
 
         # Update games, runner
         delta_num_pbs = 0
-        num_runs = self.num_runs( user.username, run.game, run.category, 1 )
+        num_runs = self.num_runs( runner.username, run.game, run.category, 1 )
         if num_runs == 0:
             delta_num_pbs = -1
-        self.update_runner( user, delta_num_pbs )
+        self.update_runner( runner, delta_num_pbs )
         self.update_games_delete( self.get_game_model( 
                 util.get_code( old_run['game'] ) ), delta_num_pbs )
 
         # Must update runinfo before pblist and gamepage because pblist and
         # gamepage rely on accurate runinfo
-        self.update_runinfo_delete( user, old_run )
-        self.update_pblist_delete( user, old_run )
-        self.update_gamepage_delete( user, old_run )
-        self.update_user_has_run_delete( user, old_run )
+        self.update_runinfo_delete( runner, old_run )
+        self.update_pblist_delete( runner, old_run )
+        self.update_gamepage_delete( runner, old_run )
+        self.update_user_has_run_delete( runner, old_run )
         if num_runs <= 0:
             self.update_gamelist_delete( old_run )
-            self.update_runnerlist_delete( user )
+            self.update_runnerlist_delete( runner )
 
         # Update runlist for runner in memcache
-        runlist = self.get_runlist_for_runner( user.username, 
+        runlist = self.get_runlist_for_runner( runner.username, 
                                                no_refresh=True )
         if runlist:
             for i, run in enumerate( runlist ):
                 if run[ 'run_id' ] == run_id:
                     del runlist[ i ]
-                    self.update_cache_runlist_for_runner( user.username,
+                    self.update_cache_runlist_for_runner( runner.username,
                                                           runlist )
                     break
 
         # Update last run
-        last_run = self.get_last_run( user.username, no_refresh=True )
+        last_run = self.get_last_run( runner.username, no_refresh=True )
         if last_run is not None and last_run.key( ).id( ) == long( run_id ):
-            self.update_cache_last_run( user.username, None )
+            self.update_cache_last_run( runner.username, None )
 
         # Done with deletion
-        self.redirect( "/runner/" + util.get_code( user.username )
+        self.redirect( "/runner/" + util.get_code( runner.username )
                        + "?q=view-all" )

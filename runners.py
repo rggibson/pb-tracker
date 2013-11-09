@@ -26,3 +26,4 @@ class Runners( db.Model ):
     visible_columns = db.TextProperty( required = False )
     num_pbs = db.IntegerProperty( default = 0 )
     timezone = db.TextProperty( required = False ) # Only used for asup
+    is_mod = db.BooleanProperty( default = False )

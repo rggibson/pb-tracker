@@ -23,7 +23,7 @@
       <th><i class="icon-desktop icon-large"></i> Version</th>
       <th><i class="icon-calendar icon-large"></i> Date</th>
       <th><i class="icon-calendar icon-large"></i> Date Submitted (UTC)</th>
-      {% if user.username == runner.username %}<th></th>{% endif %}
+      {% if user.username == runner.username or user.is_mod %}<th></th>{% endif %}
     </tr>
   </thead>
   <tbody>
@@ -46,15 +46,15 @@
 	<a href="{{run['video']}}" data-toggle="tooltip" title="See video">{% endif %}
 	  {{run['time']}}{% if run['video'] %}</a>{% endif %}
 	{% if run['notes'] %}
-	<a data-toggle="popover" data-content="{{run['notes']}}" href="#"
-	   data-original-title 
-	   title><i class="icon-comment"></i>{% endif %}
+	<a data-toggle="popover" data-content="{{run['notes']}}"
+	   data-original-title style="cursor: pointer;" 
+	   title><i class="icon-comment"></i></a>{% endif %}
       </td>
       <td>{% if run['version'] %}{{run['version']}}{% else %}-{% endif %}</td>
       <td>{% if run['date'] %}{{run['date'].strftime( "%a %b %d %Y" )}}{% else %}-{% endif %}</td>
       <td>{% if run['datetime_created'] %}
 	{{run['datetime_created'].strftime( "%a %b %d %Y %H:%M:%S" )}}{% else %}-{% endif %}</td>
-      {% if user.username == runner.username %}
+      {% if user.username == runner.username or user.is_mod %}
       <td>
 	<a href="/submit?edit={{run['run_id']}}" data-toggle="tooltip"
 	   title="Edit run"><i class="icon-edit icon-large"></i></a>  
@@ -93,9 +93,9 @@
       "bProcessing": true, /* Display a processing message when thinking */
       "aoColumnDefs": [
         { "bSearchable": false, 
-          "aTargets": [ 0, 3, 5, 6{% if user.username == runner.username %}, 7{% endif %} ] },
+          "aTargets": [ 0, 3, 5, 6{% if user.username == runner.username or user.is_mod %}, 7{% endif %} ] },
         { "bSortable": false,
-          "aTargets": [ 0{% if user.username == runner.username %}, 7{% endif %} ] },
+          "aTargets": [ 0{% if user.username == runner.username or user.is_mod %}, 7{% endif %} ] },
         { "bVisible": false, "aTargets": [ 6 ] },
         { "aDataSort": [ 5, 6 ], "aTargets": [ 5 ] }, /* Break ties for date */
         { "sType": "time", "aTargets": [ 3 ] }

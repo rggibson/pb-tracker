@@ -38,7 +38,7 @@ class UpdateBkt( handler.Handler ):
         # Check to make sure that the user has run this game
         game_model = self.get_game_model( game_code )
         user_has_run = self.get_user_has_run( user.username, game_model.game )
-        if not user_has_run:
+        if not user_has_run and not user.is_mod:
             self.error( 404 )
             self.render( "404.html", user=user )
             return
@@ -98,7 +98,7 @@ class UpdateBkt( handler.Handler ):
         # Check to make sure that the user has run this game
         game_model = self.get_game_model( game_code )
         user_has_run = self.get_user_has_run( user.username, game_model.game )
-        if not user_has_run:
+        if not user_has_run and not user.is_mod:
             self.error( 404 )
             self.render( "404.html", user=user )
             return

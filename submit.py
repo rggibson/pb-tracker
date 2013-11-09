@@ -45,7 +45,7 @@ class Submit( runhandler.RunHandler ):
         if run_id:
             # Grab the run to edit
             run = self.get_run_by_id( run_id )
-            if not run or user.username != run.username:
+            if not run or ( not user.is_mod and user.username != run.username ):
                 self.error( 404 )
                 self.render( "404.html", user=user )
                 return
@@ -206,4 +206,5 @@ class Submit( runhandler.RunHandler ):
         else:
             # Grab all of the games for autocompleting
             params['categories'] = self.get_categories( )            
+            params['user'] = user
             self.render( "submit.html", **params )

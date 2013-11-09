@@ -594,7 +594,8 @@ class RunHandler( handler.Handler ):
 
         return True
 
-    # Returns True on success, False otherwise
+    # Returns True on success, False otherwise.  Note that params['user']
+    # is volatile
     def put_existing_run( self, params ):
         user = params[ 'user' ]
         game = params[ 'game' ]
@@ -610,8 +611,16 @@ class RunHandler( handler.Handler ):
 
         # Grab the old run, which we will update to be the new run
         new_run = self.get_run_by_id( run_id )
-        if new_run is None or new_run.username != user.username:
+        if ( new_run is None 
+             or ( not user.is_mod and new_run.username != user.username ) ):
             return False
+
+        # Get the owner of this run
+        if new_run.username != user.username:
+            runner = self.get_runner( util.get_code( new_run.username ) )
+            params['user'] = runner
+        else:
+            runner = user
 
         # Store the contents of the old run
         old_run = dict( game = new_run.game,
@@ -641,7 +650,7 @@ class RunHandler( handler.Handler ):
             return False
             
         new_run.put( )
-        logging.debug( "Put updated run for runner " + user.username
+        logging.debug( "Put updated run for runner " + runner.username
                        + ", game = " + game + ", category = " + category
                        + ", time= " + time + ", run_id = " + run_id )
 
@@ -650,16 +659,16 @@ class RunHandler( handler.Handler ):
         delta_num_pbs_old = 0
         delta_num_pbs_new = 0
         if game != old_run['game'] or category != old_run['category']:
-            num_runs = self.num_runs( user.username, old_run[ 'game' ], 
+            num_runs = self.num_runs( runner.username, old_run[ 'game' ], 
                                       old_run[ 'category' ], 1 )
             if num_runs == 0:
                 delta_num_pbs_old = -1
-            num_runs = self.num_runs( user.username, game, category, 2 )
+            num_runs = self.num_runs( runner.username, game, category, 2 )
             if num_runs == 1:
                 delta_num_pbs_new = 1
             
         # Update games.Games and runners.Runners
-        self.update_runner( user, delta_num_pbs_old + delta_num_pbs_new )
+        self.update_runner( runner, delta_num_pbs_old + delta_num_pbs_new )
         if game == old_run['game']:
             self.update_games_delete( params['game_model'], delta_num_pbs_old )
         else:
@@ -671,25 +680,26 @@ class RunHandler( handler.Handler ):
         # new run.
         self.update_cache_run_by_id( run_id, new_run )
         # Must update runinfo before pblist and gamepage as in put_new_run()
-        self.update_runinfo_delete( user, old_run )
+        self.update_runinfo_delete( runner, old_run )
         self.update_runinfo_put( params )
-        self.update_pblist_delete( user, old_run )
+        self.update_pblist_delete( runner, old_run )
         self.update_pblist_put( params )
-        self.update_gamepage_delete( user, old_run )
+        self.update_gamepage_delete( runner, old_run )
         self.update_gamepage_put( params )
-        self.update_user_has_run_delete( user, old_run )
-        self.update_cache_user_has_run( user.username, game, True )
+        self.update_user_has_run_delete( runner, old_run )
+        self.update_cache_user_has_run( runner.username, game, True )
 
         # Update gamelist and runnerlist in memcache
         if delta_num_pbs_old == -1:
             self.update_gamelist_delete( old_run )
-            self.update_runnerlist_delete( user )
+            self.update_runnerlist_delete( runner )
         if delta_num_pbs_new == 1:
             self.update_gamelist_put( params )
             self.update_runnerlist_put( params )
 
         # Replace the old run in the runlist for runner in memcache
-        runlist = self.get_runlist_for_runner( user.username, no_refresh=True )
+        runlist = self.get_runlist_for_runner( runner.username, 
+                                               no_refresh=True )
         if runlist:
             for run in runlist:
                 if run[ 'run_id' ] == run_id:
@@ -703,14 +713,14 @@ class RunHandler( handler.Handler ):
                     run[ 'notes' ] = notes
                     runlist.sort( key=lambda x: util.get_valid_date( 
                         x['date'] ), reverse=True )
-                    self.update_cache_runlist_for_runner( user.username, 
+                    self.update_cache_runlist_for_runner( runner.username, 
                                                           runlist )
                     break
 
         # Check to see if we need to replace the last run for this user
-        last_run = self.get_last_run( user.username, no_refresh=True )
+        last_run = self.get_last_run( runner.username, no_refresh=True )
         if( last_run is not None 
             and new_run.key().id() == last_run.key().id() ):
-            self.update_cache_last_run( user.username, new_run )
+            self.update_cache_last_run( runner.username, new_run )
 
         return True

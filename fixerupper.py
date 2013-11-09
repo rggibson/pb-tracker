@@ -27,29 +27,11 @@ class FixerUpper( handler.Handler ):
             self.render( "404.html", user=user )
             return
 
-        # Mark all of the games that were originally uploaded
-        f = open( 'json/import_games.json', 'r' )
-        iglist = json.loads( f.read( ) )
-        f.close( )
-
-        for d in iglist:
-            game_code = util.get_code( d['game'] )
-            game_model = self.get_game_model( game_code )
-            if game_model is None:
-                self.write( 'No game model for game ' + d['game'] + '<br>' )
-                continue
-            gameinfolist = json.loads( game_model.info )
-            modified = False
-            for gameinfo in gameinfolist:
-                category = gameinfo.get( 'category' )
-                if category in d['categories']:
-                    gameinfo['is_base_category'] = True
-                    modified = True
-                    self.write( d['game'] + ' - ' + category + '<br>' )
-            if modified:
-                game_model.info = json.dumps( gameinfolist )
-                game_model.put( )
-                self.update_cache_game_model( game_code, game_model )
+        # Mark myself as a moderator
+        runner = self.get_runner( 'rggibson' )
+        runner.is_mod = True
+        runner.put( )
+        self.update_cache_runner( 'rggibson', runner )
 
         # # Recalculate num_pbs for every game
         # q = db.Query( games.Games )

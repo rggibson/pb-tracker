@@ -29,13 +29,13 @@
   {% if d['bk_date'] %}
   on {{d['bk_date'].strftime( "%b %d %Y" )}}
   {% endif %}
-  {% if user_has_run %}
+  {% if user_has_run or user.is_mod %}
   <a href="/game/{{game_code}}/update-bkt?c={{d['category_code']}}&from=/game/{{game_code}}" data-toggle="tooltip" title="Update best known time">
     <i class="icon-edit"></i>
   </a>
   {% endif %}
 </h4>
-{% elif user_has_run %}
+{% elif user_has_run or user.is_mod %}
 <h4>
   <i class="icon-trophy"></i> Best known time: 
   <a href="/game/{{game_code}}/update-bkt?c={{d['category_code']}}&from=/game/{{game_code}}" data-toggle="tooltip" 
