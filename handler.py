@@ -53,7 +53,7 @@ class Handler(webapp2.RequestHandler):
         else:
             self.format = 'html'
 
-    # User login functions, including where to return after a login/signup
+    # User login functions
     def is_valid_login( self, username, password ):
         username_code = util.get_code( username )
         

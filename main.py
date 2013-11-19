@@ -24,7 +24,7 @@ import asup
 import cleanup_games
 import fixerupper
 
-DEBUG = True
+DEBUG = False
 
 class Default( handler.Handler ):
     def get( self, url ):

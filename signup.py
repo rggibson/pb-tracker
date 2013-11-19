@@ -38,7 +38,7 @@ class Signup( handler.Handler ):
         if user:
             # Editing profile
             params = dict( user=user,
-                           twitter=user.twitter,
+                           twitter='@'+user.twitter,
                            youtube=user.youtube,
                            twitch=user.twitch,
                            return_url=return_url )
@@ -67,7 +67,10 @@ class Signup( handler.Handler ):
         twitch = twitch.split( '/' )[ -1 ]
         timezone = self.request.get( 'timezone' )
         gravatar = self.request.get( 'gravatar' )
-        username_code = util.get_code( username )
+        if user:
+            username_code = util.get_code( user.username )
+        else:
+            username_code = util.get_code( username )
         return_url = self.request.get( 'from' )
         if not return_url:
             return_url = "/"
@@ -176,7 +179,7 @@ class Signup( handler.Handler ):
             user.put( )
 
             # Update user in memcache
-            self.update_cache_runner( util.get_code( user.username ), user )
+            self.update_cache_runner( username_code, user )
 
             # Update runnerlist in memcache if gravatar updated
             if gravatar != '<private email>':
