@@ -97,7 +97,8 @@
         { "bSortable": false,
           "aTargets": [ 0{% if user.username == runner.username or user.is_mod %}, 7{% endif %} ] },
         { "bVisible": false, "aTargets": [ 6 ] },
-        { "aDataSort": [ 5, 6 ], "aTargets": [ 5 ] }, /* Break ties for date */
+        /* Break ties for date */
+        { "aDataSort": [ 5, 6 ], "sType": "mydate", "aTargets": [ 5 ] }, 
         { "sType": "time", "aTargets": [ 3 ] }
       ],
       "oLanguage": { "sSearch": "Filter game and/or category:" }
