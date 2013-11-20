@@ -1,5 +1,5 @@
 # games.py
-# Author: Ricard Gibson
+# Author: Richard Gibson
 #
 # Stores game, category and best known time information.  Categories and best 
 # known times are stored as JSON text with the following keys: `category`, 
