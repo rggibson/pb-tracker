@@ -37,7 +37,7 @@
     </div>
     <div class="col-lg-4 col-md-4 error">{{pass_error}}</div>
   </div>
-  <div class="form-group{% if verify_error %} has-error{% endif %}">
+  <div class="form-group{% if ver_error %} has-error{% endif %}">
     <label for="verify" class="col-lg-4 col-md-4 control-label">
       Retype password {% if user %}(leave blank to not change){% endif %}
     </label>
@@ -116,7 +116,9 @@
 </form>
 {% if not user %}
 <center>
-  <p class="lead">Already signed up?  Then <a href="/login?from={{return_url}}">log in</a>.
+  <p class="lead">Already signed up?  Then 
+    <a href="/login?from={{return_url}}">log in</a>.
+  </p>
 </center>
 {% endif %}
 

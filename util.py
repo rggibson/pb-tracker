@@ -31,7 +31,7 @@ def check_secure_val(h):
     if h == make_secure_val( val ):
         return val
 
-# Hasing functions with salt
+# Hashing functions with salt
 def make_salt():
     return ''.join(random.choice(letters) for x in xrange(5))
         
@@ -120,7 +120,7 @@ def timestr_to_seconds( time ):
 def get_gravatar_url( gravatar, size=80 ):
     if gravatar:
         return ( 'http://www.gravatar.com/avatar/' + gravatar + "?s=" 
-                 + str( size ) )
+                 + str( size ) + "&d=blank" )
     else:
         return ''
 
