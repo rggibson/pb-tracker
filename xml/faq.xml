@@ -12,6 +12,14 @@ This runner page is the main feature of PB Tracker, providing a useful reference
 </faq>
 
 <faq>
+<title>Help! I forgot my password! How do I reset it?</title>
+<content><![CDATA[
+Since we don't require users to provide or verify any contact information, we don't have a fool proof way to provide password resets automatically. 
+If you need a password reset, send <a href="https://twitter.com/rggibson_">rggibson</a> a message or <a href="mailto:[name-of-site-no-spaces]speedruns[AT]gmail[DOT]com">email us</a> and we'll get you straightened out as quickly as we can.
+]]></content>
+</faq>
+
+<faq>
 <title>Is there a banner for PB Tracker that I can use on my Twitch TV channel?</title>
 <content><![CDATA[
 Yes there is! 
