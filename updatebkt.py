@@ -145,6 +145,7 @@ class UpdateBkt( handler.Handler ):
             gameinfo['bk_seconds'] = None
             gameinfo['bk_datestr'] = None
             gameinfo['bk_video'] = None
+            date = None
         else:
             # Make sure we got a username
             if not username:
@@ -157,7 +158,7 @@ class UpdateBkt( handler.Handler ):
                 params['time_error'] = "Invalid time: " + time_error
                 valid = False
 
-            # Pase the date, ensure it is valid
+            # Parse the date, ensure it is valid
             ( date, date_error ) = util.datestr_to_date( datestr )
             if date_error:
                 params['date_error'] = "Invalid date: " + date_error
