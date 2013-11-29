@@ -32,7 +32,7 @@ class Default( handler.Handler ):
         self.error( 404 )
         self.render( "404.html", user=user )
 
-MY_RE = r'([a-zA-Z0-9_-]+)'
+MY_RE = r'([a-zA-Z0-9_+-]+)'
 RUN_RE = r'([0-9]+)'
 app = webapp2.WSGIApplication( [ ('/', front.Front), 
                                  ('/signup/?', signup.Signup),

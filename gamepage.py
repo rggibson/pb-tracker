@@ -20,6 +20,10 @@ class GamePage( handler.Handler ):
     def get( self, game_code ):
         user = self.get_user( )
 
+        # Have to take the code of the game code because of percent
+        # encoded plusses
+        game_code = util.get_code( game_code )
+
         # Make sure this game exists
         game_model = self.get_game_model( game_code )
         if not game_model:
