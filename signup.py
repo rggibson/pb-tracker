@@ -166,7 +166,7 @@ class Signup( handler.Handler ):
         else:
             # Editing the current user
             if len( password ) > 0:
-                user.password = util.make_pw_hash( user.username, password )
+                user.password = util.make_pw_hash( username_code, password )
             user.twitter = twitter
             user.youtube = youtube
             user.twitch = twitch
