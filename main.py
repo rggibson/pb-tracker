@@ -18,7 +18,7 @@ import gamelist
 import runnerlist
 import deleterun
 import updatebkt
-import faq
+import xmlpage
 import edit_table
 import asup
 import cleanup_games
@@ -52,7 +52,8 @@ app = webapp2.WSGIApplication( [ ('/', front.Front),
                                   gamepage.GamePage),
                                  ('/delete/' + RUN_RE + '/?', 
                                   deleterun.DeleteRun),
-                                 ('/faq/?', faq.Faq),
+                                 ('/faq/?', xmlpage.XmlPage),
+                                 ('/blog/?', xmlpage.XmlPage),
                                  ('/asup/?', asup.Asup),
                                  ('/cleanup-games', 
                                   cleanup_games.CleanupGames),

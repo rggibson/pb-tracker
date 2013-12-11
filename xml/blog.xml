@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<blogs>
+
+<blog>
+<title>PB Tracker Launched!</title>
+<date>October 29, 2013</date>
+<image>pbtracker-console-102913.png</image>
+<text><![CDATA[
+<p>
+About two weeks ago, PB Tracker went live at <a href="http://www.pbtracker.net">http://www.pbtracker.net</a> and I was officially the first user to sign up (surprise surprise). 
+New users have been slowly trickling on and feedback about the site sounds positive so far. 
+The site received a huge spike in action yesterday morning and afternoon when <a href="https://twitter.com/regularduck">duckfist</a> tweeted about PB Tracker. 
+I guess it doesn't hurt to have a popular Mega Man speedrunner speak highly of your web site. 
+At last count, there are 148 runners signed up on PB Tracker and more seem to keep coming every day. 
+</p>
+<p>
+A few bugs have reared their ugly heads since launch. 
+The worst problem I've encountered so far was a bug that blocked new users from submitting runs entirely (oops). 
+Luckily, I was able to fix this one pretty quickly once I was made aware of it. 
+The community has been great helping me out too, quickly letting me know over Twitter when something suspicious happens. 
+I have even had a few volunteer their time to help with development, which is amazing. 
+This finally convinced me yesterday to write some documentation in the code to better facilitate new developers jumping on the open project. 
+</p>
+<p>
+Though I will need to spend more of my time working on other things soon, there are still some matters to attend to. 
+Last post, I mentioned that I wanted to write my own splits program that automatically submits runs to PB Tracker. 
+However, I have changed my stance on this. 
+There are already three good splits programs out there: <a href="http://www.mediafire.com/?tpcyj74d9vpy7">WSplit</a>, <a href="http://jenmaarai.com/xunkar/llanfair/">Llanfair</a> and <a href="https://forum.speeddemosarchive.com/post/timerstopwatch_program_368.html#timerstopwatch_program_368">TimeSplitTracker</a>. 
+The community really doesn't need a fourth. 
+Instead, I have been talking with the authors of TimeSplitTracker and <a href="http://allspeedruns.com/">allspeedruns.com</a>, and we are working on a protocol for communication between splits programs and run tracking sites like PB Tracker. 
+In a perfect world, we would have an option available to submit to PB Tracker from all three splits programs, but we'll see how close we can get to that goal. 
+</p>
+<p>
+While auto-submission for splits is being sorted out, I have a few more improvements in mind. 
+For me, the primary feature of PB Tracker is the runner pages where anyone can view the personal best times submitted by an individual runner in a nice, tabular format. 
+This provides a convenient page to link to from one's Twitch TV channel, especially with their less-than-popular switch from HTML to Markdown panels for listing channel info. 
+As such, the improvements I want to make to PB Tracker focus on enhancing the runner pages. 
+For example, I'm hoping to allow users to choose which columns of their PB table are visible to viewers so that only information important to the runner is reported. 
+I also want to add some sorting and filtering options for the "view all runs" pages. 
+Currently, all runs are simply listed by date. 
+It would be nice to be able to, for example, list only runs for a certain game or category and to sort runs by, say, run time. 
+I haven't thought much about how to implement these options, but hopefully they are easy enough to include.  
+</p>
+]]></text>
+</blog>
+
+<blog>
+<title>PB Tracker Update 2</title>
+<date>October 9, 2013</date>
+<image>pbtracker-front-100913.png</image>
+<image>pbtracker-rggibson-100913.png</image>
+<text><![CDATA[
+<p>
+Oh hey, it's time for another PB Tracker update. 
+I have lots of cool stuff to talk about, so let's go.
+</p>
+<p>
+Firstly, PB Tracker has a brand spanking new paint job thanks to me stumbling across <a href="http://bootswatch.com/">Bootswatch's free themes for Bootstrap</a>.
+I went with the very orange "United" theme that gives the site a very Ubuntu-look.
+I think it looks sharp. 
+Secondly, browsing the internets for new fonts led me to <a href="http://fortawesome.github.io/Font-Awesome/">Font Awesome</a>, a rad set of icons that are also Bootstrap friendly. 
+For the artistically-challenged, like myself, Bootswatch and Font Awesome are a godsend when it comes to web visuals. 
+As you may be able to tell from the screenshots, I basically used Font Awesome icons whenever I possibly could. 
+I tried really hard to find a good use for the <a href="http://fortawesome.github.io/Font-Awesome/icon/bolt/">lightning bolt</a> icon, but unfortunately the site is currently sans lightning bolt.
+</p>
+<p>
+I was actually able to spend some time on the visuals because all the basic features of the site are now implemented. 
+Users can now add links to their Twitter, YouTube and Twitch TV accounts. 
+Profile images can also be added through <a href="https://gravatar.com">Gravatar</a>. 
+I didn't want to host any additional images, so Gravatar seemed like a good fit here. 
+Furthermore, on runner and game pages, there is now a spot to set the best known time for a given game and category with an optional video link. 
+This feature acts somewhat like a restricted wiki where anyone who has submitted a run for the game can update the corresponding best known times. 
+With any wiki, there's always potential for others to post bogus times, but hopefully the trolls won't make life too miserable. 
+I've thought about putting in better defence mechanisms against this, but I figure I'll just cross that bridge when the time comes. 
+</p>
+<p>
+After I tie up a few loose ends, the site will be ready to launch. 
+If all goes well, I'm hoping to have it up and running sometime next week after Canadian Thanksgiving. 
+I'm sure bugs will crop up once I release the site to the wild, but there's only so much testing one guy can do. 
+Finally, submissions are still a bit clunky and will be one of my top priorities to improve after launch. 
+I'm looking to add the ability to submit by uploading WSplit-style files. 
+After that, I hope to write a splits program as a companion to PB Tracker that allows auto-submissions after every complete run. 
+</p>
+]]></text>
+</blog>
+
+<blog>
+<title>PB Tracker Update</title>
+<date>September 30, 2013</date>
+<image>pbtracker-rggibson-093013.png</image>
+<image>pbtracker-beavisbutthead-093013.png</image>
+<image>pbtracker-submit-093013.png</image>
+<image>pbtracker-viewall-093013.png</image>
+<text><![CDATA[
+<p>
+A week has passed since I first posted about PB Tracker, so I figure it's time to post an update. 
+I have had at least a few people mention something to me about the site, so it's good to hear that there is some interest in this project. 
+</p>
+<p>
+PB Tracker still looks as grey as ever, but the site is much more functional than it was a week ago. 
+Optional links to videos can now be added to runs. 
+In addition, all runs submitted by a runner can be viewed and the owner of the runs can edit submissions at will. 
+While the colour scheme may still be boring, I've also added appropriate box art to many of the pages. 
+Since I'm wanting a site that at the minimum replicates <a href="https://sites.google.com/site/richardggibson/rggibson">my old Twitch TV personal best table</a>, box art was mandatory. 
+</p>
+<p>
+Furthermore, there are now game pages that list every runner's personal best time for each run category. 
+I dare say the word "leaderboard" here, but I guess that is kind of what these pages represent. 
+Just to be clear, I am not trying to compete with SRL and their upcoming leaderboard. 
+These game pages are only here for convenience, much like <a href="http://www.congratsio.com/game/mario-tennis/records">similar pages exist on Congratsio</a>. 
+Runners' times will only appear on these game pages if the runners themselves submit their runs. 
+For this reason, PB Tracker's game pages will be far from an accurate speedrunning leaderboard. 
+I am actually excited to see what the SRL guys come up with as it sounds like they will be implementing a true leaderboard that will list the best run times with video links known for many games. 
+</p>
+<p>
+I still have a number of things on my to-do list before I push the site live. 
+This list includes the ability to delete previous runs, as well as a column that lists a runner's average time for any given game and category. 
+User profiles are also very minimal at the moment. 
+I would like to include links to a runner's Twitter, YouTube, and TwitchTV accounts on their PB page. 
+It would be really cool to add the option to auto-tweet upon submission, but that certainly won't be available from the get-go. 
+We'll see if I ever get to any such fancy features after deployment. 
+</p>
+<p>
+That's all for now. 
+Keep fit and have fun. 
+</p>
+]]></text>
+</blog>
+
+<blog>
+<title>PB Tracker</title>
+<date>September 23, 2013</date>
+<image>pbtracker-front-092313.png</image>
+<image>pbtracker-rggibson-092313.png</image>
+<text><![CDATA[
+<p>
+A while back, I spent several hours creating <a href="https://sites.google.com/site/richardggibson/rggibson">an info page for my Twitch TV channel</a> that, among a few other things, tracks my personal best times for all the games I speedrun. 
+It's just a simple, static html page generated from a spreadsheet and a couple dirty scripts. 
+However, it takes a bit of effort to update and I have been meaning to improve the page for some time now. 
+After taking <a href="https://www.udacity.com/course/cs253">Udacity's Web Development online course</a>, I feel like I have enough tools now to actually build something significantly better.  
+</p>
+<p>
+To that end, I started developing a dynamic web app called "PB Tracker" to make it easier to record and display speedrun times in a simple, tabular format. 
+I have included user signups, so the app will be available for anyone to use that may be interested in tracking their own runs. 
+At first glance, you may notice that the site looks, well, very grey. 
+This is because I have spent zero time on the actual appearance of the site and have only focused on functionality to this point. 
+Also, if you are familiar with some of the other speedrunning sites around, you may also see some similarities here with both <a href="http://www.congratsio.com/">Congratsio</a> and <a href="https://forum.speeddemosarchive.com/post/speedrun_leaderboards_discussion_topic_srl.html">the SpeedRunsLive leaderboards plan</a>. 
+In fact, the SRL guys were looking for some coding help, and I didn't volunteer to instead work on this. 
+I feel a little guilty about that, but I feel the goals of PB Tracker are significantly different from Congratsio's and SRL's. 
+</p>
+<p>
+Firstly, though the name of the site may be a bit misleading, the site is built to track <i>all</i> run times, not just PBs. 
+One of the things I enjoy about speedrunning is setting goals and making progress towards those goals. 
+Beating a PB is always a great goal, but sometimes that is a daunting task (at least for me). 
+Instead, I like to think about beating my <i>average</i> time. 
+So, by submiting every run, the site will track both average times and best times. 
+Secondly, one of my stretch goals is to build a new split program that can automatically upload finished run times to PB Tracker, making the recording of times much more seamless. 
+The split program will likely be quite simple and compatible with the <a href="http://www.mediafire.com/?llxj7i54wuxgi">WSplit</a> file format.  
+I'm also planning to have splits recorded from other runners be downloadable for anyone to use.
+</p>
+<p>
+On the tech side of things, I will be deploying the site through Google App Engine at the custom domain <a href="http://www.pbtracker.net">pbtracker.net</a> that I just registered this morning. 
+I am developing in Python, using the latest version of <a href="http://getbootstrap.com">Twitter Bootstrap</a> and doing some html templating with <a href="http://jinja.pocoo.org/">jinja2</a>. 
+I am not a web developer by any stretch of the imagination, so I will likely be doing some very foolish things along the way. 
+I don't have a release date planned for PB Tracker just yet, but I do plan to release the site as soon as it is functional, even if all the features are not quite there yet. 
+Stay tuned. 
+</p>
+]]></text>
+</blog>
+
+</blogs>

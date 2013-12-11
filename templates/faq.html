@@ -9,20 +9,20 @@
 </script>
 
 <div class="panel-group" id="accordion" style="padding-bottom: 10px;">
-  {% for faq in faqs %}
+  {% for faq in xml %}
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
 	<a class="accordion-toggle" data-toggle="collapse" 
 	   data-parent="#accordion" href="#collapse-{{loop.index}}">
-	  {{faq['title']}}
+	  {{faq['title'][ 0 ]}}
 	</a>
       </h4>
     </div>
     <div id="collapse-{{loop.index}}" 
 	 class="panel-collapse collapse{% if loop.index == q %} in{% endif %}">
       <div class="panel-body">
-	{{faq['content'] | safe}}
+	{{faq['content'][ 0 ] | safe}}
       </div>
     </div>
   </div>
