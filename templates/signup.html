@@ -77,16 +77,6 @@
     </div>
     <div class="col-lg-4 col-md-4 error">{{twitch_error}}</div>
   </div>
-  <div class="form-group{% if gravatar_error %} has-error{% endif %}">
-    <label for="gravatar" class="col-lg-4 col-md-4 control-label">
-      <a href="http://gravatar.com">Gravatar</a> (optional, private)
-    </label>
-    <div class="col-lg-4 col-md-4">
-      <input type="text" class="form-control" name="gravatar" 
-	     placeholder="e.g. spiderman64@gmail.com" value="{{gravatar}}">
-    </div>
-    <div class="col-lg-4 col-md-4 error">{{gravatar_error}}</div>
-  </div>
   <div class="form-group{% if timezone_error %} has-error{% endif %}">
     <label for="timezone" class="col-lg-4 col-md-4 control-label">
       Time zone (optional, private)
@@ -101,6 +91,25 @@
       </select>
     </div>
     <div class="col-lg-4 col-md-4 error">{{timezone_error}}</div>
+  </div>
+  <div class="form-group{% if gravatar_error %} has-error{% endif %}">
+    <label for="gravatar" class="col-lg-4 col-md-4 control-label">
+      Gravatar email (optional, private)
+    </label>
+    <div class="col-lg-4 col-md-4">
+      <input type="text" class="form-control" name="gravatar" 
+	     placeholder="e.g. spiderman64@gmail.com" value="{{gravatar}}">
+    </div>
+    <div class="col-lg-4 col-md-4 error">{{gravatar_error}}</div>
+  </div>
+  <div class="col-md-4 col-md-push-4" style="margin-bottom: 15px;">
+    <img class="img-responsive img-rounded pull-left" src="{{gravatar_url}}"
+	 style="margin-right: 2px;">
+    <p class="form-control-static">
+      <strong>
+	<a href="http://gravatar.com">Change your avatar at Gravatar.com</a>
+      </strong>
+    </p>
   </div>
   <div class="form-group">
     <div class="col-lg-offset-4 col-md-offset-4 col-lg-4 col-md-4">

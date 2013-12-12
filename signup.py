@@ -44,6 +44,8 @@ class Signup( handler.Handler ):
                            return_url=return_url )
             if user.gravatar:
                 params['gravatar'] = '<private email>'
+                params['gravatar_url'] = util.get_gravatar_url( user.gravatar,
+                                                                30 )
             if user.timezone is not None:
                 params['timezone'] = user.timezone
             self.render( "signup.html", timezones=pytz.common_timezones,
@@ -115,6 +117,9 @@ class Signup( handler.Handler ):
                 or gravatar != '<private email>' ):
                 params['gravatar_error'] = "That's not a valid email."
                 valid = False
+        if user is not None and gravatar == '<private email>':
+            params['gravatar_url'] = util.get_gravatar_url( user.gravatar,
+                                                            30 )
 
         if timezone != '' and timezone not in pytz.common_timezones:
             params['timezone_error'] = "Invalid timezone."
