@@ -499,6 +499,8 @@ class Handler(webapp2.RequestHandler):
                                       game = run.game,
                                       game_code = util.get_code( run.game ),
                                       category = run.category,
+                                      category_code = util.get_code( 
+                            run.category ),
                                       time = util.
                                       seconds_to_timestr( run.seconds ),
                                       date = run.date,

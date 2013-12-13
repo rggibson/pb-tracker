@@ -72,7 +72,7 @@
     <tr class="{{ outer_loop.cycle('active', '') }}">
       {% endif %}
       {% if visible_columns['category'] %}
-      <td>{{info['category']}}</td>
+      <td><a href="/game/{{pb['game_code']}}#{{info['category_code']}}">{{info['category']}}</a></td>
       {% endif %}
       {% if visible_columns['pb'] %}
       <td>

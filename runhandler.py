@@ -432,6 +432,7 @@ class RunHandler( handler.Handler ):
                                      game = game, 
                                      game_code = game_code,
                                      category = category, 
+                                     category_code = util.get_code( category ),
                                      time = time,
                                      date = date, 
                                      datetime_created = datetime_created,
@@ -706,6 +707,7 @@ class RunHandler( handler.Handler ):
                     run[ 'game' ] = game
                     run[ 'game_code' ] = game_code
                     run[ 'category' ] = category
+                    run[ 'category_code' ] = util.get_code( category )
                     run[ 'time' ] = time
                     run[ 'date' ] = new_run.date
                     run[ 'video' ] = video

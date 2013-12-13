@@ -40,7 +40,7 @@
 	</center>
       </td>
       <td><a href="/game/{{run['game_code']}}">{{run['game']}}</a></td>
-      <td>{{run['category']}}</td>
+      <td><a href="/game/{{run['game_code']}}#{{run['category_code']}}">{{run['category']}}</a></td>
       <td>
 	{% if run['video'] %}
 	<a href="{{run['video']}}" data-toggle="tooltip" title="See video">{% endif %}
