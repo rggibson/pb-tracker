@@ -2,6 +2,11 @@
 
 {% block subtitle %}{{game}}{% endblock %}
 
+{% block morehead %}
+<link rel="stylesheet" type="text/css" 
+      href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css">
+{% endblock %}
+
 {% block content %}
 
 <script type="text/javascript">
@@ -42,7 +47,9 @@
      title="Set best known time"><i class="icon-edit"></i></a>
 </h4>
 {% endif %}
-<table class="table table-striped table-bordered">
+<div class="table-responsive" style="margin-bottom: 75px;">
+<table id="table-{{d['category_code']}}" 
+       class="table table-striped table-bordered mydatatable">
   <thead>
     <tr>
       <th width="5%" class="hidden-xs"></th>
@@ -78,6 +85,7 @@
   </tr>
   {% endfor %}
 </table>
+</div>
 {% endfor %}
 
 {% endblock %}
@@ -88,7 +96,9 @@
 
 {% block js %}
 <script src="/static/js/jquery.lazyload.min.js"></script>
+<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
 <script src="/static/js/util.js"></script>
+<script src="/static/js/datatables-helper.js"></script>
 <script type="text/javascript">
   $( "img.lazy" ).lazyload( {
     skip_invisible: false
@@ -97,6 +107,27 @@
                        {% if user %}true{% else %}false{% endif %} );
   $( document ).ready( function( ) {
     $( "[data-toggle=tooltip]" ).tooltip( );
+
+    {% for d in gamepage %}
+    /* datatables.net */
+    var oTable = $( "#table-{{d['category_code']}}" ).dataTable( {
+      "bSortClasses": false, /* Don't add some of the extra css classes */
+      "asStripClasses": [ ], /* Remove table-striping classes */
+      "bAutoWidth": false,
+      "bPaginate": false,
+      "bProcessing": true, /* Display a processing message when thinking */
+      "aoColumnDefs": [
+        { "bSearchable": false, "aTargets": [ 0, 2, 3, 5, 6 ] },
+        { "bSortable": false, "aTargets": [ 0 ] },
+        { "sType": "mydate", "aTargets": [ 3 ] },
+        { "sType": "time", "aTargets": [ 2, 6 ] }
+      ],
+      "oLanguage": { "sSearch": "Filter runner and/or version:" }
+    } );
+
+    /* Set default sort on page ready */
+    oTable.fnSort( [ [ 2, 'asc' ] ] );  
+    {% endfor %}
   } );
 </script>
 {% endblock %}

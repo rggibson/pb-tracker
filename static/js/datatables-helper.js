@@ -1,3 +1,4 @@
+/* Special function for datatables.  See datatables.net */
 function strip( html ) {
     var tmp = document.createElement("DIV");
     tmp.innerHTML = html;
@@ -48,14 +49,26 @@ var month_to_int = {
 jQuery.fn.dataTableExt.oSort['mydate-asc'] = function( x, y ) {
     var x_parts = x.split( " " );
     var y_parts = y.split( " " );
-    if( x_parts.length < 4 ) {
-	return ( ( y_parts.length < 4 ) ? 0 : -1 );
-    } else if( y_parts.length < 4 ) {
+    if( x_parts.length < 3 ) {
+	return ( ( y_parts.length < 3 ) ? 0 : -1 );
+    } else if( y_parts.length < 3 ) {
 	return 1;
     }
 
-    var x_date = [ x_parts[ 3 ], month_to_int[ x_parts[ 1 ] ], x_parts[ 2 ] ];
-    var y_date = [ y_parts[ 3 ], month_to_int[ y_parts[ 1 ] ], y_parts[ 2 ] ];
+    if( x_parts.length >= 4 ) {
+	var x_date = [ x_parts[ 3 ], month_to_int[ x_parts[ 1 ] ], 
+		       x_parts[ 2 ] ];
+    } else {
+	var x_date = [ x_parts[ 2 ], month_to_int[ x_parts[ 0 ] ],
+		       x_parts[ 1 ] ];
+    }
+    if( y_parts.length >= 4 ) {
+	var y_date = [ y_parts[ 3 ], month_to_int[ y_parts[ 1 ] ], 
+		       y_parts[ 2 ] ];
+    } else {
+	var y_date = [ y_parts[ 2 ], month_to_int[ y_parts[ 0 ] ],
+		       y_parts[ 1 ] ];
+    }
     for( var i = 0; i < x_date.length; ++i ) {
 	if( x_date[ i ] != y_date[ i ] ) {
 	    return ( ( x_date[ i ] < y_date[ i ] ) ? -1 : 1 );
@@ -68,14 +81,26 @@ jQuery.fn.dataTableExt.oSort['mydate-asc'] = function( x, y ) {
 jQuery.fn.dataTableExt.oSort['mydate-desc'] = function( x, y ) {
     var x_parts = x.split( " " );
     var y_parts = y.split( " " );
-    if( x_parts.length < 4 ) {
-	return ( ( y_parts.length < 4 ) ? 0 : 1 );
-    } else if( y_parts.length < 4 ) {
+    if( x_parts.length < 3 ) {
+	return ( ( y_parts.length < 3 ) ? 0 : 1 );
+    } else if( y_parts.length < 3 ) {
 	return -1;
     }
 
-    var x_date = [ x_parts[ 3 ], month_to_int[ x_parts[ 1 ] ], x_parts[ 2 ] ];
-    var y_date = [ y_parts[ 3 ], month_to_int[ y_parts[ 1 ] ], y_parts[ 2 ] ];
+    if( x_parts.length >= 4 ) {
+	var x_date = [ x_parts[ 3 ], month_to_int[ x_parts[ 1 ] ], 
+		       x_parts[ 2 ] ]; 
+    } else {
+	var x_date = [ x_parts[ 2 ], month_to_int[ x_parts[ 0 ] ], 
+		       x_parts[ 1 ] ]; 
+    }
+    if( y_parts.length >= 4 ) {
+	var y_date = [ y_parts[ 3 ], month_to_int[ y_parts[ 1 ] ], 
+		       y_parts[ 2 ] ];
+    } else {
+	var y_date = [ y_parts[ 2 ], month_to_int[ y_parts[ 0 ] ], 
+		       y_parts[ 1 ] ];
+    }
     for( var i = 0; i < x_date.length; ++i ) {
 	if( x_date[ i ] != y_date[ i ] ) {
 	    return ( ( x_date[ i ] < y_date[ i ] ) ? 1 : -1 );

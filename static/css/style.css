@@ -43,10 +43,10 @@ a > i:hover {
 }
 
 /* datatables.net */
-#listruns-table_filter {
+.mydatatable_filter {
     float: right;
 }
 
 .sorting_asc, .sorting_desc {
-    background-color: #dff0d8; /* This is the "success" color for United */
+    background-color: #fcf8e3; /* This is the "warning" color for United */
 }
