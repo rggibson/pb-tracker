@@ -20,7 +20,7 @@
   <div class="col-lg-9 col-md-9 col-lg-pull-3 col-md-pull-3">
     <h1>
       {{runner.username}} 
-      {% if runner.username == user.username %}
+      {% if runner.username == user.username or user.is_mod %}
       <a href="/signup?from=/runner/{{username_code}}{% block query_string_1 %}{% endblock %}"
 	 data-toggle="tooltip" title="Edit profile">
 	<i class="icon-edit"></i>

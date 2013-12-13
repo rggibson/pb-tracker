@@ -34,14 +34,19 @@ class Signup( handler.Handler ):
         return_url = self.request.get( 'from' )
         if not return_url:
             return_url = "/"
+        elif user is not None and user.is_mod:
+            # Mod is editing a user's profile, possibly his or her own
+            username_code = return_url.split( '/' )[ -1 ]
+            user = self.get_runner( username_code )
             
-        if user:
+        if user is not None:
             # Editing profile
             params = dict( user=user,
-                           twitter='@'+user.twitter,
                            youtube=user.youtube,
                            twitch=user.twitch,
                            return_url=return_url )
+            if user.twitter:
+                params['twitter'] = '@' + user.twitter
             if user.gravatar:
                 params['gravatar'] = '<private email>'
                 params['gravatar_url'] = util.get_gravatar_url( user.gravatar,
@@ -69,13 +74,17 @@ class Signup( handler.Handler ):
         twitch = twitch.split( '/' )[ -1 ]
         timezone = self.request.get( 'timezone' )
         gravatar = self.request.get( 'gravatar' )
-        if user:
+        if user is not None:
             username_code = util.get_code( user.username )
         else:
             username_code = util.get_code( username )
         return_url = self.request.get( 'from' )
         if not return_url:
             return_url = "/"
+        elif user is not None and user.is_mod:
+            # Mod is editing a user's profile, possibly his or her own
+            username_code = return_url.split( '/' )[ -1 ]
+            user = self.get_runner( username_code )
 
         params = dict( user = user,
                        username = username,
