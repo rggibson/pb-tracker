@@ -2,6 +2,11 @@
 
 {% block subtitle %}{{runner.username}} PBs{% endblock %}
 
+{% block morehead %}
+<link rel="stylesheet" type="text/css" 
+      href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css">
+{% endblock %}
+
 {% block runner_content %}
 
 <a href="/runner/{{username_code}}?q=view-all" data-toggle="tooltip"
@@ -15,41 +20,26 @@
 <table class="table table-bordered">
   <thead>
     <tr>
-      {% if visible_columns['boxart'] %}
-      <th class="hidden-xs"></th>
-      {% endif %}
-      {% if visible_columns['game'] %}
-      <th><i class="icon-gamepad icon-large"></i> Game</th>
-      {% endif %}
-      {% if visible_columns['category'] %}
-      <th><i class="icon-compass icon-large"></i> Category</th>
-      {% endif %}
-      {% if visible_columns['pb'] %}
-      <th><i class="icon-star icon-large"></i> PB</th>
-      {% endif %}
-      {% if visible_columns['date'] %}
-      <th><i class="icon-calendar icon-large"></i> Date</th>
-      {% endif %}
-      {% if visible_columns['version'] %}
-      <th><i class="icon-desktop icon-large"></i> Version</th>
-      {% endif %}
-      {% if visible_columns['runs'] %}
-      <th><i class="icon-flag-checkered icon-large"></i> Runs</th>
-      {% endif %}
-      {% if visible_columns['avg_time'] %}
-      <th><i class="icon-time icon-large"></i> Avg Time</th>
-      {% endif %}
-      {% if visible_columns['bkt'] %}
-      <th><i class="icon-trophy icon-large"></i> Best Known Time</th>
-      {% endif %}
+      <th class="hidden"><i class="icon-flag-checkered icon-large"> Total Runs</th>
+      <th class="hidden-xs {% if not visible_columns['boxart'] %}hidden{% endif %}"></th>
+      <th class="{% if not visible_columns['game'] %}hidden{% endif %}"><i class="icon-gamepad icon-large"></i> Game</th>
+      <th class="{% if not visible_columns['category'] %}hidden{% endif %}"><i class="icon-compass icon-large"></i> Category</th>
+      <th class="{% if not visible_columns['pb'] %}hidden{% endif %}"><i class="icon-star icon-large"></i> PB</th>
+      <th class="{% if not visible_columns['date'] %}hidden{% endif %}"><i class="icon-calendar icon-large"></i> Date</th>
+      <th class="{% if not visible_columns['version'] %}hidden{% endif %}"><i class="icon-desktop icon-large"></i> Version</th>
+      <th class="{% if not visible_columns['runs'] %}hidden{% endif %}"><i class="icon-flag-checkered icon-large"></i> Runs</th>
+      <th class="{% if not visible_columns['avg_time'] %}hidden{% endif %}"><i class="icon-time icon-large"></i> Avg Time</th>
+      <th class="{% if not visible_columns['bkt'] %}hidden{% endif %}"><i class="icon-trophy icon-large"></i> Best Known Time</th>
     </tr>
   </thead>
   <tbody>
     {% for pb in pblist %}
     {% set outer_loop = loop %}
     <tr class="{{ outer_loop.cycle('active', '') }}">
-      {% if visible_columns['boxart'] %}
-      <td rowspan="{{pb['infolist']|length}}" class="hidden-xs">
+      <td rowspan="{{pb['infolist']|length}}" class="hidden">{{pb['num_runs']}}
+      </td>
+      <td rowspan="{{pb['infolist']|length}}" 
+	  class="hidden-xs {% if not visible_columns['boxart'] %}hidden{% endif %}">
 	<center>
 	  <a href="/game/{{pb['game_code']}}">
 	    <img alt="" class="img-responsive lazy" 
@@ -59,42 +49,27 @@
 	  </a>
 	</center>
       </td>
-      {% endif %}
-      {% if visible_columns['game'] %}
-      <td rowspan="{{pb['infolist']|length}}">
+      <td rowspan="{{pb['infolist']|length}}"
+	  class="{% if not visible_columns['game'] %}hidden{% endif %}">
 	<a href="/game/{{pb['game_code']}}">
 	  {{pb['game']}}
 	</a>
       </td>
-      {% endif %}
       {% for info in pb['infolist'] %}
       {% if not loop.first %}
     <tr class="{{ outer_loop.cycle('active', '') }}">
       {% endif %}
-      {% if visible_columns['category'] %}
-      <td><a href="/game/{{pb['game_code']}}#{{info['category_code']}}">{{info['category']}}</a></td>
-      {% endif %}
-      {% if visible_columns['pb'] %}
-      <td>
+      <td class="{% if not visible_columns['category'] %}hidden{% endif %}"><a href="/game/{{pb['game_code']}}#{{info['category_code']}}">{{info['category']}}</a></td>
+      <td class="{% if not visible_columns['pb'] %}hidden{% endif %}">
 	{% if info['video'] %}
 	<a href="{{info['video']}}" data-toggle="tooltip" title="See video">{% endif %}
 	  {{info['pb_time']}}{% if info['video'] %}</a>{% endif %}
       </td>
-      {% endif %}
-      {% if visible_columns['date'] %}
-      <td>{% if info['pb_date'] %}{{info['pb_date'].strftime( "%b %d %Y" )}}{% else %}-{% endif %}</td>
-      {% endif %}
-      {% if visible_columns['version'] %}
-      <td>{% if info['version'] %}{{info['version']}}{% else %}-{% endif %}</td>
-      {% endif %}
-      {% if visible_columns['runs'] %}
-      <td>{{info['num_runs']}}</td>
-      {% endif %}
-      {% if visible_columns['avg_time'] %}
-      <td>{{info['avg_time']}}</td>
-      {% endif %}
-      {% if visible_columns['bkt'] %}
-      <td>{% if info['bk_time'] %}
+      <td class="{% if not visible_columns['date'] %}hidden{% endif %}">{% if info['pb_date'] %}{{info['pb_date'].strftime( "%b %d %Y" )}}{% else %}-{% endif %}</td>
+      <td class="{% if not visible_columns['version'] %}hidden{% endif %}">{% if info['version'] %}{{info['version']}}{% else %}-{% endif %}</td>
+      <td class="{% if not visible_columns['runs'] %}hidden{% endif %}">{{info['num_runs']}}</td>
+      <td class="{% if not visible_columns['avg_time'] %}hidden{% endif %}">{{info['avg_time']}}</td>
+      <td class="{% if not visible_columns['bkt'] %}hidden{% endif %}">{% if info['bk_time'] %}
 	{% if info['bk_video'] %}
 	<a href="{{info['bk_video']}}" data-toggle="tooltip" title="See video">{% endif %}
 	  {{info['bk_time']}}{% if info['bk_video'] %}</a>{% endif %} 
@@ -112,7 +87,6 @@
 	{% endif %}
 	{% endif %}
       </td>
-      {% endif %}
     </tr>
     {% endfor %}
     {% endfor %}
