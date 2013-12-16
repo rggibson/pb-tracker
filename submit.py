@@ -170,8 +170,8 @@ class Submit( runhandler.RunHandler ):
             params['date_error'] = "Invalid date: " + params['date_error']
             valid = False
                 
-        # Check that if this is a best known time, that it beats the old
-        # best known time
+        # Check that if this is a best known time, then it beats the old
+        # best known time.
         if is_bkt and game_model is not None:
             gameinfolist = json.loads( game_model.info )
             for gameinfo in gameinfolist:
@@ -186,6 +186,25 @@ class Submit( runhandler.RunHandler ):
                               + "update best known time after submission)" )
                         params['bkt_error'] = s
                         params['is_bkt'] = False
+                        valid = False
+                    break
+                
+        # Check that if this is not the best known time, then it doesn't beat
+        # the old best known time
+        if not is_bkt and game_model is not None:
+            gameinfolist = json.loads( game_model.info )
+            for gameinfo in gameinfolist:
+                if gameinfo['category'] == params['category']:
+                    if( gameinfo.get( 'bk_seconds' ) is not None
+                        and seconds < gameinfo['bk_seconds'] ):
+                        s = ( "This time beats the current best known time of "
+                              + util.seconds_to_timestr( 
+                                gameinfo.get( 'bk_seconds' ) )
+                              + " by " + gameinfo['bk_runner']
+                              + " (if best known time is incorrect, you can "
+                              + "update best known time after submission)" )
+                        params['bkt_error'] = s
+                        params['is_bkt'] = True
                         valid = False
                     break
 
