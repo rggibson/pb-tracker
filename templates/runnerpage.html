@@ -16,7 +16,7 @@
    title="Edit PB table columns"><i class="icon-columns icon-2x"></i></a>
 {% endif %}
 
-<div class="table-responsive">
+<div class="row table-responsive">
 <table class="table table-bordered">
   <thead>
     <tr>
@@ -39,7 +39,7 @@
     <tr>
       <td class="hidden">{{pb['num_runs']}}
       </td>
-      <td class="hidden-xs {% if not visible_columns['boxart'] %}hidden{% endif %}">
+      <td class="hidden-xs {% if loop.first %}non-dupe-{{pb['infolist']|length}}{% else %}dupe{% endif %} {% if not visible_columns['boxart'] %}hidden{% endif %}">
 	<center>
 	  <a href="/game/{{pb['game_code']}}">
 	    <img alt="" class="img-responsive lazy" 
@@ -49,7 +49,7 @@
 	  </a>
 	</center>
       </td>
-      <td class="{% if not visible_columns['game'] %}hidden{% endif %}">
+      <td class="{% if loop.first%}non-dupe-{{pb['infolist']|length}}{% else %}dupe{% endif %} {% if not visible_columns['game'] %}hidden{% endif %}">
 	<a href="/game/{{pb['game_code']}}">
 	  {{pb['game']}}
 	</a>
@@ -108,7 +108,25 @@
         { "aDataSort": [ 0 ], "aTargets": [ 7 ] }
       ],
       "fnDrawCallback": function( oSettings ) {
-        
+        var odd = 0;
+        $( "tr" ).each( function( index ) {
+          var child = $( this ).children( )[ 1 ];
+          if( $( child ).attr( 'class' ).indexOf( "non-dupe-" ) != -1 ) {
+            odd = 1 - odd;
+          }
+          if( odd == 1 ) {
+            $( this ).addClass( 'active' );
+          } else {
+            $( this ).removeClass( 'active' );
+          }
+          $( this ).removeClass( 'odd' ).removeClass( 'even' );
+        } );
+        $( ".dupe" ).remove( );
+        $( "td[class*='non-dupe-']" ).each( function( index ) {
+          var className = $( this ).attr( 'class' );
+          var m = className.match( /non-dupe-(\d+)/ );
+          $( this ).attr( 'rowspan', "" + m[ 1 ] );
+        } );
       }
     } );
 
