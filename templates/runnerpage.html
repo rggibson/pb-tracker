@@ -110,9 +110,11 @@
       "fnDrawCallback": function( oSettings ) {
         var odd = 0;
         $( "tr" ).each( function( index ) {
-          var child = $( this ).children( )[ 1 ];
-          if( $( child ).attr( 'class' ).indexOf( "non-dupe-" ) != -1 ) {
-            odd = 1 - odd;
+          if( $( this ).children( ).length > 1 ) {
+            var child = $( this ).children( )[ 1 ];
+            if( $( child ).attr( 'class' ).indexOf( "non-dupe-" ) != -1 ) {
+              odd = 1 - odd;
+            }
           }
           if( odd == 1 ) {
             $( this ).addClass( 'active' );
