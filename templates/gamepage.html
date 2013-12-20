@@ -13,7 +13,7 @@
   document.getElementById("nav-games").setAttribute("class", "active");
 </script>
 
-<div class="row" style="margin-bottom: -35px;">
+<div class="row">
   <div class="col-lg-3 col-md-3 col-lg-push-9 col-md-push-9">
     <img alt="" class="img-responsive lazy" style="max-height: 200px;"
 	 src="/static/boxart/__blank-pixel__.png" 
@@ -23,6 +23,14 @@
     <h1><i class="icon-gamepad"></i> {{game}}</h1>
   </div>
 </div>
+
+<h3>Categories:</h3>
+<ul class="nav nav-pills" style="margin-bottom: -35px;">
+  {% for d in gamepage %}
+  <li><a href="#{{d['category_code']}}">{{d['category']}}</a></li>
+  {% endfor %}
+</ul>
+
 {% for d in gamepage %}
 <h2 id="{{d['category_code']}}" style="padding-top: 65px;"><i class="icon-compass"></i> 
   {{d['category']}}
