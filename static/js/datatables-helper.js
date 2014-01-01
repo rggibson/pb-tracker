@@ -10,13 +10,13 @@ function timestr_to_secs( timestr ) {
     timetext = strip( timestr );
     var parts = timetext.split( ":" );
     if( parts.length == 1 ) {
-	return parseInt( parts[ 0 ], 10 );
+	return parseFloat( parts[ 0 ], 10 );
     } else if( parts.length == 2 ) {
-	return ( 60 * parseInt( parts[ 0 ], 10 ) ) 
-	    + parseInt( parts[ 1 ], 10 );
+	return ( 60 * parseFloat( parts[ 0 ], 10 ) ) 
+	    + parseFloat( parts[ 1 ], 10 );
     } else { 
-	return ( 3600 * parseInt( parts[ 0 ], 10 ) ) 
-	    + ( 60 * parseInt( parts[ 1 ], 10 ) ) + parseInt( parts[ 2 ], 10 );
+	return ( 3600 * parseFloat( parts[ 0 ], 10 ) ) 
+	    + ( 60 * parseFloat( parts[ 1 ], 10 ) ) + parseFloat( parts[ 2 ], 10 );
     }
 }
 

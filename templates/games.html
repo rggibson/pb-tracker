@@ -15,7 +15,7 @@
       <div class="row">
 	<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
 	  <center>
-	    <img id="img-{{gamedict['game_code']}}" alt="" 
+	    <img id="img-{{loop.index}}" alt="" 
 		 class="img-responsive lazy" 
 		 data-original="/static/boxart/{{gamedict['game_code']}}.jpg"
 		 style="max-height: 22px; max-width: 44px;" 
@@ -44,6 +44,11 @@
 <script src="/static/js/jquery.lazyload.min.js"></script>
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
+  /* Fix boxart url */
+  {% for gamedict in gamelist %}
+  $( "#img-{{loop.index}}" ).attr( "data-original", 
+		    $( "#img-{{loop.index}}" ).attr( "data-original" ).replace( "%2B", "+" ) );
+  {% endfor %}
   $( "img.lazy" ).lazyload( {
     skip_invisible: false
   } );  

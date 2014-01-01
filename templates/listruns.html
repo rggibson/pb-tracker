@@ -32,7 +32,7 @@
       <td class="hidden-xs">
 	<center>
 	  <a href="/game/{{run['game_code']}}">
-	    <img alt="" class="img-responsive lazy" 
+	    <img id="img-{{loop.index}}" alt="" class="img-responsive lazy" 
 		 style="max-height: 22px; max-width: 44px;"
 		 src="/static/boxart/__blank-pixel__.png"
 		 data-original="/static/boxart/{{run['game_code']}}.jpg">
@@ -81,6 +81,12 @@
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
 <script type="text/javascript" src="/static/js/datatables-helper.js"></script>
 <script type="text/javascript">
+  /* Fix boxart url */
+  {% for run in runlist %}
+  $( "#img-{{loop.index}}" ).attr( "data-original", 
+		    $( "#img-{{loop.index}}" ).attr( "data-original" ).replace( "%2B", "+" ) );
+  {% endfor %}
+
   $( document ).ready( function( ) {
     $( "[data-toggle=popover]" ).popover( );
 

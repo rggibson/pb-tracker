@@ -15,7 +15,8 @@
 
 <div class="row">
   <div class="col-lg-3 col-md-3 col-lg-push-9 col-md-push-9">
-    <img alt="" class="img-responsive lazy" style="max-height: 200px;"
+    <img id="boxart" alt="" class="img-responsive lazy boxart" 
+	 style="max-height: 200px;"
 	 src="/static/boxart/__blank-pixel__.png" 
 	 data-original="/static/boxart/{{game_code}}.jpg">
   </div>
@@ -58,7 +59,7 @@
 </h4>
 {% endif %}
 <div class="table-responsive">
-<table id="table-{{d['category_code']}}" 
+<table id="table-{{loop.index}}" 
        class="table table-striped table-bordered mydatatable">
   <thead>
     <tr>
@@ -110,6 +111,8 @@
 <script src="/static/js/util.js"></script>
 <script src="/static/js/datatables-helper.js"></script>
 <script type="text/javascript">
+  $( "#boxart" ).attr( "data-original", 
+		    $( "#boxart" ).attr( "data-original" ).replace( "%2B", "+" ) );
   $( "img.lazy" ).lazyload( {
     skip_invisible: false
   } );  
@@ -120,7 +123,7 @@
 
     {% for d in gamepage %}
     /* datatables.net */
-    var oTable = $( "#table-{{d['category_code']}}" ).dataTable( {
+    var oTable = $( "#table-{{loop.index}}" ).dataTable( {
       "bSortClasses": false, /* Don't add some of the extra css classes */
       "asStripClasses": [ ], /* Remove table-striping classes */
       "bAutoWidth": false,

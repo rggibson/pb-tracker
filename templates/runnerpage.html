@@ -42,7 +42,8 @@
       <td class="hidden-xs {% if loop.first %}non-dupe-{{pb['infolist']|length}}{% else %}dupe{% endif %} {% if not visible_columns['boxart'] %}hidden{% endif %}">
 	<center>
 	  <a href="/game/{{pb['game_code']}}">
-	    <img alt="" class="img-responsive lazy" 
+	    <img id="img-{{outer_loop.index}}" alt="" 
+		 class="img-responsive lazy" 
 		 style="max-height: 50px; max-width: 100px;" 
 		 src="/static/boxart/__blank__.png"
 		 data-original="/static/boxart/{{pb['game_code']}}.jpg">
@@ -94,6 +95,10 @@
 {% block runner_js %}
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
 <script type="text/javascript">
+  /* Fix boxart url */
+  {% for pb in pblist %}
+  $( "#img-{{loop.index}}" ).attr( "data-original", $( "#img-{{loop.index}}" ).attr( "data-original" ).replace( "%2B", "+" ) );
+  {% endfor %}
   $( document ).ready( function( ) {
     /* datatables.net */
     var oTable = $( ".table" ).dataTable( {
