@@ -15,6 +15,7 @@ import runs
 import util
 import handler
 import json
+import logging
 
 from google.appengine.ext import db
 
@@ -30,10 +31,18 @@ class FixerUpper( handler.Handler ):
         # Convert seconds to float
         q = db.Query( runs.Runs )
         q.ancestor( runs.key() )
+        count = 0
         for run in q.run( limit=1000000 ):
+            count += 1
             if not isinstance( run.seconds, float ):
-                run.seconds = float( run.seconds )
-                run.put( )
+                try:
+                    run.seconds = float( run.seconds )
+                    run.put( )
+                except apiproxy_errors.OverQuotaError, message:
+                    logging.error( message )
+                    self.write( "Over quota error caught after "
+                                + str( count ) + "runs:<br>" + message )
+                    return
 
         # Mark myself as a moderator
         # runner = self.get_runner( 'rggibson' )
