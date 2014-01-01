@@ -62,11 +62,11 @@ def get_code( string ):
     res = re.sub( '-$', '', res )
     return res
 
-def seconds_to_timestr( seconds ):
+def seconds_to_timestr( seconds, dec_places=3 ):
     if seconds is None:
         return None
 
-    secs = int( round( seconds ) )
+    secs = int( seconds )
     mins = secs / 60
     secs = secs % 60
     hours = mins / 60
@@ -81,8 +81,12 @@ def seconds_to_timestr( seconds ):
     secs_str = str(secs)
     if( secs < 10 ):
         secs_str = "0" + secs_str
+    dec_str = ''
+    parts = str( seconds ).split( '.' )
+    if dec_places > 0 and len( parts ) > 1 and int( parts[ -1 ] ) > 0:
+        dec_str = '.' + parts[ -1 ][ :dec_places ] #Truncate to hh:mm:ss.XXX
 
-    return hours_str + mins_str + secs_str
+    return hours_str + mins_str + secs_str + dec_str
 
 def timestr_to_seconds( time ):
     parts = time.split(':')
@@ -91,8 +95,7 @@ def timestr_to_seconds( time ):
         return (None, "too many colons")
 
     try:
-        # Truncate off fractions of seconds
-        seconds = int( float( parts[ -1 ] ) )
+        seconds = float( parts[ -1 ] )
     except ValueError:
         return (None, "bad seconds value [" + parts[ -1 ] + "]")
     if( seconds < 0 or seconds >= 60 ):

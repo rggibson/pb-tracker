@@ -244,7 +244,8 @@ class Handler(webapp2.RequestHandler):
                             pb_date = None,
                             num_runs = num_runs,
                             avg_seconds = avg_seconds,
-                            avg_time = util.seconds_to_timestr( avg_seconds ),
+                            avg_time = util.seconds_to_timestr( avg_seconds,
+                                                                dec_places=0),
                             video = None )
             # Set the pb time
             if pb_run:

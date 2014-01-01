@@ -27,11 +27,19 @@ class FixerUpper( handler.Handler ):
             self.render( "404.html", user=user )
             return
 
+        # Convert seconds to float
+        q = db.Query( runs.Runs )
+        q.ancestor( runs.key() )
+        for run in q.run( limit=1000000 ):
+            if not isinstance( run.seconds, float ):
+                run.seconds = float( run.seconds )
+                run.put( )
+
         # Mark myself as a moderator
-        runner = self.get_runner( 'rggibson' )
-        runner.is_mod = True
-        runner.put( )
-        self.update_cache_runner( 'rggibson', runner )
+        # runner = self.get_runner( 'rggibson' )
+        # runner.is_mod = True
+        # runner.put( )
+        # self.update_cache_runner( 'rggibson', runner )
 
         # # Recalculate num_pbs for every game
         # q = db.Query( games.Games )
