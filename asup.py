@@ -53,7 +53,10 @@ class Asup( runhandler.RunHandler ):
     def post( self ):
         # Fetch the posted data
         body_json = self.request.body        
-        body = json.loads( body_json )
+        try:
+            body = json.loads( body_json )
+        except ValueError:
+            return self.get_fail_response( "Could not parse body to JSON" )
 
         # Render the response
         self.render_json( self.get_response( body ) )
@@ -118,6 +121,7 @@ class Asup( runhandler.RunHandler ):
             category_code = body.get( 'category' )
             version = body.get( 'version' )
             time = body.get( 'runtime' )
+            video = body.get( 'video' )
             notes = body.get( 'comment' )
             splits = body.get( 'splits' )
 
@@ -177,7 +181,7 @@ class Asup( runhandler.RunHandler ):
                            category_found=True,
                            seconds=seconds,
                            time=time,
-                           video='',
+                           video=video,
                            version=version,
                            notes=notes,
                            valid=True,
@@ -187,7 +191,12 @@ class Asup( runhandler.RunHandler ):
             if self.put_new_run( params ):
                 return self.get_success_response( )
             else:
-                return self.get_fail_response( 'Sorry, an unknown error '
-                                               + 'occurred.' )
+                if params.get( 'video_error' ):
+                    return self.get_fail_response( 'Bad video link [' 
+                                                   + video + ']: ' 
+                                                   + params[ 'video_error' ] )
+                else:
+                    return self.get_fail_response( 'Sorry, an unknown error '
+                                                   + 'occurred.' )
                     
         return self.get_fail_response( "Unknown type [" + body_type + "]." )
