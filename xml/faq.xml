@@ -50,12 +50,16 @@ Find the run you wish to edit or delete and click the appropriate icon in the fa
 </faq>
 
 <faq>
-<title>How does auto-submission with Time Split Tracker work?</title>
+<title>How does auto-submission with Time Split Tracker and LiveSplit work?</title>
 <content><![CDATA[
 <p>
-<a href="https://forum.speeddemosarchive.com/post/timerstopwatch_program_377.html#timerstopwatch_program_377">Time Split Tracker</a> is a splits program by <a href="https://twitter.com/dunnius">dunnius</a> for speedrunning and is a useful tool to keep track of level completion times during a run. 
-Time Split Tracker supports auto-submission of runs to PB Tracker. 
-To enable this feature, click options and go down to enable auto-upload. 
+<a href="https://forum.speeddemosarchive.com/post/timerstopwatch_program_377.html#timerstopwatch_program_377">Time Split Tracker</a> and <a href="http://livesplit.bplaced.net">LiveSplit</a> are splits programs for speedrunning and are useful tools to keep track of level completion times during a run. 
+Both support auto-submission of runs to PB Tracker. 
+Below are some useful tips for getting started with TimeSplitTracker. 
+If you have problems auto-submitting with LiveSplit, contact the authors <a href="https://twitter.com/CryZe107">CryZe</a> or <a href="https://twitter.com/wooferzfg1">wooferzfg1</a>.
+</p>
+<p>
+To enable auto-submission in TimeSplitTracker, click options and go down to enable auto-upload. 
 Enter your credentials and the game info on the menu that pops up. 
 Note that new games and categories currently cannot be auto-submitted and the first run of a new game or category must be submitted manually on the web. 
 Once enabled, on completion of a run (after the final split is hit), your run time will be automatically submitted to PB Tracker. 
