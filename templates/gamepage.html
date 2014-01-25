@@ -33,6 +33,7 @@
 </ul>
 
 {% for d in gamepage %}
+<div class="row">
 <h2 id="{{d['category_code']}}" style="padding-top: 65px;"><i class="icon-compass"></i> 
   {{d['category']}}
 </h2>
@@ -96,6 +97,7 @@
   </tr>
   {% endfor %}
 </table>
+</div>
 </div>
 {% endfor %}
 
