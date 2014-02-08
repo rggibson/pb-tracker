@@ -133,7 +133,7 @@ def get_valid_date( d ):
         return d
     else:
         return date( 1970, 1, 1 )
-    
+
 def datestr_to_date( datestr ):
     if datestr is None or len( datestr ) <= 0:
         return ( None, '' )

@@ -17,11 +17,16 @@
 # on the submit page.  Any game and/or category submitted that is not in the 
 # database is immediately added. Games entities are currently never deleted.
 #
+import re
 
 from google.appengine.ext import db
 
 def key( name = 'default' ):
     return db.Key.from_path( 'games', name )    
+
+GAME_CATEGORY_RE = re.compile( r"^[a-zA-Z0-9 +=,.:!@#$%&*()'/\\-]{1,100}$" )
+def valid_game_or_category( game_or_category ):
+    return GAME_CATEGORY_RE.match( game_or_category )
 
 # info is a list of dictionaries, stored as json, where the dictionary keys
 # are 'category', 'bk_runner', 'bk_seconds', 'bk_video'

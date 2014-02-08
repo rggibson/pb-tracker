@@ -21,15 +21,11 @@ import util
 import logging
 import runs
 import json
-import re
+import games
 
 from operator import itemgetter
 from datetime import date
 from google.appengine.ext import db
-
-GAME_CATEGORY_RE = re.compile( r"^[a-zA-Z0-9 +=,.:!@#$%&*()'/\\-]{1,100}$" )
-def valid_game_or_category( game_or_category ):
-    return GAME_CATEGORY_RE.match( game_or_category )
 
 class Submit( runhandler.RunHandler ):
     def get( self ):
@@ -116,7 +112,7 @@ class Submit( runhandler.RunHandler ):
                                      + " Hit submit again to confirm." )
             params['game'] = game_model.game
             valid = False
-        elif not valid_game_or_category( game ):
+        elif not games.valid_game_or_category( game ):
             params['game_error'] = ( "Game name must not use any 'funny'"
                                      + " characters and can be up to 100 "
                                      + "characters long" )
@@ -145,7 +141,7 @@ class Submit( runhandler.RunHandler ):
                         params['category'] = info['category']
                         valid = False
                     break
-        if not category_found and not valid_game_or_category( category ):
+        if not category_found and not games.valid_game_or_category( category ):
             params['category_error'] = ( "Category must not use any 'funny'"
                                          + " characters and can be up to 100 "
                                          + "characters long" )

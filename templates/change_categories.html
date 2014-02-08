@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block subtitle %}
+Change Categories
+{% endblock %}
+
+{% block morehead %}
+<link rel="stylesheet" href="/static/css/jquery-ui.min.css"/>
+{% endblock %}
+
+
+{% block content %}
+
+<form method="post" class="form-horizontal" role="form">
+  <div class="form-group{% if old_game_error %} has-error{% endif %}">
+    <label for="old-game" class="col-lg-4 col-md-4 control-label">
+      <i class="icon-gamepad icon-large"></i> Old Game
+    </label>
+    <div class="col-lg-4 col-md-4">
+      <input type="text" class="form-control" id="old-game" 
+	     name="old-game" 
+	     placeholder="e.g. Mega Man 2" value="{{old_game}}" autofocus> 
+    </div>
+    <div class="col-lg-4 col-md-4 error">{{old_game_error}}</div>
+  </div>
+  <div class="form-group{% if category_error %} has-error{% endif %}">
+    <label for="old-category" class="col-lg-4 col-md-4 control-label">
+      <i class="icon-compass icon-large"></i> Old Category
+    </label>
+    <div class="col-lg-4 col-md-4">
+      <input type="text" class="form-control" id="old-category" 
+	     name="old-category"
+	     placeholder="e.g. Any% (Normal)" value="{{old_category}}">
+    </div>
+    <div class="col-lg-4 col-md-4 error">{{old_category_error}}</div>
+  </div>
+  <div class="form-group{% if new_game_error %} has-error{% endif %}">
+    <label for="new-game" class="col-lg-4 col-md-4 control-label">
+      <i class="icon-gamepad icon-large"></i> New Game
+    </label>
+    <div class="col-lg-4 col-md-4">
+      <input type="text" class="form-control" id="new-game" 
+	     name="new-game" 
+	     placeholder="e.g. Mega Man 2" value="{{new_game}}"> 
+    </div>
+    <div class="col-lg-4 col-md-4 error">{{new_game_error}}</div>
+  </div>
+  <div class="form-group{% if category_error %} has-error{% endif %}">
+    <label for="new-category" class="col-lg-4 col-md-4 control-label">
+      <i class="icon-compass icon-large"></i> New Category
+    </label>
+    <div class="col-lg-4 col-md-4">
+      <input type="text" class="form-control" id="new-category" 
+	     name="new-category"
+	     placeholder="e.g. Any% (Normal)" value="{{new_category}}">
+    </div>
+    <div class="col-lg-4 col-md-4 error">{{new_category_error}}</div>
+  </div>
+  <div class="form-group">
+    <div class="col-lg-offset-4 col-md-offset-4 col-lg-4 col-md-4">
+      <button id="submit-btn" class="btn btn-lg btn-primary" type="submit"
+	      data-loading-text="<i class='icon-refresh icon-spin 
+				 icon-large'></i> {% if run_id %}Saving
+				 {% else %}Submitting{% endif %}">
+	{% if run_id %}<i class="icon-save icon-large"></i> Save changes
+	{% else %}<i class="icon-flag-checkered icon-large"></i>
+	Submit{% endif %}
+      </button>
+    </div>
+  </div>
+</form>
+
+{% endblock %}
+
+{% block js %}
+<script src="/static/js/jquery-ui.min.js"></script>
+<!-- Have to re-include bootstrap.js, otherwise blocking double 
+     submit breaks -->
+<script 
+   src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js">
+</script>
+<script src="/static/js/util.js"></script>
+<script type="text/javascript">
+  block_double_submit( '#submit-btn' );
+
+  $( document ).ready( function( ) {
+    var categories = {{categories | safe}};
+    /* Autocomplete game inputs */
+    $( 'input#old-game' ).autocomplete( {
+      source: keys( categories ).sort( )
+    } ); 
+    $( 'input#new-game' ).autocomplete( {
+      source: keys( categories ).sort( )
+    } ); 
+
+    /* Autocomplete category inputs */
+    $( 'input#old-category' ).focus( function() {
+      var game = $( 'input#old-game' ).val( );
+      if( categories[ game ] ) {
+        $( 'input#old-category' ).autocomplete( {
+          source: categories[ game ]
+        } );
+      } else {
+        $( 'input#old-category' ).autocomplete( {
+          source: [ ]
+        } );
+      }
+    } );
+    $( 'input#new-category' ).focus( function() {
+      var game = $( 'input#new-game' ).val( );
+      if( categories[ game ] ) {
+        $( 'input#new-category' ).autocomplete( {
+          source: categories[ game ]
+        } );
+      } else {
+        $( 'input#new-category' ).autocomplete( {
+          source: [ ]
+        } );
+      }
+    } );
+  } );
+</script>
+{% endblock %}

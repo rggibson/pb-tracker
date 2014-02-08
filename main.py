@@ -22,6 +22,7 @@ import xmlpage
 import edit_table
 import asup
 import cleanup_games
+import change_categories
 import fixerupper
 
 DEBUG = False
@@ -57,6 +58,8 @@ app = webapp2.WSGIApplication( [ ('/', front.Front),
                                  ('/asup/?', asup.Asup),
                                  ('/cleanup-games', 
                                   cleanup_games.CleanupGames),
+                                 ('/change-categories', 
+                                  change_categories.ChangeCategories),
 #                                 ('/fixerupper', fixerupper.FixerUpper),
                                  ('/' + r'(.*)', Default) ],
                                debug=DEBUG)
