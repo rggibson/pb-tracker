@@ -113,6 +113,8 @@ class ChangeCategories( runhandler.RunHandler ):
             return
 
         changes = self.change_categories( params )
+    
+        logging.info( changes )
 
         # Render changes
         self.write( changes )
