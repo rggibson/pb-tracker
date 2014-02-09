@@ -35,7 +35,10 @@ class CleanupGamesBase( handler.Handler ):
                       for i, gameinfo in enumerate( gameinfolist ) ]
             for i, gameinfo in reversed( glist ):
                 # Leave it if the category is marked as a base category
-                if gameinfo.get( 'is_base_category' ):
+                if( gameinfo.get( 'is_base_category' )
+                    and game != "Luigi's Mansion"
+                    and game != "Super Mario Bros.: The Lost Levels"
+                    and game != "The Legend of Zelda: A Link to the Past" ):
                     continue
                 # Check if there is a run for this game and category
                 q = db.Query( runs.Runs, keys_only=True )
