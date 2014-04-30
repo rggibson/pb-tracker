@@ -38,7 +38,8 @@ class CleanupGamesBase( handler.Handler ):
                 if( gameinfo.get( 'is_base_category' )
                     and game != "Luigi's Mansion"
                     and game != "Super Mario Bros.: The Lost Levels"
-                    and game != "The Legend of Zelda: A Link to the Past" ):
+                    and game != "The Legend of Zelda: A Link to the Past"
+                    and game != "Mega Man 9" ):
                     continue
                 # Check if there is a run for this game and category
                 q = db.Query( runs.Runs, keys_only=True )
