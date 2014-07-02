@@ -44,7 +44,7 @@ So, feel free to add run times to any games and categories you wish!
 <content><![CDATA[
 When logged in, head to your runner page by clicking on your username in the top navigation bar. 
 From there, there will be a list icon in the top left just above your PB table.
-Clicking this icon will bring up a list of all of your runs, sorted by date. 
+Clicking this icon will bring up a list of all of your runs, default sorted by date. 
 Find the run you wish to edit or delete and click the appropriate icon in the far right column of the table. 
 ]]></content>
 </faq>
@@ -93,7 +93,7 @@ Just let us know what you would like to do with PB Tracker in your application a
 <title>Isn't there a blog about PB Tracker?</title>
 <content><![CDATA[
 Yes there is! 
-You can find it at <a href="http://www.pbtracker.net/blog">http://www.pbtracker.net/blog</a>.
+It is currently a bit outdated, but you can find it at <a href="http://www.pbtracker.net/blog">http://www.pbtracker.net/blog</a>.
 ]]></content>
 </faq>
 
@@ -126,8 +126,21 @@ If you have a feature that you want to work on for PB Tracker and it is not list
 <title>Where is the box art for game X?</title>
 <content><![CDATA[
 While we are trying to keep up with all of the games being added to PB Tracker, sometimes the box art for certain games are missing, particularly games recently added. 
-In fact, the easiest way that you can help contribute to the site is to add the box art images to the /static/boxart/ directory in the <a href="https://github.com/rggibson/pb-tracker">open-source GitHub repository</a> and send a <a href="https://help.github.com/articles/fork-a-repo">pull request</a>. 
-Make sure the box art image filename is [game_code].jpg, where http://www.pbtracker.net/game/[game_code] is the URL for the game page. 
+In fact, the easiest way that you can help contribute to the site is to <a href="mailto:[name-of-site-no-spaces]speedruns[AT]gmail[DOT]com">send us</a> links to box art images that you would like to see added.
+Alternatively, if you are a fancy pants and are familiar with GitHub, you can clone or fork <a href="https://github.com/rggibson/pb-tracker">the open-source repository</a>, add the box art image to the /static/boxart/ directory and send a <a href="https://help.github.com/articles/fork-a-repo">pull request</a>. 
+When sending a pull request, make sure the box art image file name is [game_code].jpg, where http://www.pbtracker.net/game/[game_code] is the URL for the game page. 
+]]></content>
+</faq>
+
+<faq>
+<title>Why does PB Tracker occasionally go down and not come back up until the next day?</title>
+<content><![CDATA[
+PB Tracker is hosted on <a href="https://developers.google.com/appengine/?csw=1">Google App Engine (GAE)</a>, a web service that allows web applications to be built and run on Google's infrastructure.
+GAE offers free tier quotas on things like database reads, outgoing bandwidth, and other necessary services to run a web app. 
+PB Tracker currently runs on this free tier and some days, we receive enough traffic so that we hit one or more of these free resource limits. 
+Once one of these limits is hit, some or all of PB Tracker's pages become inaccessible (and likely respond with a "500 Internal Server Error"). 
+We currently do not ask for donations to increase the quota limits, though we could look into it if there is enough interest in keeping the site functional every day around the clock.
+In addition, we have not looked into adding advertisements or sponsorship to PB Tracker, but only because we have not found the time to do so.
 ]]></content>
 </faq>
 
