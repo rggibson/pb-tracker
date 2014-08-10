@@ -102,6 +102,7 @@ It is currently a bit outdated, but you can find it at <a href="http://www.pbtra
 <title>How can I request a feature or report a problem?</title>
 <content><![CDATA[
 You can send an <a href="mailto:[name-of-site-no-spaces]speedruns[AT]gmail[DOT]com">email</a> or contact <a href="https://twitter.com/rggibson_">rggibson</a> on Twitter. 
+Unfortunately, we have very little time these days to add new features, but one day hopefully we can start tackling <a href="https://github.com/rggibson/pb-tracker/issues">this growing list</a>.
 ]]></content>
 </faq>
 
@@ -121,12 +122,6 @@ The code for PB Tracker is open-source, so anyone is welcome to work on the site
 Check out the <a href="https://github.com/rggibson/pb-tracker/issues?direction=asc&sort=created&state=open">issues</a> and let <a href="https://twitter.com/rggibson_">rggibson</a> know if you want to work on any of them. 
 He is happy to take pull requests from anyone willing to put in the time to come up with a workable solution. 
 If you have a feature that you want to work on for PB Tracker and it is not listed on the issues page, <a href="mailto:[name-of-site-no-spaces]speedruns[AT]gmail[DOT]com">drop us a line</a> to make sure that it is a suitable feature for PB Tracker.
-</p>
-<p>
-Also, you may have noticed that because we don't have an artist on board, our logo kind of sucks. 
-If you're an artist and would like to help out, we could definitely use a new logo / icon for the site.
-We are thinking a cartoony jar of peanut butter running hurdles while holding a controller in its hand would be pretty awesome. 
-That's just an idea though and maybe you have something better in mind.
 </p>
 ]]></content>
 </faq>
