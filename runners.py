@@ -21,6 +21,7 @@ class Runners( db.Model ):
     twitter = db.StringProperty( required = False )
     youtube = db.StringProperty( required = False )
     twitch = db.StringProperty( required = False )
+    hitbox = db.StringProperty( required = False )
     gravatar = db.StringProperty( required = False )
     datetime_created = db.DateTimeProperty( auto_now_add = True )
     visible_columns = db.TextProperty( required = False )
