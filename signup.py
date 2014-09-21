@@ -45,6 +45,10 @@ class Signup( handler.Handler ):
                            youtube=user.youtube,
                            twitch=user.twitch,
                            return_url=return_url )
+            if user.hitbox is not None:
+                params['hitbox'] = user.hitbox
+            else:
+                params['hitbox'] = ''
             if user.twitter:
                 params['twitter'] = '@' + user.twitter
             if user.gravatar:
@@ -72,6 +76,8 @@ class Signup( handler.Handler ):
         youtube = youtube.split( '/' )[ -1 ]
         twitch = self.request.get( 'twitch' )
         twitch = twitch.split( '/' )[ -1 ]
+        hitbox = self.request.get( 'hitbox' )
+        hitbox = hitbox.split( '/' )[ -1 ]
         timezone = self.request.get( 'timezone' )
         gravatar = self.request.get( 'gravatar' )
         if user is not None:
@@ -93,6 +99,7 @@ class Signup( handler.Handler ):
                        twitter = twitter,
                        youtube = youtube,
                        twitch = twitch,
+                       hitbox = hitbox,
                        gravatar = gravatar,
                        timezone = timezone,
                        return_url = return_url )
@@ -147,6 +154,7 @@ class Signup( handler.Handler ):
                                       twitter = twitter,
                                       youtube = youtube,
                                       twitch = twitch,
+                                      hitbox = hitbox,
                                       timezone = timezone,
                                       num_pbs = 0,
                                       parent = runners.key(),
@@ -184,6 +192,7 @@ class Signup( handler.Handler ):
             user.twitter = twitter
             user.youtube = youtube
             user.twitch = twitch
+            user.hitbox = hitbox
             user.timezone = timezone
             if gravatar and gravatar != '<private email>':
                 user.gravatar = hashlib.md5( gravatar.lower( ) ).hexdigest( )

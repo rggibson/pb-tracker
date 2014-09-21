@@ -42,6 +42,13 @@
 	   onmouseover="this.src='/static/icons/twitch-orange-hover.png'"
 	   onmouseout="this.src='/static/icons/twitch-orange.png'"></a>
     {% endif %}
+    {% if runner.hitbox %}
+    <a href="http://www.hitbox.tv/{{runner.hitbox}}">
+      <img src="/static/icons/hitbox-orange.png" alt="hitbox" 
+	   class="img-responsive img-hitbox"
+	   onmouseover="this.src='/static/icons/hitbox-orange-hover.png'"
+	   onmouseout="this.src='/static/icons/hitbox-orange.png'"></a>
+    {% endif %}
   </div>
 </div>
 

@@ -10,7 +10,8 @@
 {% block runner_content %}
 
 <a href="/runner/{{username_code}}?q=view-all" data-toggle="tooltip"
-   title="List {% if user.username == runner.username %}/ edit{% else %}all{% endif%} runs"><i class="icon-list icon-2x"></i></a>
+   title="List {% if user.username == runner.username %}/ edit{% else %}all{% endif%} runs" style="margin-right: 3px;"><i class="icon-list icon-2x"></i></a>
+
 {% if user.username == runner.username %}
 <a href="/runner/{{username_code}}/edit-table" data-toggle="tooltip"
    title="Edit PB table columns"><i class="icon-columns icon-2x"></i></a>
