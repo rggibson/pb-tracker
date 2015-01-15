@@ -76,22 +76,26 @@ class Asup( runhandler.RunHandler ):
         elif body_type == 'gamelist':
             # Note that this is a different type of gamelist than the one
             # generated in games.py
-            categories = self.get_categories( )
-            d = dict( )
-            for game in categories.keys( ):
-                d[ util.get_code( game ) ] = game
-            return self.get_success_response( data=d )
+#            categories = self.get_categories( )
+#            d = dict( )
+#            for game in categories.keys( ):
+#                d[ util.get_code( game ) ] = game
+#            return self.get_success_response( data=d )
+            return self.get_fail_response( "Type [" + body_type + "] currently"
+                                           + " not supported." )
 
         elif body_type == 'categories':
-            categories = self.get_categories( )
-            d = dict( )
-            for game, categorylist in categories.iteritems( ):
-                game_code = util.get_code( game )
-                for category in categorylist:
-                    category_code = util.get_code( category )
-                    d[ game_code + ':' + category_code ] = ( game + ' - ' 
-                                                             + category )
-            return self.get_success_response( data=d )
+#            categories = self.get_categories( )
+#            d = dict( )
+#            for game, categorylist in categories.iteritems( ):
+#                game_code = util.get_code( game )
+#                for category in categorylist:
+#                    category_code = util.get_code( category )
+#                    d[ game_code + ':' + category_code ] = ( game + ' - ' 
+#                                                             + category )
+#            return self.get_success_response( data=d )
+            return self.get_fail_response( "Type [" + body_type + "] currently"
+                                           + " not supported." )
 
         elif body_type == 'gamecategories':
             game_code = body.get( 'game' )
