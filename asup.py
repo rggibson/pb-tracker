@@ -40,6 +40,21 @@ class Asup( runhandler.RunHandler ):
 
         return True, self.get_success_response( )
 
+    def verify_mod_login( self, body ):
+        # First, verify login credentials
+        ( valid, response ) = self.verify_login( body )
+        if not valid:
+            return valid, response
+
+        # Make sure the user is a mod
+        user = self.get_runner( util.get_code( username ) )
+        if not user.is_mod:
+            body_type = body.get( 'type' )
+            return False, self.get_fail_response( "You must be a mod to use ["
+                                                  + body_type + "]." )
+
+        return True, self.get_success_response( )
+
     def get( self ):
         # By default, return success, a link to the handler, and a link to
         # the protocol doc
@@ -74,28 +89,42 @@ class Asup( runhandler.RunHandler ):
             return response
 
         elif body_type == 'gamelist':
-            # Note that this is a different type of gamelist than the one
-            # generated in games.py
-#            categories = self.get_categories( )
-#            d = dict( )
-#            for game in categories.keys( ):
-#                d[ util.get_code( game ) ] = game
-#            return self.get_success_response( data=d )
             return self.get_fail_response( "Type [" + body_type + "] currently"
                                            + " not supported." )
 
         elif body_type == 'categories':
-#            categories = self.get_categories( )
-#            d = dict( )
-#            for game, categorylist in categories.iteritems( ):
-#                game_code = util.get_code( game )
-#                for category in categorylist:
-#                    category_code = util.get_code( category )
-#                    d[ game_code + ':' + category_code ] = ( game + ' - ' 
-#                                                             + category )
-#            return self.get_success_response( data=d )
             return self.get_fail_response( "Type [" + body_type + "] currently"
                                            + " not supported." )
+
+        elif body_type == 'modgamelist':
+            # First, verify login credentials and that we are a mod
+            ( valid, response ) = self.verify_mod_login( body )
+            if not valid:
+                return response
+
+            # Note that this is a different type of gamelist than the one
+            # generated in games.py
+            categories = self.get_categories( )
+            d = dict( )
+            for game in categories.keys( ):
+                d[ util.get_code( game ) ] = game
+            return self.get_success_response( data=d )
+
+        elif body_type == 'modcategories':
+            # First, verify login credentials and that we are a mod
+            ( valid, response ) = self.verify_mod_login( body )
+            if not valid:
+                return response
+
+            categories = self.get_categories( )
+            d = dict( )
+            for game, categorylist in categories.iteritems( ):
+                game_code = util.get_code( game )
+                for category in categorylist:
+                    category_code = util.get_code( category )
+                    d[ game_code + ':' + category_code ] = ( game + ' - ' 
+                                                             + category )
+            return self.get_success_response( data=d )
 
         elif body_type == 'gamecategories':
             game_code = body.get( 'game' )
