@@ -7,7 +7,11 @@
 # care about datastore reads/writes, this class would not be necessary. 
 # However, I would like to continue to use the free tier usage of GAE as long
 # as possible, hence these optimization routines to stay off the database as
-# much as possible. 
+# much as possible.
+#
+# GAE now offers the NDB datastore, which sounds like it is a much better
+# option than the DB datastore employed by this app as NDB does auto-caching.
+# If we ever migrate to NDB, this class is likely not needed.
 #
 
 import handler
@@ -443,12 +447,22 @@ class RunHandler( handler.Handler ):
                           reverse=True )
             self.update_cache_runlist_for_runner( user.username, runlist )
 
+    def update_gamelist_snp_put( self, game ):
+        # Update gamelist-skip-num-pbs in memcache if necessary
+        gamelist_snp = self.get_gamelist( no_refresh=True, get_num_pbs=False )
+        if gamelist_snp is not None:
+            if game not in gamelist_snp:
+                # This game wasn't found in the gamelist_snp, so add it
+                gamelist_snp.append( game )
+                gamelist_snp.sort( )
+                self.update_cache_gamelist( gamelist_snp, get_num_pbs=False )
+
     def update_gamelist_put( self, params ):
         game_code = params[ 'game_code' ]
         game = params[ 'game' ]
 
         # Update gamelist in memcache if necessary
-        gamelist = self.get_gamelist( no_refresh=True )
+        gamelist = self.get_gamelist( no_refresh=True, get_num_pbs=True )
         if gamelist is not None:
             found_game = False
             for gamedict in gamelist:
@@ -457,7 +471,7 @@ class RunHandler( handler.Handler ):
                     gamedict['num_pbs'] += 1
                     gamelist.sort( key=itemgetter('num_pbs'), 
                                    reverse=True )
-                    self.update_cache_gamelist( gamelist )
+                    self.update_cache_gamelist( gamelist, get_num_pbs=True )
                     break
             if not found_game:
                 # This game wasn't found in the gamelist, so add it
@@ -465,11 +479,14 @@ class RunHandler( handler.Handler ):
                                        num_pbs = 1 ) )
                 gamelist.sort( key=itemgetter('game') )
                 gamelist.sort( key=itemgetter('num_pbs'), reverse=True )
-                self.update_cache_gamelist( gamelist )
+                self.update_cache_gamelist( gamelist, get_num_pbs=True )
+
+        # Update gamelist-skip-num-pbs in memcache if necessary
+        self.update_gamelist_snp_put( game )
 
     def update_gamelist_delete( self, old_run ):
         # Fix the gamelist with the removal of the old run
-        gamelist = self.get_gamelist( no_refresh=True )
+        gamelist = self.get_gamelist( no_refresh=True, get_num_pbs=True )
         if gamelist is not None:
             for i, gamedict in enumerate( gamelist ):
                 if( gamedict[ 'game' ] == old_run[ 'game' ] ):
@@ -478,7 +495,7 @@ class RunHandler( handler.Handler ):
                         del gamelist[ i ]
                     gamelist.sort( key=itemgetter('num_pbs'), 
                                    reverse=True )
-                    self.update_cache_gamelist( gamelist )
+                    self.update_cache_gamelist( gamelist, get_num_pbs=True )
                     break
 
     def update_runnerlist_put( self, params ):
@@ -587,7 +604,8 @@ class RunHandler( handler.Handler ):
             logging.error( "Unexpected count [" + str(count) 
                            + "] for number of runs for "
                            + username + ", " + game + ", " + category )
-            self.update_cache_gamelist( None )
+            self.update_cache_gamelist( None, get_num_pbs=True )
+            self.update_cache_gamelist( None, get_num_pbs=False )
             self.update_cache_runnerlist( None )
         if delta_num_pbs == 1:
             self.update_gamelist_put( params )
@@ -724,5 +742,24 @@ class RunHandler( handler.Handler ):
         if( last_run is not None 
             and new_run.key().id() == last_run.key().id() ):
             self.update_cache_last_run( runner.username, new_run )
+
+        return True
+
+    # Returns True on success, False on failure
+    def put_new_game( self, game ):
+        # Add a new game to the database
+        try:
+            game_model = games.Games( game = game,
+                                      info = json.dumps( [ ] ),
+                                      parent = games.key( ),
+                                      key_name = util.get_code( game ) )
+        except db.BadValueError:
+            return False
+        
+        game_model.put( )
+        logging.warning( "Put new game " + game + " in database." )
+
+        # Update memcache
+        self.update_gamelist_snp_put( game )
 
         return True

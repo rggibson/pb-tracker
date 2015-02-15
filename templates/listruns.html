@@ -56,7 +56,8 @@
 	{{run['datetime_created'].strftime( "%a %b %d %Y %H:%M:%S" )}}{% else %}-{% endif %}</td>
       {% if user.username == runner.username or user.is_mod %}
       <td>
-	<a href="/submit?edit={{run['run_id']}}" data-toggle="tooltip"
+	<a href="/submit/{{run['game_code']}}/?edit={{run['run_id']}}"
+	   data-toggle="tooltip"
 	   title="Edit run"><i class="icon-edit icon-large"></i></a>  
 	<a href="/delete/{{run['run_id']}}" data-toggle="tooltip"
 	   title="Delete run"><i class="icon-trash icon-large"></i></a></td>

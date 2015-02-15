@@ -406,42 +406,52 @@ class Handler(webapp2.RequestHandler):
         else:
             logging.error( "Failed to update " + key + " in memcache" )
 
-    def get_gamelist_memkey( self ):
-        return "gamelist"
+    def get_gamelist_memkey( self, get_num_pbs ):
+        if get_num_pbs:
+            return "gamelist"
+        else:
+            return "gamelist-skip-num-pbs"
 
-    def get_gamelist( self, no_refresh=False ):
-        key = self.get_gamelist_memkey( )
+    def get_gamelist( self, no_refresh=False, get_num_pbs=True ):
+        key = self.get_gamelist_memkey( get_num_pbs )
         gamelist = memcache.get( key )
         if gamelist is None and not no_refresh:
             # Build the gamelist, which is a list of dictionaries where each
             # dict gives the game, game_code and number of pbs for that game.
             # The list is sorted by numbers of pbs for the game
             gamelist = [ ]
-            q = db.Query( games.Games, projection=('game', 'num_pbs') )
+            projection = [ 'game' ]
+            if get_num_pbs:
+                projection.append( 'num_pbs' )
+            q = db.Query( games.Games, projection=projection )
             q.ancestor( games.key() )
-            q.order( '-num_pbs' )
+            if get_num_pbs:
+                q.order( '-num_pbs' )
             q.order( 'game' )
             for game_model in q.run( limit=10000 ):
-                if game_model.num_pbs <= 0:
+                if get_num_pbs and game_model.num_pbs <= 0:
                     break
-                gamelist.append( dict( game=game_model.game,
-                                       game_code = util.get_code( 
-                            game_model.game ),
-                                       num_pbs = game_model.num_pbs ) )
+                if get_num_pbs:
+                    d = dict( game = game_model.game,
+                              game_code = util.get_code( game_model.game ),
+                              num_pbs = game_model.num_pbs )
+                    gamelist.append( d )
+                else:
+                    gamelist.append( str( game_model.game ) )
             if memcache.set( key, gamelist ):
-                logging.debug( "Set gamelist in memcache" )
+                logging.debug( "Set " + key + " in memcache" )
             else:
-                logging.warning( "Failed to set new gamelist in memcache" )
+                logging.warning( "Failed to set new " + key + " in memcache" )
         elif gamelist is not None:
-            logging.debug( "Got gamelist from memcache" )
+            logging.debug( "Got " + key + " from memcache" )
         return gamelist
 
-    def update_cache_gamelist( self, gamelist ):
-        key = self.get_gamelist_memkey( )
+    def update_cache_gamelist( self, gamelist, get_num_pbs=True ):
+        key = self.get_gamelist_memkey( get_num_pbs )
         if memcache.set( key, gamelist ):
-            logging.debug( "Updated gamelist in memcache" )
+            logging.debug( "Updated " + key + " in memcache" )
         else:
-            logging.error( "Failed to update gamelist in memcache" )
+            logging.error( "Failed to update " + key + " in memcache" )
 
     def get_runnerlist_memkey( self ):
         return "runnerlist"

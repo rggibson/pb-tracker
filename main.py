@@ -11,6 +11,7 @@ import signup
 import login
 import logout
 import submit
+import presubmit
 import runnerpage
 import gamepage
 import handler
@@ -40,7 +41,8 @@ app = webapp2.WSGIApplication( [ ('/', front.Front),
                                  ('/signup/?', signup.Signup),
                                  ('/login/?', login.Login),
                                  ('/logout/?', logout.Logout),
-                                 ('/submit/?', submit.Submit),
+                                 ('/submit/' + MY_RE + '/?', submit.Submit),
+                                 ('/submit/?', presubmit.PreSubmit),
                                  ('/games(?:\.json)?/?', gamelist.GameList),
                                  ('/runners(?:\.json)?/?', 
                                   runnerlist.RunnerList),

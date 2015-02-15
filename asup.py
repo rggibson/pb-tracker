@@ -5,6 +5,12 @@
 # splits program.  Follows the protocol currently listed here:
 # https://docs.google.com/document/d/13UAc4CQTSMBAiEHm7xNdJYT8v27VZY1GJc2aYsaFVu0/edit#
 #
+# Currently, the gamelist and categories request types are not supported.
+# They were removed in an attempt to lighten the load to the site and to
+# hopefully reduce downtime that PB Tracker receives.  This two requests in
+# particular are pretty hard on the datastore reads, which is a commonly
+# exhausted resource.
+#
 
 import runhandler
 import json
@@ -47,6 +53,7 @@ class Asup( runhandler.RunHandler ):
             return valid, response
 
         # Make sure the user is a mod
+        username = body.get( 'username' )
         user = self.get_runner( util.get_code( username ) )
         if not user.is_mod:
             body_type = body.get( 'type' )

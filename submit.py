@@ -2,18 +2,17 @@
 # Author: Richard Gibson
 #
 # Writes runs submitted by users to the database and updates common queries 
-# stored in memcache.  Before any render, handler.get_categories is called to
-# retrieve a dictionary, indexed by game name, of all the categories contained
-# in the games.Games entities.  This dictionary is used for auto-completion of
-# both the game and category inputs using jQuery's ui-autocomplete feature
-# (see templates/submit.html).  On a successful POST, the run is put in the
+# stored in memcache.  On a successful POST, the run is put in the
 # database and several update_memcache functions are run to ensure that the
 # memcache is not stale.
 #
 # submit.py also handles run editing through the '?edit=<run_id>' query string.
 # Most of the handling is the same as for submitting a new run, except 
 # extra memcache update functions that delete the old run must first be run
-# before updating the memcache with the new run.  
+# before updating the memcache with the new run.
+#
+# Note that it is currently not possible to edit the game name of a run.
+# These types of edits must instead be deleted and re-submitted.
 #
 
 import runhandler
@@ -28,7 +27,7 @@ from datetime import date
 from google.appengine.ext import db
 
 class Submit( runhandler.RunHandler ):
-    def get( self ):
+    def get( self, game_code ):
         user = self.get_user( )
         if not user:
             self.redirect( "/" )
@@ -36,16 +35,24 @@ class Submit( runhandler.RunHandler ):
 
         params = dict( user=user )
 
+        game_model = self.get_game_model( game_code )
+        if game_model is None:
+            self.error( 404 )
+            self.render( "404.html", user=user )
+            return
+
         # Are we editing an existing run?
         run_id = self.request.get( 'edit' )
         if run_id:
             # Grab the run to edit
             run = self.get_run_by_id( run_id )
-            if not run or ( not user.is_mod and user.username != run.username ):
+            if not run or ( not user.is_mod 
+                            and user.username != run.username ):
                 self.error( 404 )
                 self.render( "404.html", user=user )
                 return
             params[ 'game' ] = run.game
+            params[ 'game_code' ] = game_code
             params[ 'category' ] = run.category
             params[ 'time' ] = util.seconds_to_timestr( run.seconds )
             if run.date is not None:
@@ -58,28 +65,21 @@ class Submit( runhandler.RunHandler ):
             if run.notes is not None:
                 params[ 'notes' ] = run.notes
         else:
-            # Start with the game, category and version from this user's 
-            # last run
-            run = self.get_last_run( user.username )
-            params['set_date_to_today'] = True;
-            if run is not None:
-                params['game'] = run.game
-                params['category'] = run.category
-                if run.version is not None:
-                    params['version'] = run.version
-
-        # Grab all of the games and categories for autocompleting
-        params['categories'] = self.get_categories( )
+            params['game'] = game_model.game
+            params['game_code'] = game_code
+            params['set_date_to_today'] = True;            
                     
+        # Grab all of the categories for autocompleting
+        params['categories'] = game_model.categories( )
+
         self.render( "submit.html", **params )
 
-    def post( self ):
+    def post( self, game_code ):
         user = self.get_user( )
         if not user:
             self.redirect( "/" )
             return
 
-        game = self.request.get( 'game' )
         category = self.request.get( 'category' )
         time = self.request.get( 'time' )
         datestr = self.request.get( 'date' )
@@ -93,31 +93,27 @@ class Submit( runhandler.RunHandler ):
             is_bkt = False
         run_id = self.request.get( 'edit' )
 
-        params = dict( user = user, game = game, category = category, 
+        params = dict( user = user, game_code = game_code,
+                       category = category, 
                        time = time, datestr = datestr, video = video, 
                        version = version, notes = notes, run_id = run_id, 
                        is_bkt = is_bkt )
 
         valid = True
 
-        # Make sure the game doesn't already exist under a similar name
-        game_code = util.get_code( game )
+        # Make sure the game already exists
         game_model = self.get_game_model( game_code )
+        game = ''
         if not game_code:
             params['game_error'] = "Game cannot be blank"
             valid = False
-        elif game_model is not None and game != game_model.game:
-            params['game_error'] = ( "Game already exists under [" 
-                                     + game_model.game + "] (case sensitive)."
-                                     + " Hit submit again to confirm." )
-            params['game'] = game_model.game
+        elif game_model is None:
+            params['game_error'] = ( "That's weird, we could not find any "
+                                     + "records for that game" )
             valid = False
-        elif not games.valid_game_or_category( game ):
-            params['game_error'] = ( "Game name must not use any 'funny'"
-                                     + " characters and can be up to 100 "
-                                     + "characters long" )
-            valid = False
-        params[ 'game_code' ] = game_code
+        else:
+            game = game_model.game
+        params[ 'game' ] = game
         params[ 'game_model' ] = game_model
 
         # Make sure the category doesn't already exist under a similar name
@@ -218,8 +214,12 @@ class Submit( runhandler.RunHandler ):
         if success:
             self.redirect( "/runner/" + util.get_code( user.username )
                            + "?q=view-all" )
-        else:
-            # Grab all of the games for autocompleting
-            params['categories'] = self.get_categories( )            
+        elif game_model is not None:
+            # Grab all of the categories for autocompleting
+            params['categories'] = game_model.categories( )
             params['user'] = user
             self.render( "submit.html", **params )
+        else:
+            self.error( 404 )
+            self.render( "404.html", user=user )
+            

@@ -73,8 +73,20 @@ class CleanupGamesBase( handler.Handler ):
                 game_model.put( )
                 self.update_cache_game_model( game_code, game_model )
         
-        # Finally, update categories in memcache if necessary
+        # Finally, update categories, gamelists in memcache if necessary
         if categories_modified:
             for game in games_to_delete:
                 del categories[ game ]
             self.update_cache_categories( categories )
+        gamelist = self.get_gamelist( no_refresh=True, get_num_pbs=True )
+        gamelist_snp = self.get_gamelist( no_refresh=True, get_num_pbs=False )
+        for game in games_to_delete:
+            if gamelist is not None:
+                for i, d in enumerate( gamelist ):
+                    if d['game'] == game:
+                        del( gamelist[ i ] )
+                        break
+            if gamelist_snp is not None and game in gamelist_snp:
+                gamelist_snp.remove( game )
+        self.update_cache_gamelist( gamelist, get_num_pbs=True )
+        self.update_cache_gamelist( gamelist_snp, get_num_pbs=False )

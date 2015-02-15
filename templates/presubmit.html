@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block subtitle %}
+Submit Run
+{% endblock %}
+
+{% block morehead %}
+<link rel="stylesheet" href="/static/css/jquery-ui.min.css"/>
+{% endblock %}
+
+
+{% block content %}
+
+<script type="text/javascript">
+  document.getElementById("nav-submit").setAttribute("class", "active");
+</script>
+
+<form method="post" class="form-horizontal" role="form">
+  <div class="form-group{% if game_error %} has-error{% endif %}">
+    <label for="game" class="col-lg-4 col-md-4 control-label">
+      <i class="icon-gamepad icon-large"></i> Game
+    </label>
+    <div class="col-lg-4 col-md-4">
+      <input type="text" class="form-control" id="game" name="game"
+	     placeholder="e.g. Mega Man 2" value="{{game}}" autofocus>
+    </div>
+    <div class="col-lg-4 col-md-4 error">{{game_error}}</div>
+  </div>
+  <div class="form-group">
+    <div class="col-lg-offset-4 col-md-offset-4 col-lg-4 col-md-4">
+      <button id="submit-btn" class="btn btn-lg btn-primary" type="submit"
+	      data-loading-text="<i class='icon-refresh icon-spin 
+				 icon-large'></i> Please wait...">
+	<i class="icon-arrow-right icon-large"></i> Next
+      </button>
+    </div>
+  </div>
+</form>
+
+{% endblock %}
+
+{% block js %}
+<script src="/static/js/jquery-ui.min.js"></script>
+<!-- Have to re-include bootstrap.js, otherwise blocking double 
+     submit breaks -->
+<script 
+   src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js">
+</script>
+<script src="/static/js/util.js"></script>
+<script type="text/javascript">
+  block_double_submit( '#submit-btn' );
+
+  $( document ).ready( function( ) {
+    var games = {{games | safe}};
+    /* Autocomplete game input */
+    $( 'input#game' ).autocomplete( {
+      source: games
+    } ); 
+
+  } );
+</script>
+{% endblock %}

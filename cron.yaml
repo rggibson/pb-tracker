@@ -1,4 +1,4 @@
 cron:
 - description: clean up games and categories that no longer exist
   url: /cleanup-games
-  schedule: every day 07:00
+  schedule: every wednesday 07:00

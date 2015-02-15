@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block subtitle %}
-{% if run_id %}Edit Run{% else %}Submit Run{% endif %}
+{% if run_id %}Edit Run of {{game}}{% else %}Submit Run of {{game}}{% endif %}
 {% endblock %}
 
 {% block morehead %}
@@ -18,14 +18,20 @@
 </script>
 
 <form method="post" class="form-horizontal" role="form">
+  <div class="form-group">
+    <div class="col-lg-4 col-md-4 col-lg-push-4 col-md-push-4">
+      <img id="boxart" alt="" class="img-responsive lazy boxart" 
+	   style="max-height: 200px;"
+	   src="/static/boxart/__blank-pixel__.png" 
+	   data-original="/static/boxart/{{game_code}}.jpg">
+    </div>
+  </div>
   <div class="form-group{% if game_error %} has-error{% endif %}">
     <label for="game" class="col-lg-4 col-md-4 control-label">
       <i class="icon-gamepad icon-large"></i> Game
     </label>
     <div class="col-lg-4 col-md-4">
-      <input type="text" class="form-control" id="game" 
-	     name="game" 
-	     placeholder="e.g. Mega Man 2" value="{{game}}" autofocus> 
+      <p class="form-control-static">{{game}}</p>
     </div>
     <div class="col-lg-4 col-md-4 error">{{game_error}}</div>
   </div>
@@ -35,7 +41,7 @@
     </label>
     <div class="col-lg-4 col-md-4">
       <input type="text" class="form-control" id="category" name="category"
-	     placeholder="e.g. Any% (Normal)" value="{{category}}">
+	     placeholder="e.g. Any% (Normal)" value="{{category}}" autofocus>
     </div>
     <div class="col-lg-4 col-md-4 error">{{category_error}}</div>
   </div>
@@ -120,6 +126,7 @@
 {% endblock %}
 
 {% block js %}
+<script src="/static/js/jquery.lazyload.min.js"></script>
 <script src="/static/js/jquery-ui.min.js"></script>
 <!-- Have to re-include bootstrap.js, otherwise blocking double 
      submit breaks -->
@@ -128,6 +135,12 @@
 </script>
 <script src="/static/js/util.js"></script>
 <script type="text/javascript">
+  $( "#boxart" ).attr( "data-original", 
+		    $( "#boxart" ).attr( "data-original" ).replace( "%2B", "+" ) );
+  $( "img.lazy" ).lazyload( {
+    skip_invisible: false
+  } );  
+
   block_double_submit( '#submit-btn' );
 
   {% if set_date_to_today %}
@@ -140,25 +153,11 @@
   {% endif %}
 
   $( document ).ready( function( ) {
-    var categories = {{categories | safe}};
-    /* Autocomplete game input */
-    $( 'input#game' ).autocomplete( {
-      source: keys( categories ).sort( )
-    } ); 
-
     /* Autocomplete category input */
-    $( 'input#category' ).focus( function() {
-      var game = $( 'input#game' ).val( );
-      if( categories[ game ] ) {
-        $( 'input#category' ).autocomplete( {
-          source: categories[ game ]
-        } );
-      } else {
-        $( 'input#category' ).autocomplete( {
-          source: [ ]
-        } );
-      }
-    } );
+    var categories = {{categories | safe}};
+    $( 'input#category' ).autocomplete( {
+      source: categories
+    } ); 
 
     /* Date picker */
     $( 'input#date' ).datepicker( {

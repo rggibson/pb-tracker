@@ -15,9 +15,11 @@
 # When PB Tracker originally launched, many Games entities were created to 
 # provide an opening database of games and categories to suggest to runners 
 # on the submit page.  Any game and/or category submitted that is not in the 
-# database is immediately added. Games entities are currently never deleted.
+# database is immediately added. Games entities are later deleted by a cron
+# job if no runs exist for the game (see cleanup_games_base.py).
 #
 import re
+import json
 
 from google.appengine.ext import db
 
@@ -34,3 +36,7 @@ class Games( db.Model ):
     game = db.StringProperty( required=True )
     info = db.TextProperty( required=True ) 
     num_pbs = db.IntegerProperty( default=0 )
+
+    def categories( self ):
+        infolist = json.loads( self.info )
+        return [ str( i['category'] ) for i in infolist ]
