@@ -97,11 +97,21 @@ class Asup( runhandler.RunHandler ):
 
         elif body_type == 'gamelist':
             return self.get_fail_response( "Type [" + body_type + "] currently"
-                                           + " not supported." )
+                                           + " not supported dynamically, but "
+                                           + "you can find a static JSON "
+                                           + "response at "
+                                           + "https://www.dropbox.com/s/"
+                                           + "xnvsmx3mt0i4nbv/gamelist.json?dl"
+                                           + "=0" )
 
         elif body_type == 'categories':
             return self.get_fail_response( "Type [" + body_type + "] currently"
-                                           + " not supported." )
+                                           + " not supported dynamically, but "
+                                           + "you can find a static JSON "
+                                           + "response at "
+                                           + "https://www.dropbox.com/s/"
+                                           + "irdj4xakh72g541/categories.json?"
+                                           + "dl=0" )
 
         elif body_type == 'modgamelist':
             # First, verify login credentials and that we are a mod
