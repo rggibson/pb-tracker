@@ -12,6 +12,10 @@ handlers:
   script: main.app
   login: admin
 
+- url: /favicon\.ico
+  static_files: static/icons/favicon.ico
+  upload: static/icons/favicon\.ico
+
 - url: .*
   script: main.app
 
