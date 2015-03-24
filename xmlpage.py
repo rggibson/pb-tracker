@@ -11,6 +11,8 @@ import xml.etree.cElementTree as et
 class XmlPage( handler.Handler ):
     def get( self ):
         user = self.get_user( )
+        if user == self.OVER_QUOTA_ERROR:
+            user = None
 
         # Grab the optional query parameter and cast it as an int.
         # Currently only used for /faq

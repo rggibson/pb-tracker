@@ -23,6 +23,10 @@ class ChangeCategories( runhandler.RunHandler ):
         if not user:
             self.redirect( "/" )
             return
+        elif user == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html" )
+            return
 
         # Make sure user is a mod
         if not user.is_mod:
@@ -32,6 +36,10 @@ class ChangeCategories( runhandler.RunHandler ):
 
         params = dict( user=user,
                        categories=self.get_categories( ) )
+        if params['categories'] is None:
+            self.error( 403 )
+            self.render( "403.html", user=user )
+            return
 
         self.render( "change_categories.html", **params )
 
@@ -40,6 +48,10 @@ class ChangeCategories( runhandler.RunHandler ):
         user = self.get_user( )
         if not user:
             self.redirect( "/" )
+            return
+        elif user == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html" )
             return
 
         # Make sure user is a mod

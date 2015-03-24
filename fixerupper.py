@@ -23,7 +23,15 @@ class FixerUpper( handler.Handler ):
     def get( self ):
         # Make sure it's me
         user = self.get_user( )
-        if not user or user.username != "rggibson":
+        if not user:
+            self.error( 404 )
+            self.render( "404.html", user=user )
+            return
+        elif user == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html" )
+            return
+        elif user.username != "rggibson":
             self.error( 404 )
             self.render( "404.html", user=user )
             return

@@ -14,6 +14,10 @@ class CleanupGamesNow( cleanup_games_base.CleanupGamesBase ):
         if not user:
             self.redirect( "/" )
             return
+        elif user == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html" )
+            return
         if not user.is_mod:
             self.error( 404 )
             self.render( "404.html", user=user )

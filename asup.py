@@ -122,6 +122,10 @@ class Asup( runhandler.RunHandler ):
             # Note that this is a different type of gamelist than the one
             # generated in games.py
             categories = self.get_categories( )
+            if categories is None:
+                return self.get_fail_response( "PB Tracker is currently "
+                                               + "experiencing an over "
+                                               + "quota downtime period." )
             d = dict( )
             for game in categories.keys( ):
                 d[ util.get_code( game ) ] = game
@@ -134,6 +138,10 @@ class Asup( runhandler.RunHandler ):
                 return response
 
             categories = self.get_categories( )
+            if categories is None:
+                return self.get_fail_response( "PB Tracker is currently "
+                                               + "experiencing an over "
+                                               + "quota downtime period." )
             d = dict( )
             for game, categorylist in categories.iteritems( ):
                 game_code = util.get_code( game )
@@ -144,20 +152,22 @@ class Asup( runhandler.RunHandler ):
             return self.get_success_response( data=d )
 
         elif body_type == 'gamecategories':
-            game_code = body.get( 'game' )
-            game_model = self.get_game_model( game_code )
-            if game_code is None:
-                return self.get_fail_response( 'No game specified' )
-            elif game_model is None:
-                return self.get_fail_response( 'Unknown game [' 
-                                               + game_code + '].' )
-            else:
-                d = dict( )
-                gameinfolist = json.loads( game_model.info )
-                for gameinfo in gameinfolist:
-                    category = gameinfo['category']
-                    d[ util.get_code( category ) ] = category
-                return self.get_success_response( data=d )
+            return self.get_fail_response( "Type [" + body_type + "] currently"
+                                           + " not supported, sorry." )
+#            game_code = body.get( 'game' )
+#            game_model = self.get_game_model( game_code )
+#            if game_code is None:
+#                return self.get_fail_response( 'No game specified' )
+#            elif game_model is None:
+#                return self.get_fail_response( 'Unknown game [' 
+#                                               + game_code + '].' )
+#            else:
+#                d = dict( )
+#                gameinfolist = json.loads( game_model.info )
+#                for gameinfo in gameinfolist:
+#                    category = gameinfo['category']
+#                    d[ util.get_code( category ) ] = category
+#                return self.get_success_response( data=d )
 
         elif body_type == 'submitrun':
             # First, verify login credentials

@@ -15,7 +15,15 @@ class EditTable( handler.Handler ):
         user = self.get_user( )
 
         # Make sure this is the correct user
-        if user is None or util.get_code( user.username ) != username_code:
+        if user is None:
+            self.error( 404 )
+            self.render( "404.html", user=user )
+            return
+        elif user == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html" )
+            return
+        elif util.get_code( user.username ) != username_code:
             self.error( 404 )
             self.render( "404.html", user=user )
             return
@@ -33,7 +41,15 @@ class EditTable( handler.Handler ):
         user = self.get_user( )
 
         # Make sure this is the correct user
-        if user is None or util.get_code( user.username ) != username_code:
+        if user is None:
+            self.error( 404 )
+            self.render( "404.html", user=user )
+            return
+        elif user == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html" )
+            return
+        elif util.get_code( user.username ) != username_code:
             self.error( 404 )
             self.render( "404.html", user=user )
             return

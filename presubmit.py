@@ -24,6 +24,10 @@ class PreSubmit( runhandler.RunHandler ):
         if not user:
             self.redirect( "/" )
             return
+        elif user == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html" )
+            return
 
         params = dict( user=user )
                     
@@ -36,6 +40,10 @@ class PreSubmit( runhandler.RunHandler ):
         user = self.get_user( )
         if not user:
             self.redirect( "/" )
+            return
+        elif user == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html" )
             return
 
         game = self.request.get( 'game' )

@@ -31,6 +31,10 @@ def valid_email( email ):
 class Signup( handler.Handler ):
     def get( self ):
         user = self.get_user( )
+        if user == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html" )
+            return
         return_url = self.request.get( 'from' )
         if not return_url:
             return_url = "/"
@@ -66,6 +70,10 @@ class Signup( handler.Handler ):
 
     def post( self ):
         user = self.get_user( )
+        if user == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html" )
+            return
         username = self.request.get( 'username' )
         password = self.request.get( 'password' )
         verify = self.request.get( 'verify' )

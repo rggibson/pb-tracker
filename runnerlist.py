@@ -12,6 +12,8 @@ import handler
 class RunnerList( handler.Handler ):
     def get( self ):
         user = self.get_user( )
+        if user == self.OVER_QUOTA_ERROR:
+            user = None
 
         runnerlist = self.get_runnerlist( )
 

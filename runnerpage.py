@@ -25,6 +25,8 @@ import util
 class RunnerPage( handler.Handler ):
     def get( self, username_code ):
         user = self.get_user( )
+        if user == self.OVER_QUOTA_ERROR:
+            user = None
         q = self.request.get( 'q', default_value=None )
 
         # Make sure the runner exists

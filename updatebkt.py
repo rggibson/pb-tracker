@@ -20,6 +20,10 @@ import handler
 class UpdateBkt( handler.Handler ):
     def get( self, game_code ):
         user = self.get_user( )
+        if user == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html" )
+            return
         return_url = self.request.get( 'from' )
         if not return_url:
             return_url = "/"
@@ -80,6 +84,10 @@ class UpdateBkt( handler.Handler ):
 
     def post( self, game_code ):
         user = self.get_user( )
+        if user == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html" )
+            return
         return_url = self.request.get( 'from' )
         if not return_url:
             return_url = "/"

@@ -19,6 +19,8 @@ from google.appengine.ext import db
 class GamePage( handler.Handler ):
     def get( self, game_code ):
         user = self.get_user( )
+        if user == self.OVER_QUOTA_ERROR:
+            user = None
 
         # Have to take the code of the game code because of percent
         # encoded plusses

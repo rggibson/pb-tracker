@@ -22,13 +22,17 @@ from operator import itemgetter
 
 from google.appengine.api import memcache
 from google.appengine.ext import db
+from google.appengine.runtime import apiproxy_errors
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.join
                                    (os.path.dirname(__file__), 
                                     'templates')), autoescape = True)
 
+
 class Handler(webapp2.RequestHandler):
+    OVER_QUOTA_ERROR = 'OVER_QUOTA_ERROR'
+
     # Writing and rendering utility functions
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
@@ -44,7 +48,7 @@ class Handler(webapp2.RequestHandler):
         self.response.headers[ 'Content-Type' ] = ( 'application/json; ' 
                                                     + 'charset=UTF-8' )
         # Allow javascript from any domain to access the JSON
-        self.response.headers.add_header( 'Access-Control-Allow-Origin', '*' )
+#        self.response.headers.add_header( 'Access-Control-Allow-Origin', '*' )
         self.write( json.dumps( obj, cls = util.MyJSONEncoder ) )
 
     # Helpful override to determine the format of the output
@@ -60,8 +64,13 @@ class Handler(webapp2.RequestHandler):
         username_code = util.get_code( username )
         
         # Find the user in the database
-        user = runners.Runners.get_by_key_name( username_code, 
-                                                parent=runners.key() )
+        try:
+            user = runners.Runners.get_by_key_name( username_code, 
+                                                    parent=runners.key() )
+        except apiproxy_errors.OverQuotaError, msg:
+            logging.error( msg )
+            return False, dict( user_error="Over quota error" )
+
         if not user:
             return False, dict( user_error="Username not found" )
 
@@ -81,8 +90,13 @@ class Handler(webapp2.RequestHandler):
         if cookie_val:
             username_code = util.check_secure_val( cookie_val )
             if username_code:
-                return runners.Runners.get_by_key_name( username_code, 
-                                                        parent=runners.key() )
+                try:
+                    user = runners.Runners.get_by_key_name( 
+                        username_code, parent=runners.key() )
+                except apiproxy_errors.OverQuotaError, msg:
+                    logging.error( msg )
+                    return OVER_QUOTA_ERROR
+                return user
 
     # Memcache / Datastore functions
     def get_runner_memkey( self, username_code ):
@@ -96,8 +110,12 @@ class Handler(webapp2.RequestHandler):
         runner = memcache.get( key )
         if runner is None:
             # Not in memcache, so check the database
-            runner = runners.Runners.get_by_key_name( username_code,
-                                                      parent=runners.key() )
+            try:
+                runner = runners.Runners.get_by_key_name( username_code,
+                                                          parent=runners.key() )
+            except apiproxy_errors.OverQuotaError, msg:
+                logging.error( msg )
+                return None
             if memcache.set( key, runner ):
                 logging.debug( "Set " + key + " in memcache" )
             else:
@@ -124,8 +142,12 @@ class Handler(webapp2.RequestHandler):
         game_model = memcache.get( key )
         if game_model is None:
             # Not in memcache, so get the game from datastore
-            game_model = games.Games.get_by_key_name( game_code,
-                                                      parent=games.key() )
+            try:
+                game_model = games.Games.get_by_key_name( game_code,
+                                                          parent=games.key() )
+            except apiproxy_errors.OverQuotaError, msg:
+                logging.error( msg )
+                return None
             if memcache.set( key, game_model ):
                 logging.debug( "Set game_model in memcache for game_code " 
                                + game_code )
@@ -155,16 +177,20 @@ class Handler(webapp2.RequestHandler):
         if categories is None and not no_refresh:
             # Not in memcache, so get the categories for every game
             categories = dict( )
-            q = db.Query( games.Games )
-            q.ancestor( games.key() )
-            for game_model in q.run( limit=10000 ):
-                gameinfolist = json.loads( game_model.info )
-                categories[ str( game_model.game ) ] = [ ]
-                for gameinfo in gameinfolist:
-                    categories[ str( game_model.game ) ].append( 
-                        str( gameinfo['category'] ) )
-                # Sort the categories for each game in alphabetical order
-                categories[ str( game_model.game ) ].sort( )
+            try:
+                q = db.Query( games.Games )
+                q.ancestor( games.key() )
+                for game_model in q.run( limit=10000 ):
+                    gameinfolist = json.loads( game_model.info )
+                    categories[ str( game_model.game ) ] = [ ]
+                    for gameinfo in gameinfolist:
+                        categories[ str( game_model.game ) ].append( 
+                            str( gameinfo['category'] ) )
+                    # Sort the categories for each game in alphabetical order
+                    categories[ str( game_model.game ) ].sort( )
+            except apiproxy_errors.OverQuotaError, msg:
+                logging.error( msg )
+                return None
             if memcache.set( key, categories ):
                 logging.debug( "Set " + key + " in memcache" )
             else:

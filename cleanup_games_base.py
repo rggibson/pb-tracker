@@ -22,6 +22,8 @@ class CleanupGamesBase( handler.Handler ):
     def cleanup_games( self ):
         # Grab all of the categories, indexed by game
         categories = self.get_categories( )
+        if categories is None:
+            return
         categories_modified = False
 
         games_to_delete = [ ]
