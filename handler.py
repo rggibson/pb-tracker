@@ -341,8 +341,8 @@ class Handler(webapp2.RequestHandler):
                     info = self.get_runinfo( username, run.game, run.category )
                     if info == self.OVER_QUOTA_ERROR:
                         return self.OVER_QUOTA_ERROR
-                        pb['infolist'].append( info )
-                        pb['num_runs'] += info['num_runs']
+                    pb['infolist'].append( info )
+                    pb['num_runs'] += info['num_runs']
             except apiproxy_errors.OverQuotaError, msg:
                 logging.error( msg )
                 return self.OVER_QUOTA_ERROR
