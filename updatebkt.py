@@ -41,7 +41,15 @@ class UpdateBkt( handler.Handler ):
         
         # Check to make sure that the user has run this game
         game_model = self.get_game_model( game_code )
+        if game_model == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html", user=user )
+            return
         user_has_run = self.get_user_has_run( user.username, game_model.game )
+        if user_has_run == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html", user=user )
+            return            
         if not user_has_run and not user.is_mod:
             self.error( 404 )
             self.render( "404.html", user=user )
@@ -105,7 +113,15 @@ class UpdateBkt( handler.Handler ):
         
         # Check to make sure that the user has run this game
         game_model = self.get_game_model( game_code )
+        if game_model == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html", user=user )
+            return
         user_has_run = self.get_user_has_run( user.username, game_model.game )
+        if user_has_run == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html", user=user )
+            return
         if not user_has_run and not user.is_mod:
             self.error( 404 )
             self.render( "404.html", user=user )
@@ -194,7 +210,9 @@ class UpdateBkt( handler.Handler ):
 
         # Update gamepage in memcache
         gamepage = self.get_gamepage( game_model.game, no_refresh=True )
-        if gamepage is not None:
+        if gamepage == self.OVER_QUOTA_ERROR:
+            self.update_cache_gamepage( game, None )
+        elif gamepage is not None:
             for d in gamepage:
                 if d['category'] == gameinfo['category']:
                     d['bk_runner'] = gameinfo['bk_runner']

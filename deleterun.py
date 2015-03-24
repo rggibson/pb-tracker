@@ -22,6 +22,10 @@ class DeleteRun( runhandler.RunHandler ):
 
         # Get the run
         run = self.get_run_by_id( run_id )
+        if run == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html", user=user )
+            return
         if( not run or 
             ( not user.is_mod and run.username != user.username ) ):
             self.error( 404 )
@@ -56,6 +60,10 @@ class DeleteRun( runhandler.RunHandler ):
             runner = user
         else:
             runner = self.get_runner( util.get_code( run.username ) )
+            if runner == self.OVER_QUOTA_ERROR:
+                self.error( 403 )
+                self.render( "403.html", user=user )
+                return
 
         # Delete the run
         run.delete( )
@@ -71,8 +79,12 @@ class DeleteRun( runhandler.RunHandler ):
         if num_runs == 0:
             delta_num_pbs = -1
         self.update_runner( runner, delta_num_pbs )
-        self.update_games_delete( self.get_game_model( 
-                util.get_code( old_run['game'] ) ), delta_num_pbs )
+        game_model = self.get_game_model( util.get_code( old_run['game'] ) )
+        if game_model == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html", user=user )
+            return        
+        self.update_games_delete( game_model, delta_num_pbs )
 
         # Must update runinfo before pblist and gamepage because pblist and
         # gamepage rely on accurate runinfo
@@ -87,7 +99,9 @@ class DeleteRun( runhandler.RunHandler ):
         # Update runlist for runner in memcache
         runlist = self.get_runlist_for_runner( runner.username, 
                                                no_refresh=True )
-        if runlist:
+        if runlist == self.OVER_QUOTA_ERROR:
+            self.update_cache_runlist_for_runner( runner.username, None )
+        elif runlist is not None:
             for i, run in enumerate( runlist ):
                 if run[ 'run_id' ] == run_id:
                     del runlist[ i ]
@@ -97,7 +111,9 @@ class DeleteRun( runhandler.RunHandler ):
 
         # Update last run
         last_run = self.get_last_run( runner.username, no_refresh=True )
-        if last_run is not None and last_run.key( ).id( ) == long( run_id ):
+        if last_run == self.OVER_QUOTA_ERROR:
+            self.update_cache_last_run( runner.username, None )
+        elif last_run is not None and last_run.key( ).id( ) == long( run_id ):
             self.update_cache_last_run( runner.username, None )
 
         # Done with deletion

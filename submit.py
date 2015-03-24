@@ -44,12 +44,20 @@ class Submit( runhandler.RunHandler ):
             self.error( 404 )
             self.render( "404.html", user=user )
             return
+        if game_model == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html", user=user )
+            return        
 
         # Are we editing an existing run?
         run_id = self.request.get( 'edit' )
         if run_id:
             # Grab the run to edit
             run = self.get_run_by_id( run_id )
+            if run == self.OVER_QUOTA_ERROR:
+                self.error( 403 )
+                self.render( "403.html", user=user )
+                return
             if not run or ( not user.is_mod 
                             and user.username != run.username ):
                 self.error( 404 )
@@ -118,6 +126,11 @@ class Submit( runhandler.RunHandler ):
         elif game_model is None:
             params['game_error'] = ( "That's weird, we could not find any "
                                      + "records for that game" )
+            valid = False
+        elif game_model == self.OVER_QUOTA_ERROR:
+            params['game_error'] = ( "PB Tracker is currently over its quota"
+                                     + " limit for the day. Please try again "
+                                     + "tomorrow." )
             valid = False
         else:
             game = game_model.game

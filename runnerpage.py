@@ -35,13 +35,21 @@ class RunnerPage( handler.Handler ):
             self.error( 404 )
             self.render( "404.html", user=user )
             return
+        if runner == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            if self.format == 'html':
+                self.render( "403.html", user=user )
+            return
         username = runner.username
         gravatar = util.get_gravatar_url( runner.gravatar, size=120 )
 
         if q == 'view-all':
             # List all runs for this runner
             runlist = self.get_runlist_for_runner( username )
-            if self.format == 'html':
+            if runlist == self.OVER_QUOTA_ERROR:
+                self.error( 403 )
+                self.render( "403.html", user=user )
+            elif self.format == 'html':
                 self.render( "listruns.html", user=user, runner=runner,
                              username_code=username_code, runlist=runlist,
                              gravatar=gravatar )
@@ -50,6 +58,10 @@ class RunnerPage( handler.Handler ):
         else:
             # By default, list pbs for this runner
             pblist = self.get_pblist( username )
+            if pblist == self.OVER_QUOTA_ERROR:
+                self.error( 403 )
+                self.render( "403.html", user=user )
+                return
             # We are also going to list the best known times for each game.
             # Let's gather those times here and add them to the pblist info.
             for pb in pblist:
@@ -57,6 +69,10 @@ class RunnerPage( handler.Handler ):
                 if game_model is None:
                     logging.error( "No game_model for game " + pb['game'] )
                     continue
+                if game_model == self.OVER_QUOTA_ERROR:
+                    self.error( 403 )
+                    self.render( "403.html", user=user )
+                    return
                 gameinfolist = json.loads( game_model.info )
                 for runinfo in pb['infolist']:
                     # Find the matching gameinfo

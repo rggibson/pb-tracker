@@ -13,8 +13,10 @@ class GameList( handler.Handler ):
             user = None
 
         gamelist = self.get_gamelist( )
-
-        if self.format == 'html':
+        if gamelist == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html", user=user )
+        elif self.format == 'html':
             self.render( "games.html", user=user, gamelist=gamelist )
         elif self.format == 'json':
             self.render_json( gamelist )

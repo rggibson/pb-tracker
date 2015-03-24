@@ -15,6 +15,7 @@ import games
 from operator import itemgetter
 from google.appengine.ext import db
 from google.appengine.api import memcache
+from google.appengine.runtime import apiproxy_errors
 
 class ChangeCategories( runhandler.RunHandler ):
     def get( self ):
@@ -36,7 +37,7 @@ class ChangeCategories( runhandler.RunHandler ):
 
         params = dict( user=user,
                        categories=self.get_categories( ) )
-        if params['categories'] is None:
+        if params['categories'] == self.OVER_QUOTA_ERROR:
             self.error( 403 )
             self.render( "403.html", user=user )
             return
@@ -76,6 +77,10 @@ class ChangeCategories( runhandler.RunHandler ):
         if not new_game_code:
             params['new_game_error'] = "New game cannot be blank"
             valid = False
+        if new_game_model == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html", user=user )
+            return
         elif new_game_model is not None and new_game != new_game_model.game:
             params['new_game_error'] = ( "New game already exists under [" 
                                          + new_game_model.game 
@@ -141,6 +146,10 @@ class ChangeCategories( runhandler.RunHandler ):
             old_game_model = params['new_game_model']
         else:
             old_game_model = self.get_game_model( old_game_code )
+        if old_game_model == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html" )
+            return
         if old_game_model is None:
             return "Did not find game [" + params['old_game'] + "]"
 
@@ -203,33 +212,42 @@ class ChangeCategories( runhandler.RunHandler ):
             params['new_game_model'].info = json.dumps( newgameinfolist )
             res += 'Updated bkt<br>'
 
+        if not memcache.flush_all( ):
+            res += "Failed to flush memcache<br>"
+
         # Update num_pbs for old game, new game
         res += ( 'Previous num_pbs for old game, category = ' 
                  + str( old_game_model.num_pbs ) + '<br>' )
         res += ( 'Previous num_pbs for new game, category = ' 
                  + str( params['new_game_model'].num_pbs ) + '<br>' )
-        q = db.Query( runs.Runs, projection=['username'], distinct=True )
-        q.ancestor( runs.key() )
-        q.filter( 'game =', params['old_game'] )
-        q.filter( 'category =', params['old_category'] )
-        for run in q.run( limit=1000 ):
-            old_game_model.num_pbs -= 1
-            q2 = db.Query( runs.Runs )
-            q2.ancestor( runs.key() )
-            q2.filter( 'game =', params['new_game'] )
-            q2.filter( 'category =', params['new_category'] )
-            q2.filter( 'username =', run.username )
-            num_runs = q2.count( limit=1 )
-            if num_runs <= 0:
-                params['new_game_model'].num_pbs += 1
-            else:
-                # Need to decrement runner's num_pbs
-                runner = self.get_runner( util.get_code( run.username ) )
-                runner.num_pbs -= 1
-                runner.put( )
-                res += ( "Updated " + run.username + " num_pbs from "
-                         + str( runner.num_pbs + 1 ) + " to " 
-                         + str( runner.num_pbs ) + "<br>" )
+        try:
+            q = db.Query( runs.Runs, projection=['username'], distinct=True )
+            q.ancestor( runs.key() )
+            q.filter( 'game =', params['old_game'] )
+            q.filter( 'category =', params['old_category'] )
+            for run in q.run( limit=1000 ):
+                old_game_model.num_pbs -= 1
+                q2 = db.Query( runs.Runs )
+                q2.ancestor( runs.key() )
+                q2.filter( 'game =', params['new_game'] )
+                q2.filter( 'category =', params['new_category'] )
+                q2.filter( 'username =', run.username )
+                num_runs = q2.count( limit=1 )
+                if num_runs <= 0:
+                    params['new_game_model'].num_pbs += 1
+                else:
+                    # Need to decrement runner's num_pbs
+                    runner = self.get_runner( util.get_code( run.username ) )
+                    if runner == self.OVER_QUOTA_ERROR:
+                        return 'Over quota error'
+                    runner.num_pbs -= 1
+                    runner.put( )
+                    res += ( "Updated " + run.username + " num_pbs from "
+                             + str( runner.num_pbs + 1 ) + " to " 
+                             + str( runner.num_pbs ) + "<br>" )
+        except apiproxy_errors.OverQuotaError, msg:
+            logging.error( msg )
+            return "Ran out of quota"
                 
         res += ( 'Updated num_pbs for old game, category = ' 
                  + str( old_game_model.num_pbs ) + '<br>' )
@@ -243,20 +261,21 @@ class ChangeCategories( runhandler.RunHandler ):
 
         # Change the runs
         res += "<br>Changed runs:<br>"
-        q = db.Query( runs.Runs )
-        q.ancestor( runs.key() )
-        q.filter( 'game =', params['old_game'] )
-        q.filter( 'category =', params['old_category'] )
-        for run in q.run( limit = 10000 ):
-            # Update the run
-            run.game = params['new_game']
-            run.category = params['new_category']
-            run.put( )
-            res += ( 'Runner=' + run.username + ' time=' 
-                     + util.seconds_to_timestr( run.seconds ) + '<br>' )
-
-        if not memcache.flush_all( ):
-            res += "Failed to flush memcache<br>"
+        try:
+            q = db.Query( runs.Runs )
+            q.ancestor( runs.key() )
+            q.filter( 'game =', params['old_game'] )
+            q.filter( 'category =', params['old_category'] )
+            for run in q.run( limit = 10000 ):
+                # Update the run
+                run.game = params['new_game']
+                run.category = params['new_category']
+                run.put( )
+                res += ( 'Runner=' + run.username + ' time=' 
+                         + util.seconds_to_timestr( run.seconds ) + '<br>' )
+        except apiproxy_errors.OverQuotaError, msg:
+            logging.error( msg )
+            return "Ran out of quota when changing runs"
 
         # All dun
         return res

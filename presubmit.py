@@ -33,8 +33,11 @@ class PreSubmit( runhandler.RunHandler ):
                     
         # Grab all of the games for autocompleting
         params['games'] = self.get_gamelist( get_num_pbs=False )
-
-        self.render( "presubmit.html", **params )
+        if params['games'] == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html", user=user )
+        else:
+            self.render( "presubmit.html", **params )
 
     def post( self ):
         user = self.get_user( )
@@ -55,6 +58,10 @@ class PreSubmit( runhandler.RunHandler ):
         # Make sure the game doesn't already exist under a similar name
         game_code = util.get_code( game )
         game_model = self.get_game_model( game_code )
+        if game_model == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html", user=user )
+            return        
         if not game_code:
             params['game_error'] = "Game cannot be blank"
             valid = False
@@ -73,7 +80,11 @@ class PreSubmit( runhandler.RunHandler ):
         if not valid:
             # Grab all of the games for autocompleting
             params['games'] = self.get_gamelist( get_num_pbs=False )   
-            self.render( "presubmit.html", **params )
+            if params['games'] == self.OVER_QUOTA_ERROR:
+                self.error( 403 )
+                self.render( "403.html", user=user )
+            else:
+                self.render( "presubmit.html", **params )
             return
 
         if game_model is None:
@@ -87,6 +98,10 @@ class PreSubmit( runhandler.RunHandler ):
             self.redirect( "/submit/" + game_code + '/' )
         else:
             # Grab all of the games for autocompleting
-            params['games'] = self.get_gamelist( get_num_pbs=False )   
-            self.render( "presubmit.html", **params )
+            params['games'] = self.get_gamelist( get_num_pbs=False )
+            if params['games'] == self.OVER_QUOTA_ERROR:
+                self.error( 403 )
+                self.render( "403.html", user=user )
+            else:
+                self.render( "presubmit.html", **params )
             return

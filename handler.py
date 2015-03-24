@@ -95,7 +95,7 @@ class Handler(webapp2.RequestHandler):
                         username_code, parent=runners.key() )
                 except apiproxy_errors.OverQuotaError, msg:
                     logging.error( msg )
-                    return OVER_QUOTA_ERROR
+                    return self.OVER_QUOTA_ERROR
                 return user
 
     # Memcache / Datastore functions
@@ -115,7 +115,7 @@ class Handler(webapp2.RequestHandler):
                                                           parent=runners.key() )
             except apiproxy_errors.OverQuotaError, msg:
                 logging.error( msg )
-                return None
+                return self.OVER_QUOTA_ERROR
             if memcache.set( key, runner ):
                 logging.debug( "Set " + key + " in memcache" )
             else:
@@ -147,7 +147,7 @@ class Handler(webapp2.RequestHandler):
                                                           parent=games.key() )
             except apiproxy_errors.OverQuotaError, msg:
                 logging.error( msg )
-                return None
+                return self.OVER_QUOTA_ERROR
             if memcache.set( key, game_model ):
                 logging.debug( "Set game_model in memcache for game_code " 
                                + game_code )
@@ -190,7 +190,7 @@ class Handler(webapp2.RequestHandler):
                     categories[ str( game_model.game ) ].sort( )
             except apiproxy_errors.OverQuotaError, msg:
                 logging.error( msg )
-                return None
+                return self.OVER_QUOTA_ERROR
             if memcache.set( key, categories ):
                 logging.debug( "Set " + key + " in memcache" )
             else:
@@ -215,7 +215,11 @@ class Handler(webapp2.RequestHandler):
         if run is None:
             # Not in memcache, so get the run from database and store in
             # memcache.
-            run = runs.Runs.get_by_id( long( run_id ), parent=runs.key() )
+            try:
+                run = runs.Runs.get_by_id( long( run_id ), parent=runs.key() )
+            except apiproxy_errors.OverQuotaError, msg:
+                logging.error( msg )
+                return self.OVER_QUOTA_ERROR
             if memcache.set( key, run ):
                 logging.debug( "Set run in memcache for run_id" 
                                + str( run_id ) )
@@ -244,35 +248,40 @@ class Handler(webapp2.RequestHandler):
         runinfo = memcache.get( key )
         if runinfo is None and not no_refresh:
             # Not in memcache, so constrcut the runinfo dictionary
-            q = db.Query( runs.Runs, 
-                          projection=('seconds', 'date', 'video', 'version') )
-            q.ancestor( runs.key() )
-            q.filter('username =', username)
-            q.filter('game =', game)
-            q.filter('category =', category)
-            q.order('-date') # Cut off old runs
             pb_run = None
             avg_seconds = 0
             num_runs = 0
-            for run in q.run( limit = 100000 ):
-                num_runs += 1
-                avg_seconds += ( 1.0 / num_runs ) * ( 
-                    run.seconds - avg_seconds )
-                if( pb_run is None or run.seconds <= pb_run.seconds ):
-                    pb_run = run
+            try:
+                q = db.Query( runs.Runs, 
+                              projection=('seconds', 'date', 'video',
+                                          'version') )
+                q.ancestor( runs.key() )
+                q.filter('username =', username)
+                q.filter('game =', game)
+                q.filter('category =', category)
+                q.order('-date') # Cut off old runs
+                for run in q.run( limit = 100000 ):
+                    num_runs += 1
+                    avg_seconds += ( 1.0 / num_runs ) * ( 
+                        run.seconds - avg_seconds )
+                    if( pb_run is None or run.seconds <= pb_run.seconds ):
+                        pb_run = run
 
-            runinfo = dict( username = username,
-                            username_code = util.get_code( username ),
-                            category = category, 
-                            category_code = util.get_code( category ),
-                            pb_seconds = None,
-                            pb_time = None,
-                            pb_date = None,
-                            num_runs = num_runs,
-                            avg_seconds = avg_seconds,
-                            avg_time = util.seconds_to_timestr( avg_seconds,
-                                                                dec_places=0),
-                            video = None )
+                runinfo = dict( username = username,
+                                username_code = util.get_code( username ),
+                                category = category, 
+                                category_code = util.get_code( category ),
+                                pb_seconds = None,
+                                pb_time = None,
+                                pb_date = None,
+                                num_runs = num_runs,
+                                avg_seconds = avg_seconds,
+                                avg_time = util.seconds_to_timestr(
+                                    avg_seconds, dec_places=0),
+                                video = None )
+            except apiproxy_errors.OverQuotaError, msg:
+                logging.error( msg )
+                return self.OVER_QUOTA_ERROR
             # Set the pb time
             if pb_run:
                 runinfo['pb_seconds'] = pb_run.seconds
@@ -308,29 +317,35 @@ class Handler(webapp2.RequestHandler):
             # 'game_code' and 'infolist'.  The infolist is another list of 
             # dictionaries containing all the info for each pb of the game.
             pblist = [ ]
-            # Use a projection query to get all of the unique game, category
-            # pairs
-            q = db.Query( runs.Runs, projection=('game', 'category'), 
-                          distinct=True )
-            q.ancestor( runs.key() )
-            q.filter( 'username =', username )
-            q.order( 'game' )
-            q.order( 'category' )
-            cur_game = None
-            for run in q.run( limit = 1000 ):
-                if run.game != cur_game:
-                    # New game
-                    pb = dict( game = run.game, 
-                               game_code = util.get_code( run.game ),
-                               num_runs = 0,
-                               infolist = [ ] )
-                    pblist.append( pb )
-                    cur_game = run.game                
+            try:
+                # Use a projection query to get all of the unique game, category
+                # pairs
+                q = db.Query( runs.Runs, projection=('game', 'category'), 
+                              distinct=True )
+                q.ancestor( runs.key() )
+                q.filter( 'username =', username )
+                q.order( 'game' )
+                q.order( 'category' )
+                cur_game = None
+                for run in q.run( limit = 1000 ):
+                    if run.game != cur_game:
+                        # New game
+                        pb = dict( game = run.game, 
+                                   game_code = util.get_code( run.game ),
+                                   num_runs = 0,
+                                   infolist = [ ] )
+                        pblist.append( pb )
+                        cur_game = run.game                
 
-                # Add runinfo to pblist
-                info = self.get_runinfo( username, run.game, run.category )
-                pb['infolist'].append( info )
-                pb['num_runs'] += info['num_runs']
+                    # Add runinfo to pblist
+                    info = self.get_runinfo( username, run.game, run.category )
+                    if info == self.OVER_QUOTA_ERROR:
+                        return self.OVER_QUOTA_ERROR
+                        pb['infolist'].append( info )
+                        pb['num_runs'] += info['num_runs']
+            except apiproxy_errors.OverQuotaError, msg:
+                logging.error( msg )
+                return self.OVER_QUOTA_ERROR
 
             # Sort the categories for a game by num_runs
             for pb in pblist:
@@ -374,39 +389,47 @@ class Handler(webapp2.RequestHandler):
                 logging.error( "Could not create " + key + " due to no "
                                + "game model" )
                 return None
+            if game_model == self.OVER_QUOTA_ERROR:
+                return self.OVER_QUOTA_ERROR
             gameinfolist = json.loads( game_model.info )
 
-            # Use a projection query to get all of the unique 
-            # username, category pairs
-            q = db.Query( runs.Runs, projection=('username', 'category'), 
-                          distinct=True )
-            q.ancestor( runs.key() )
-            q.filter( 'game =', game )
-            q.order( 'category' )
-            cur_category = None
-            for run in q.run( limit = 1000 ):
-                if run.category != cur_category:
-                    # New category
-                    d = dict( category=run.category, 
-                              category_code=util.get_code( run.category ), 
-                              infolist=[ ] )
-                    gamepage.append( d )
-                    cur_category = run.category
-                    # Check for a best known time for this category
-                    for gameinfo in gameinfolist:
-                        if gameinfo['category'] == run.category:
-                            d['bk_runner'] = gameinfo.get( 'bk_runner' )
-                            d['bk_time'] = util.seconds_to_timestr(
-                                gameinfo.get( 'bk_seconds' ) )
-                            d['bk_date'] = util.datestr_to_date( 
-                                gameinfo.get( 'bk_datestr' ) )[ 0 ]
-                            d['bk_video'] = gameinfo.get( 'bk_video' )
-                            break
+            try:
+                # Use a projection query to get all of the unique 
+                # username, category pairs
+                q = db.Query( runs.Runs, projection=('username', 'category'), 
+                              distinct=True )
+                q.ancestor( runs.key() )
+                q.filter( 'game =', game )
+                q.order( 'category' )
+                cur_category = None
+                for run in q.run( limit = 1000 ):
+                    if run.category != cur_category:
+                        # New category
+                        d = dict( category=run.category, 
+                                  category_code=util.get_code( run.category ), 
+                                  infolist=[ ] )
+                        gamepage.append( d )
+                        cur_category = run.category
+                        # Check for a best known time for this category
+                        for gameinfo in gameinfolist:
+                            if gameinfo['category'] == run.category:
+                                d['bk_runner'] = gameinfo.get( 'bk_runner' )
+                                d['bk_time'] = util.seconds_to_timestr(
+                                    gameinfo.get( 'bk_seconds' ) )
+                                d['bk_date'] = util.datestr_to_date( 
+                                    gameinfo.get( 'bk_datestr' ) )[ 0 ]
+                                d['bk_video'] = gameinfo.get( 'bk_video' )
+                                break
 
-                # Add the info to the gamepage
-                info = self.get_runinfo( run.username, game, run.category )
-                d['infolist'].append( info )
-
+                    # Add the info to the gamepage
+                    info = self.get_runinfo( run.username, game, run.category )
+                    if info == self.OVER_QUOTA_ERROR:
+                        return self.OVER_QUOTA_ERROR
+                    d['infolist'].append( info )
+            except apiproxy_errors.OverQuotaError, msg:
+                logging.error( msg )
+                return self.OVER_QUOTA_ERROR
+                
             # For each category, sort the runlist by seconds, breaking ties
             # by date
             for runlist in gamepage:
@@ -449,21 +472,26 @@ class Handler(webapp2.RequestHandler):
             projection = [ 'game' ]
             if get_num_pbs:
                 projection.append( 'num_pbs' )
-            q = db.Query( games.Games, projection=projection )
-            q.ancestor( games.key() )
-            if get_num_pbs:
-                q.order( '-num_pbs' )
-            q.order( 'game' )
-            for game_model in q.run( limit=10000 ):
-                if get_num_pbs and game_model.num_pbs <= 0:
-                    break
+            try:
+                q = db.Query( games.Games, projection=projection )
+                q.ancestor( games.key() )
                 if get_num_pbs:
-                    d = dict( game = game_model.game,
-                              game_code = util.get_code( game_model.game ),
-                              num_pbs = game_model.num_pbs )
-                    gamelist.append( d )
-                else:
-                    gamelist.append( str( game_model.game ) )
+                    q.order( '-num_pbs' )
+                q.order( 'game' )
+                for game_model in q.run( limit=10000 ):
+                    if get_num_pbs and game_model.num_pbs <= 0:
+                        break
+                    if get_num_pbs:
+                        d = dict( game = game_model.game,
+                                  game_code = util.get_code( game_model.game ),
+                                  num_pbs = game_model.num_pbs )
+                        gamelist.append( d )
+                    else:
+                        gamelist.append( str( game_model.game ) )
+            except apiproxy_errors.OverQuotaError, msg:
+                logging.error( msg )
+                return self.OVER_QUOTA_ERROR
+
             if memcache.set( key, gamelist ):
                 logging.debug( "Set " + key + " in memcache" )
             else:
@@ -490,18 +518,23 @@ class Handler(webapp2.RequestHandler):
             # dict gives the username and number of pbs for that user.
             # The list is sorted by numbers of pbs for the user.
             runnerlist = [ ]
-            q = db.Query( runners.Runners, 
-                          projection=('username', 'gravatar', 'num_pbs') )
-            q.ancestor( runners.key() )
-            q.order( '-num_pbs' )
-            q.order( 'username' )
-            for runner in q.run( limit=100000 ):
-                runnerlist.append( 
-                    dict( username = runner.username, 
-                          username_code = util.get_code( runner.username ),
-                          num_pbs = runner.num_pbs,
-                          gravatar_url = util.get_gravatar_url( 
-                              runner.gravatar ) ) )
+            try:
+                q = db.Query( runners.Runners, 
+                              projection=('username', 'gravatar', 'num_pbs') )
+                q.ancestor( runners.key() )
+                q.order( '-num_pbs' )
+                q.order( 'username' )
+                for runner in q.run( limit=100000 ):
+                    runnerlist.append( 
+                        dict( username = runner.username, 
+                              username_code = util.get_code( runner.username ),
+                              num_pbs = runner.num_pbs,
+                              gravatar_url = util.get_gravatar_url( 
+                                  runner.gravatar ) ) )
+            except apiproxy_errors.OverQuotaError, msg:
+                logging.error( msg )
+                return self.OVER_QUOTA_ERROR
+
             if memcache.set( key, runnerlist ):
                 logging.debug( "Set runnerlist in memcache" )
             else:
@@ -526,25 +559,29 @@ class Handler(webapp2.RequestHandler):
         if runlist is None and not no_refresh:
             # Not in memcache, so construct the runlist and store in memcache.
             runlist = [ ]
-            q = runs.Runs.all( )
-            q.ancestor( runs.key() )
-            q.filter( 'username =', username )
-            q.order( '-date' )
-            q.order( '-datetime_created' )
-            for run in q.run( limit = 1000 ):
-                runlist.append( dict( run_id = str( run.key().id() ),
-                                      game = run.game,
-                                      game_code = util.get_code( run.game ),
-                                      category = run.category,
-                                      category_code = util.get_code( 
-                            run.category ),
-                                      time = util.
-                                      seconds_to_timestr( run.seconds ),
-                                      date = run.date,
-                                      datetime_created = run.datetime_created,
-                                      video = run.video,
-                                      version = run.version,
-                                      notes = run.notes ) )
+            try:
+                q = runs.Runs.all( )
+                q.ancestor( runs.key() )
+                q.filter( 'username =', username )
+                q.order( '-date' )
+                q.order( '-datetime_created' )
+                for run in q.run( limit = 1000 ):
+                    runlist.append( dict( run_id = str( run.key().id() ),
+                                          game = run.game,
+                                          game_code = util.get_code( run.game ),
+                                          category = run.category,
+                                          category_code = util.get_code( 
+                                              run.category ),
+                                          time = util.
+                                          seconds_to_timestr( run.seconds ),
+                                          date = run.date,
+                                          datetime_created = run.datetime_created,
+                                          video = run.video,
+                                          version = run.version,
+                                          notes = run.notes ) )
+            except apiproxy_errors.OverQuotaError, msg:
+                logging.error( msg )
+                return self.OVER_QUOTA_ERROR
 
             if memcache.set( key, runlist ):
                 logging.debug( "Set " + key + " in memcache" )
@@ -569,15 +606,19 @@ class Handler(webapp2.RequestHandler):
         user_has_run = memcache.get( key )
         if user_has_run is None and not no_refresh:
             # Not in memcache, so check datastore
-            q = db.Query( runs.Runs, keys_only=True )
-            q.ancestor( runs.key() )
-            q.filter( 'username =', username )
-            q.filter( 'game =', game )
-            num = q.count( limit=1 )
-            if num > 0:
-                user_has_run = True
-            else:
-                user_has_run = False
+            try:
+                q = db.Query( runs.Runs, keys_only=True )
+                q.ancestor( runs.key() )
+                q.filter( 'username =', username )
+                q.filter( 'game =', game )
+                num = q.count( limit=1 )
+                if num > 0:
+                    user_has_run = True
+                else:
+                    user_has_run = False
+            except apiproxy_errors.OverQuotaError, msg:
+                logging.error( msg )
+                return self.OVER_QUOTA_ERROR
             if memcache.set( key, user_has_run ):
                 logging.debug( "Set " + key + " in memcache" )
             else:
@@ -601,11 +642,16 @@ class Handler(webapp2.RequestHandler):
         run = memcache.get( key )
         if run is None and not no_refresh:
             # Not in memcache, so check datastore
-            q = db.Query( runs.Runs )
-            q.ancestor( runs.key() )
-            q.filter( 'username =', username )
-            q.order( '-datetime_created' )
-            run = q.get( )
+            try:
+                q = db.Query( runs.Runs )
+                q.ancestor( runs.key() )
+                q.filter( 'username =', username )
+                q.order( '-datetime_created' )
+                run = q.get( )
+            except apiproxy_errors.OverQuotaError, msg:
+                logging.error( msg )
+                return self.OVER_QUOTA_ERROR
+
             if memcache.set( key, run ):
                 logging.debug( "Set " + key + " in memcache" )
             else:

@@ -42,7 +42,10 @@ class Signup( handler.Handler ):
             # Mod is editing a user's profile, possibly his or her own
             username_code = return_url.split( '/' )[ -1 ]
             user = self.get_runner( username_code )
-            
+            if user == self.OVER_QUOTA_ERROR:
+                self.error( 403 )
+                self.render( "403.html" )
+                return
         if user is not None:
             # Editing profile
             params = dict( user=user,
@@ -99,6 +102,10 @@ class Signup( handler.Handler ):
             # Mod is editing a user's profile, possibly his or her own
             username_code = return_url.split( '/' )[ -1 ]
             user = self.get_runner( username_code )
+            if user == self.OVER_QUOTA_ERROR:
+                self.error( 403 )
+                self.render( "403.html" )
+                return
 
         params = dict( user = user,
                        username = username,
@@ -122,6 +129,10 @@ class Signup( handler.Handler ):
         elif user is None:
             # Check if username already exists
             runner = self.get_runner( username_code )
+            if runner == self.OVER_QUOTA_ERROR:
+                self.error( 403 )
+                self.render( "403.html", user=user )
+                return
             if runner is not None:
                 params['user_error'] = "That user already exists."
                 valid = False
@@ -180,7 +191,9 @@ class Signup( handler.Handler ):
             # those runners with 0 pbs.  The runner will be sorted properly
             # if the memcache gets flushed, which is good enough
             runnerlist = self.get_runnerlist( no_refresh=True )
-            if runnerlist is not None:
+            if runnerlist == self.OVER_QUOTA_ERROR:
+                self.update_cache_runnerlist( None )
+            elif runnerlist is not None:
                 runnerlist.append( dict( username = username, 
                                          username_code = username_code,
                                          num_pbs = 0,
@@ -215,7 +228,9 @@ class Signup( handler.Handler ):
             # Update runnerlist in memcache if gravatar updated
             if gravatar != '<private email>':
                 runnerlist = self.get_runnerlist( no_refresh=True )
-                if runnerlist is not None:
+                if runnerlist == self.OVER_QUOTA_ERROR:
+                    self.update_cache_runnerlist( None )
+                elif runnerlist is not None:
                     for runnerdict in runnerlist:
                         if runnerdict['username'] == user.username:
                             runnerdict['gravatar_url'] = util.get_gravatar_url(

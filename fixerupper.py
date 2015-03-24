@@ -18,6 +18,7 @@ import json
 import logging
 
 from google.appengine.ext import db
+from google.appengine.runtime import apiproxy_errors
 
 class FixerUpper( handler.Handler ):
     def get( self ):
@@ -37,63 +38,19 @@ class FixerUpper( handler.Handler ):
             return
 
         # Convert seconds to float
-        q = db.Query( runs.Runs )
-        q.ancestor( runs.key() )
         count = 0
-        for run in q.run( limit=1000000 ):
-            count += 1
-            if not isinstance( run.seconds, float ):
-                try:
+        try:
+            q = db.Query( runs.Runs )
+            q.ancestor( runs.key() )
+            for run in q.run( limit=1000000 ):
+                count += 1
+                if not isinstance( run.seconds, float ):
                     run.seconds = float( run.seconds )
                     run.put( )
-                except apiproxy_errors.OverQuotaError, message:
-                    logging.error( message )
-                    self.write( "Over quota error caught after "
-                                + str( count ) + "runs:<br>" + message )
-                    return
-
-        # Mark myself as a moderator
-        # runner = self.get_runner( 'rggibson' )
-        # runner.is_mod = True
-        # runner.put( )
-        # self.update_cache_runner( 'rggibson', runner )
-
-        # # Recalculate num_pbs for every game
-        # q = db.Query( games.Games )
-        # q.ancestor( games.key() )
-        # for game_model in q.run( limit=100000 ):
-        #     q2 = db.Query( runs.Runs, projection=('username', 'category'),
-        #                    distinct=True )
-        #     q2.ancestor( runs.key() )
-        #     q2.filter( 'game =', game_model.game )
-        #     num_pbs = q2.count( limit=1000 )
-        #     if game_model.num_pbs != num_pbs:
-        #         self.write( game_model.game + ": " + str( game_model.num_pbs )
-        #                     + " -> " + str( num_pbs ) + "<br>" )
-        #         game_model.num_pbs = num_pbs
-        #         game_model.put( )
-        #         # Update memcache
-        #         self.update_cache_game_model( util.get_code( game_model.game ),
-        #                                       game_model )
-        #         self.update_cache_gamelist( None )
-
-        # # Recalculate num_pbs for every runner
-        # q = db.Query( runners.Runners )
-        # q.ancestor( runners.key() )
-        # for runner in q.run( limit=100000 ):
-        #     q2 = db.Query( runs.Runs, projection=('game', 'category'),
-        #                    distinct=True )
-        #     q2.ancestor( runs.key() )
-        #     q2.filter( 'username =', runner.username )
-        #     num_pbs = q2.count( limit=1000 )
-        #     if num_pbs == 0 or runner.num_pbs != num_pbs:
-        #         self.write( runner.username + ": " + str( runner.num_pbs )
-        #                     + " -> " + str( num_pbs ) + "<br>" )
-        #         runner.num_pbs = num_pbs
-        #         runner.put( )
-        #         # Update memcache
-        #         self.update_cache_runner( util.get_code( runner.username ),
-        #                                   runner )
-        #         self.update_cache_runnerlist( None )
+        except apiproxy_errors.OverQuotaError, message:
+            logging.error( message )
+            self.write( "Over quota error caught after "
+                        + str( count ) + "runs:<br>" + message )
+            return
 
         self.write( "FixerUpper complete!<br>" )

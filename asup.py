@@ -55,6 +55,11 @@ class Asup( runhandler.RunHandler ):
         # Make sure the user is a mod
         username = body.get( 'username' )
         user = self.get_runner( util.get_code( username ) )
+        if user == self.OVER_QUOTA_ERROR:
+            return False, self.get_fail_response( "PB Tracker is currently "
+                                                  + "experiencing an over "
+                                                  + "quota limit down time "
+                                                  + "period." )
         if not user.is_mod:
             body_type = body.get( 'type' )
             return False, self.get_fail_response( "You must be a mod to use ["
@@ -122,7 +127,7 @@ class Asup( runhandler.RunHandler ):
             # Note that this is a different type of gamelist than the one
             # generated in games.py
             categories = self.get_categories( )
-            if categories is None:
+            if categories == self.OVER_QUOTA_ERROR:
                 return self.get_fail_response( "PB Tracker is currently "
                                                + "experiencing an over "
                                                + "quota downtime period." )
@@ -138,7 +143,7 @@ class Asup( runhandler.RunHandler ):
                 return response
 
             categories = self.get_categories( )
-            if categories is None:
+            if categories == self.OVER_QUOTA_ERROR:
                 return self.get_fail_response( "PB Tracker is currently "
                                                + "experiencing an over "
                                                + "quota downtime period." )
@@ -161,6 +166,7 @@ class Asup( runhandler.RunHandler ):
 #            elif game_model is None:
 #                return self.get_fail_response( 'Unknown game [' 
 #                                               + game_code + '].' )
+#            TODO: elif game_model == self.OVER_QUOTA_ERROR:
 #            else:
 #                d = dict( )
 #                gameinfolist = json.loads( game_model.info )
@@ -193,6 +199,10 @@ class Asup( runhandler.RunHandler ):
             if game_model is None:
                 return self.get_fail_response( 'Unknown game [' 
                                                + game_code + '].' )
+            if game_model == self.OVER_QUOTA_ERROR:
+                return self.get_fail_response( 'PB Tracker is currently over '
+                                               + "quota. Please try again "
+                                               + "later." )
             if category_code is None:
                 return self.get_fail_response( 'No category specified' )
             gameinfolist = json.loads( game_model.info )
@@ -224,6 +234,12 @@ class Asup( runhandler.RunHandler ):
 
             # Figure out current date in user's local timezone
             user = self.get_runner( util.get_code( username ) )
+            if user == self.OVER_QUOTA_ERROR:
+                return False, self.get_fail_response( 
+                    "PB Tracker is currently "
+                    + "experiencing an over "
+                    + "quota limit down time "
+                    + "period." )
             if user.timezone:
                 tz = pytz.timezone( user.timezone )
                 local_today = datetime.now( pytz.utc ).astimezone( tz )

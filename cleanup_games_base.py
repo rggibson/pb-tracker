@@ -17,12 +17,13 @@ import json
 import logging
 
 from google.appengine.ext import db
+from google.appengine.runtime import apiproxy_errors
 
 class CleanupGamesBase( handler.Handler ):
     def cleanup_games( self ):
         # Grab all of the categories, indexed by game
         categories = self.get_categories( )
-        if categories is None:
+        if categories == self.OVER_QUOTA_ERROR:
             return
         categories_modified = False
 
@@ -31,6 +32,8 @@ class CleanupGamesBase( handler.Handler ):
             # Grab the game model
             game_code = util.get_code( game )
             game_model = self.get_game_model( game_code )
+            if game_model == self.OVER_QUOTA_ERROR:
+                return            
             gameinfolist = json.loads( game_model.info )
             game_model_modified = False
             glist = [ ( i, gameinfo ) 
@@ -44,25 +47,29 @@ class CleanupGamesBase( handler.Handler ):
                     and game != "Mega Man 9" ):
                     continue
                 # Check if there is a run for this game and category
-                q = db.Query( runs.Runs, keys_only=True )
-                q.ancestor( runs.key() )
-                q.filter( 'game =', game )
-                q.filter( 'category =', gameinfo['category'] )
-                num_runs = q.count( limit=1 )
-                if num_runs == 0:
-                    # Remove this category
-                    del gameinfolist[ i ]
-                    logging.info( "Removed " + gameinfo['category'] 
-                                   + " from " + game )
-                    game_model_modified = True
-                    # Remove this category in memcache too
-                    for j, category in enumerate( categorylist ):
-                        if category == gameinfo['category']:
-                            del categorylist[ j ]
-                            categories_modified = True
-                            break
-                    else:
-                        logging.error( "ERROR: Could not find in categories" )
+                try:
+                    q = db.Query( runs.Runs, keys_only=True )
+                    q.ancestor( runs.key() )
+                    q.filter( 'game =', game )
+                    q.filter( 'category =', gameinfo['category'] )
+                    num_runs = q.count( limit=1 )
+                    if num_runs == 0:
+                        # Remove this category
+                        del gameinfolist[ i ]
+                        logging.info( "Removed " + gameinfo['category'] 
+                                      + " from " + game )
+                        game_model_modified = True
+                        # Remove this category in memcache too
+                        for j, category in enumerate( categorylist ):
+                            if category == gameinfo['category']:
+                                del categorylist[ j ]
+                                categories_modified = True
+                                break
+                        else:
+                            logging.error( "ERROR: Could not find in "
+                                           + "categories" )
+                except apiproxy_errors.OverQuotaError, msg:
+                    logging.error( msg )
             # Remove the game if no more categories exist
             if len( gameinfolist ) == 0:
                 game_model.delete( )
@@ -81,7 +88,11 @@ class CleanupGamesBase( handler.Handler ):
                 del categories[ game ]
             self.update_cache_categories( categories )
         gamelist = self.get_gamelist( no_refresh=True, get_num_pbs=True )
+        if gamelist == self.OVER_QUOTA_ERROR:
+            gamelist = None
         gamelist_snp = self.get_gamelist( no_refresh=True, get_num_pbs=False )
+        if gamelist_snp == self.OVER_QUOTA_ERROR:
+            gamelist_snp = None
         for game in games_to_delete:
             if gamelist is not None:
                 for i, d in enumerate( gamelist ):

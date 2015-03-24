@@ -17,6 +17,9 @@ class RunnerList( handler.Handler ):
 
         runnerlist = self.get_runnerlist( )
 
+        if runnerlist == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html", user=user )
         if self.format == 'html':
             self.render( "runners.html", user=user, runnerlist=runnerlist )
         elif self.format == 'json':

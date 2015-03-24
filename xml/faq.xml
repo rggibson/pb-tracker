@@ -142,7 +142,7 @@ When sending a pull request, make sure the box art image file name is [game_code
 PB Tracker is hosted on <a href="https://developers.google.com/appengine/?csw=1">Google App Engine (GAE)</a>, a web service that allows web applications to be built and run on Google's infrastructure.
 GAE offers free tier quotas on things like database reads, outgoing bandwidth, and other necessary services to run a web app. 
 PB Tracker currently runs on this free tier and some days, we receive enough traffic so that we hit one or more of these free resource limits. 
-Once one of these limits is hit, some or all of PB Tracker's pages become inaccessible (and likely respond with a "500 Internal Server Error"). 
+Once one of these limits is hit, some or all of PB Tracker's pages become inaccessible. 
 We currently do not ask for donations to increase the quota limits, though we could look into it if there is enough interest in keeping the site functional every day around the clock.
 In addition, we have not looked into adding advertisements or sponsorship to PB Tracker, but only because we have not found the time to do so.
 ]]></content>

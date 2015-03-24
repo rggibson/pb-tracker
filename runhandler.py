@@ -23,15 +23,20 @@ import json
 
 from operator import itemgetter
 from google.appengine.ext import db
+from google.appengine.runtime import apiproxy_errors
 
 class RunHandler( handler.Handler ):
     def num_runs( self, username, game, category, limit ):
-        q = db.Query( runs.Runs, keys_only=True )
-        q.ancestor( runs.key() )
-        q.filter( 'username =', username )
-        q.filter( 'game =', game )
-        q.filter( 'category =', category )
-        return q.count( limit=limit )
+        try:
+            q = db.Query( runs.Runs, keys_only=True )
+            q.ancestor( runs.key() )
+            q.filter( 'username =', username )
+            q.filter( 'game =', game )
+            q.filter( 'category =', category )
+            return q.count( limit=limit )
+        except apiproxy_errors.OverQuotaError, msg:
+            logging.error( msg )
+            return 0
 
     def update_runner( self, runner, delta_num_pbs ):
         if delta_num_pbs != 0:
@@ -74,7 +79,7 @@ class RunHandler( handler.Handler ):
             # Update memcache
             self.update_cache_game_model( game_code, game_model )
             categories = self.get_categories( no_refresh=True )
-            if categories is not None:
+            if categories is not None and categories != self.OVER_QUOTA_ERROR:
                 categories[ str( game ) ] = [ str( category ) ]
                 self.update_cache_categories( categories )
 
@@ -102,7 +107,7 @@ class RunHandler( handler.Handler ):
             # Update memcache
             self.update_cache_game_model( game_code, game_model )
             categories = self.get_categories( no_refresh=True )
-            if categories is not None:
+            if categories is not None and categories != self.OVER_QUOTA_ERROR:
                 categories[ str( game ) ].append( str( category ) )
                 categories[ str( game ) ].sort( )
                 self.update_cache_categories( categories )
@@ -152,6 +157,9 @@ class RunHandler( handler.Handler ):
                                     no_refresh=True )
         if runinfo is None:
             return
+        if runinfo == self.OVER_QUOTA_ERROR:
+            self.update_cache_runinfo( user.username, game, category, None )
+            return
 
         runinfo['num_runs'] += 1
         runinfo['avg_seconds'] += ( ( 1.0 / runinfo['num_runs'] ) 
@@ -174,6 +182,9 @@ class RunHandler( handler.Handler ):
                                     old_run['category'], no_refresh=True )
         if runinfo is None:
             return
+        if runinfo == self.OVER_QUOTA_ERROR:
+            self.update_cache_runinfo( user.username, game, category, None )
+            return
 
         if runinfo['num_runs'] <= 0:
             logging.error( "Failed to update runinfo due to nonpositive "
@@ -192,25 +203,32 @@ class RunHandler( handler.Handler ):
                 runinfo['avg_seconds'] )
             if( runinfo['pb_seconds'] == old_run['seconds'] ):
                 # We need to replace the pb too
-                q = db.Query( runs.Runs, projection=('seconds', 'date', 
-                                                     'video', 'version') )
-                q.ancestor( runs.key() )
-                q.filter( 'username =', user.username )
-                q.filter( 'game =', old_run['game'] )
-                q.filter( 'category =', old_run['category'] )
-                q.order( 'seconds' )
-                q.order( 'date' )
-                pb_run = q.get( )
-                if pb_run:
-                    runinfo['pb_seconds'] = pb_run.seconds
-                    runinfo['pb_time'] = util.seconds_to_timestr( 
-                        pb_run.seconds )
-                    runinfo['pb_date'] = pb_run.date
-                    runinfo['video'] = pb_run.video
-                    runinfo['version'] = pb_run.version
-                else:
-                    logging.error( "Unable to update runinfo due to no new "
-                                   + "pb found" )
+                try:
+                    q = db.Query( runs.Runs, projection=('seconds', 'date', 
+                                                         'video', 'version') )
+                    q.ancestor( runs.key() )
+                    q.filter( 'username =', user.username )
+                    q.filter( 'game =', old_run['game'] )
+                    q.filter( 'category =', old_run['category'] )
+                    q.order( 'seconds' )
+                    q.order( 'date' )
+                    pb_run = q.get( )
+                    if pb_run:
+                        runinfo['pb_seconds'] = pb_run.seconds
+                        runinfo['pb_time'] = util.seconds_to_timestr( 
+                            pb_run.seconds )
+                        runinfo['pb_date'] = pb_run.date
+                        runinfo['video'] = pb_run.video
+                        runinfo['version'] = pb_run.version
+                    else:
+                        logging.error( "Unable to update runinfo due to no "
+                                       + "new pb found" )
+                        self.update_cache_runinfo( user.username,
+                                                   old_run['game'],
+                                                   old_run['category'], None )
+                        return
+                except apiproxy_errors.OverQuotaError, msg:
+                    logging.error( msg )
                     self.update_cache_runinfo( user.username, old_run['game'],
                                                old_run['category'], None )
                     return
@@ -248,6 +266,9 @@ class RunHandler( handler.Handler ):
         pblist = self.get_pblist( user.username, no_refresh=True )
         if pblist is None:
             return
+        if pblist == self.OVER_QUOTA_ERROR:
+            self.update_cache_pblist( user.username, None )
+            return
 
         for pb in pblist:
             if( pb['game'] == game ):
@@ -258,36 +279,48 @@ class RunHandler( handler.Handler ):
                     if( info['category'] == category ):
                         pb['infolist'][i] = self.get_runinfo( user.username, 
                                                               game, category )
-                        pb['infolist'].sort( key=itemgetter('category') )
-                        pb['infolist'].sort( key=itemgetter('num_runs'),
-                                             reverse=True )
+                        if pb['infolist'][i] == self.OVER_QUOTA_ERROR:
+                            pblist = None
+                        else:
+                            pb['infolist'].sort( key=itemgetter('category') )
+                            pb['infolist'].sort( key=itemgetter('num_runs'),
+                                                 reverse=True )
                         self.update_cache_pblist( user.username, pblist )
                         return
 
                 # User has run this game, but not this category.
                 # Add the run to the pblist and update memcache.
                 runinfo = self.get_runinfo( user.username, game, category )
-                pb['infolist'].append( runinfo )
-                pb['infolist'].sort( key=itemgetter('category') )
-                pb['infolist'].sort( key=itemgetter('num_runs') )
+                if runinfo == self.OVER_QUOTA_ERROR:
+                    pblist = None
+                else:
+                    pb['infolist'].append( runinfo )
+                    pb['infolist'].sort( key=itemgetter('category') )
+                    pb['infolist'].sort( key=itemgetter('num_runs') )
                 self.update_cache_pblist( user.username, pblist )
                 return
 
         # No run for this username, game combination.
         # So, add the run to this username's pblist and update memcache
         runinfo = self.get_runinfo( user.username, game, category )
-        pblist.append( dict( game = game, 
-                             game_code = game_code,
-                             num_runs = 1,
-                             infolist = [ runinfo ] ) )
-        pblist.sort( key=itemgetter('game') )
-        pblist.sort( key=itemgetter('num_runs'), reverse=True )
+        if runinfo == self.OVER_QUOTA_ERROR:
+            pblist = None
+        else:
+            pblist.append( dict( game = game, 
+                                 game_code = game_code,
+                                 num_runs = 1,
+                                 infolist = [ runinfo ] ) )
+            pblist.sort( key=itemgetter('game') )
+            pblist.sort( key=itemgetter('num_runs'), reverse=True )
         self.update_cache_pblist( user.username, pblist )
 
     def update_pblist_delete( self, user, old_run ):
         # Update pblist with the removal to the old run
         pblist = self.get_pblist( user.username, no_refresh=True )
         if pblist is None:
+            return
+        if pblist == self.OVER_QUOTA_ERROR:
+            self.update_cache_pblist( user.username, None )
             return
 
         for i, pb in enumerate( pblist ):
@@ -298,6 +331,9 @@ class RunHandler( handler.Handler ):
                         runinfo = self.get_runinfo( user.username, 
                                                     old_run['game'], 
                                                     old_run['category'] )
+                        if runinfo == self.OVER_QUOTA_ERROR:
+                            self.update_cache_pblist( user.username, None )
+                            return
                         if runinfo[ 'num_runs' ] > 0:
                             pb[ 'infolist' ][ j ] = runinfo
                         else:
@@ -331,6 +367,9 @@ class RunHandler( handler.Handler ):
         gamepage = self.get_gamepage( game, no_refresh=True )
         if gamepage is None:
             return
+        if gamepage == self.OVER_QUOTA_ERROR:
+            self.update_cache_gamepage( game, None )
+            return
 
         for d in gamepage:
             if d[ 'category' ] == category:
@@ -345,24 +384,35 @@ class RunHandler( handler.Handler ):
                         # User has run this category before
                         d['infolist'][i] = self.get_runinfo( user.username, 
                                                              game, category )
-                        d['infolist'].sort( key=lambda x: util.get_valid_date(
-                                x['pb_date'] ) )
-                        d['infolist'].sort( key=itemgetter('pb_seconds') )
+                        if d['infolist'][i] == self.OVER_QUOTA_ERROR:
+                            gamepage = None
+                        else:
+                            d['infolist'].sort(
+                                key=lambda x: util.get_valid_date(
+                                    x['pb_date'] ) )
+                            d['infolist'].sort( key=itemgetter('pb_seconds') )
                         self.update_cache_gamepage( game, gamepage )
                         return
                 
                 # Category found, but user has not prev. run this category
                 runinfo = self.get_runinfo( user.username, game, category )
-                d['infolist'].append( runinfo )
-                d['infolist'].sort( key=lambda x: util.get_valid_date(
+                if runinfo == self.OVER_QUOTA_ERROR:
+                    gamepage = None
+                else:
+                    d['infolist'].append( runinfo )
+                    d['infolist'].sort( key=lambda x: util.get_valid_date(
                         x['pb_date'] ) )                
-                d['infolist'].sort( key=itemgetter('pb_seconds') )
-                gamepage.sort( key=lambda x: len(x['infolist']), reverse=True )
+                    d['infolist'].sort( key=itemgetter('pb_seconds') )
+                    gamepage.sort( key=lambda x: len(x['infolist']),
+                                   reverse=True )
                 self.update_cache_gamepage( game, gamepage )
                 return
         
         # This is a new category for this game
         runinfo = self.get_runinfo( user.username, game, category )
+        if runinfo == self.OVER_QUOTA_ERROR:
+            self.update_cache_gamepage( game, gamepage )
+            return
         d = dict( category=category, 
                   category_code=util.get_code( category ),
                   infolist=[runinfo] )
@@ -373,6 +423,9 @@ class RunHandler( handler.Handler ):
             logging.error( "Failed to update gamepage for " + game )
             self.update_cache_gamepage( game, None )
             return
+        if game_model == self.OVER_QUOTA_ERROR:
+            self.update_cache_gamepage( game, None )
+            return        
         gameinfolist = json.loads( game_model.info )
         for gameinfo in gameinfolist:
             if gameinfo['category'] == category:
@@ -391,6 +444,9 @@ class RunHandler( handler.Handler ):
         gamepage = self.get_gamepage( old_run['game'], no_refresh=True )
         if gamepage is None:
             return
+        if gamepage == self.OVER_QUOTA_ERROR:
+            self.update_cache_gamepage( game, None )
+            return        
 
         for j, d in enumerate( gamepage ):
             if d['category'] == old_run['category']:
@@ -399,6 +455,9 @@ class RunHandler( handler.Handler ):
                         new_info = self.get_runinfo( user.username, 
                                                      old_run['game'], 
                                                      old_run['category'] )
+                        if new_info == self.OVER_QUOTA_ERROR:
+                            self.update_cache_gamepage( old_run['game'], None )
+                            return
                         if new_info['num_runs'] <= 0:
                             del d['infolist'][ i ]
                             if len( d['infolist'] ) <= 0:
@@ -431,7 +490,9 @@ class RunHandler( handler.Handler ):
         # Update runlist for runner in memcache
         runlist = self.get_runlist_for_runner( user.username, 
                                                no_refresh=True )
-        if runlist is not None:
+        if runlist == self.OVER_QUOTA_ERROR:
+            self.update_cache_runlist_for_runner( user.username, None )
+        elif runlist is not None:
             runlist.insert( 0, dict( run_id = run_id,
                                      game = game, 
                                      game_code = game_code,
@@ -450,7 +511,9 @@ class RunHandler( handler.Handler ):
     def update_gamelist_snp_put( self, game ):
         # Update gamelist-skip-num-pbs in memcache if necessary
         gamelist_snp = self.get_gamelist( no_refresh=True, get_num_pbs=False )
-        if gamelist_snp is not None:
+        if gamelist_snp == self.OVER_QUOTA_ERROR:
+            self.update_cache_gamelist( None, get_num_pbs=False )
+        elif gamelist_snp is not None:
             if game not in gamelist_snp:
                 # This game wasn't found in the gamelist_snp, so add it
                 gamelist_snp.append( game )
@@ -463,7 +526,9 @@ class RunHandler( handler.Handler ):
 
         # Update gamelist in memcache if necessary
         gamelist = self.get_gamelist( no_refresh=True, get_num_pbs=True )
-        if gamelist is not None:
+        if gamelist == self.OVER_QUOTA_ERROR:
+            self.update_cache_gamelist( None, get_num_pbs=True )
+        elif gamelist is not None:
             found_game = False
             for gamedict in gamelist:
                 if( gamedict['game_code'] == game_code ):
@@ -487,7 +552,9 @@ class RunHandler( handler.Handler ):
     def update_gamelist_delete( self, old_run ):
         # Fix the gamelist with the removal of the old run
         gamelist = self.get_gamelist( no_refresh=True, get_num_pbs=True )
-        if gamelist is not None:
+        if gamelist == self.OVER_QUOTA_ERROR:
+            self.update_cache_gamelist( None, get_num_pbs=True )
+        elif gamelist is not None:
             for i, gamedict in enumerate( gamelist ):
                 if( gamedict[ 'game' ] == old_run[ 'game' ] ):
                     gamedict['num_pbs'] -= 1
@@ -503,7 +570,9 @@ class RunHandler( handler.Handler ):
 
         # Update runnerlist in memcache if necessary
         runnerlist = self.get_runnerlist( no_refresh=True )
-        if runnerlist is not None:
+        if runnerlist == self.OVER_QUOTA_ERROR:
+            self.update_cache_runnerlist( None )
+        elif runnerlist is not None:
             found_runner = False
             for runnerdict in runnerlist:
                 if( runnerdict['username'] == user.username ):
@@ -521,7 +590,9 @@ class RunHandler( handler.Handler ):
     def update_runnerlist_delete( self, user ):
         # Fix the runnerlist with the removal of the old run
         runnerlist = self.get_runnerlist( no_refresh=True )
-        if runnerlist is not None:
+        if runnerlist == self.OVER_QUOTA_ERROR:
+            self.update_cache_runnerlist( None )
+        elif runnerlist is not None:
             for runnerdict in runnerlist:
                 if( runnerdict['username'] == user.username ):
                     runnerdict['num_pbs'] -= 1
@@ -630,6 +701,8 @@ class RunHandler( handler.Handler ):
 
         # Grab the old run, which we will update to be the new run
         new_run = self.get_run_by_id( run_id )
+        if new_run == self.OVER_QUOTA_ERROR:
+            return False
         if ( new_run is None 
              or ( not user.is_mod and new_run.username != user.username ) ):
             return False
@@ -637,6 +710,8 @@ class RunHandler( handler.Handler ):
         # Get the owner of this run
         if new_run.username != user.username:
             runner = self.get_runner( util.get_code( new_run.username ) )
+            if runner == self.OVER_QUOTA_ERROR:
+                return False
             params['user'] = runner
         else:
             runner = user
@@ -645,6 +720,10 @@ class RunHandler( handler.Handler ):
         old_run = dict( game = new_run.game,
                         category = new_run.category,
                         seconds = new_run.seconds )
+        old_game_model = self.get_game_model(
+            util.get_code( old_run['game'] ) )
+        if old_game_model == self.OVER_QUOTA_ERROR:
+            return False        
 
         # Update the run
         try:
@@ -691,8 +770,7 @@ class RunHandler( handler.Handler ):
         if game == old_run['game']:
             self.update_games_delete( params['game_model'], delta_num_pbs_old )
         else:
-            self.update_games_delete( self.get_game_model( util.get_code( 
-                        old_run['game'] ) ), delta_num_pbs_old )
+            self.update_games_delete( old_game_model, delta_num_pbs_old )
         self.update_games_put( params, delta_num_pbs_new )
 
         # Update memcache with the removal of the old run and addition of the
@@ -719,7 +797,9 @@ class RunHandler( handler.Handler ):
         # Replace the old run in the runlist for runner in memcache
         runlist = self.get_runlist_for_runner( runner.username, 
                                                no_refresh=True )
-        if runlist:
+        if runlist == self.OVER_QUOTA_ERROR:
+            self.update_cache_runlist_for_runner( runner.username, None )
+        elif runlist is not None:
             for run in runlist:
                 if run[ 'run_id' ] == run_id:
                     run[ 'game' ] = game
@@ -739,7 +819,9 @@ class RunHandler( handler.Handler ):
 
         # Check to see if we need to replace the last run for this user
         last_run = self.get_last_run( runner.username, no_refresh=True )
-        if( last_run is not None 
+        if last_run == self.OVER_QUOTA_ERROR:
+            self.update_cache_last_run( runner.username, None )
+        elif( last_run is not None 
             and new_run.key().id() == last_run.key().id() ):
             self.update_cache_last_run( runner.username, new_run )
 

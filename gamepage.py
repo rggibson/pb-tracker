@@ -32,20 +32,35 @@ class GamePage( handler.Handler ):
             self.error( 404 )
             self.render( "404.html", user=user )
             return
+        if game_model == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html", user=user )
+            return        
 
         # Find out if this user has run this game
         if user is not None:
             user_has_run = self.get_user_has_run( user.username, 
                                                   game_model.game )
+            if user_has_run == self.OVER_QUOTA_ERROR:
+                user_has_run = False
         else:
             user_has_run = False
             
         gamepage = self.get_gamepage( game_model.game )
+        if gamepage == self.OVER_QUOTA_ERROR:
+            self.error( 403 )
+            self.render( "403.html", user=user )
+            return        
         
         # Add gravatar images to the gamepage
         for d in gamepage:
             for run in d['infolist']:
                 runner = self.get_runner( util.get_code( run['username'] ) )
+                if runner == self.OVER_QUOTA_ERROR:
+                    self.error( 403 )
+                    if self.format == 'html':
+                        self.render( "403.html", user=user )
+                    return
                 if runner is not None:
                     run['gravatar_url'] = util.get_gravatar_url( 
                         runner.gravatar, size=20 )
