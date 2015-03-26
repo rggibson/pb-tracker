@@ -28,7 +28,7 @@ class Login( handler.Handler ):
 
         ( valid, errors ) = self.is_valid_login( username, password )
         if not valid:
-            if errors.get( user_error ) == 'Over quota error':
+            if errors.get( 'user_error' ) == 'Over quota error':
                 self.error( 403 )
                 self.render( "403.html" )
             else:
