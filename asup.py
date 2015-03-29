@@ -86,7 +86,10 @@ class Asup( runhandler.RunHandler ):
             return self.get_fail_response( "Could not parse body to JSON" )
 
         # Render the response
-        self.render_json( self.get_response( body ) )
+        try:
+            self.render_json( self.get_response( body ) )
+        except google.appengine.runtime.DeadlineExceededError:
+            return self.get_fail_response( "Server timed out" )
 
     def get_response( self, body ):
         body_type = body.get( 'type' )

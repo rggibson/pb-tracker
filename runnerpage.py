@@ -24,75 +24,83 @@ import util
 
 class RunnerPage( handler.Handler ):
     def get( self, username_code ):
-        user = self.get_user( )
-        if user == self.OVER_QUOTA_ERROR:
-            user = None
-        q = self.request.get( 'q', default_value=None )
+        try:
+            user = self.get_user( )
+            if user == self.OVER_QUOTA_ERROR:
+                user = None
+            q = self.request.get( 'q', default_value=None )
 
-        # Make sure the runner exists
-        runner = self.get_runner( username_code )
-        if runner is None:
-            self.error( 404 )
-            self.render( "404.html", user=user )
-            return
-        if runner == self.OVER_QUOTA_ERROR:
-            self.error( 403 )
-            if self.format == 'html':
-                self.render( "403.html", user=user )
-            return
-        username = runner.username
-        gravatar = util.get_gravatar_url( runner.gravatar, size=120 )
-
-        if q == 'view-all':
-            # List all runs for this runner
-            runlist = self.get_runlist_for_runner( username )
-            if runlist == self.OVER_QUOTA_ERROR:
-                self.error( 403 )
-                self.render( "403.html", user=user )
-            elif self.format == 'html':
-                self.render( "listruns.html", user=user, runner=runner,
-                             username_code=username_code, runlist=runlist,
-                             gravatar=gravatar )
-            elif self.format == 'json':
-                self.render_json( runlist )
-        else:
-            # By default, list pbs for this runner
-            pblist = self.get_pblist( username )
-            if pblist == self.OVER_QUOTA_ERROR:
-                self.error( 403 )
-                self.render( "403.html", user=user )
+            # Make sure the runner exists
+            runner = self.get_runner( username_code )
+            if runner is None:
+                self.error( 404 )
+                self.render( "404.html", user=user )
                 return
-            # We are also going to list the best known times for each game.
-            # Let's gather those times here and add them to the pblist info.
-            for pb in pblist:
-                game_model = self.get_game_model( pb['game_code'] )
-                if game_model is None:
-                    logging.error( "No game_model for game " + pb['game'] )
-                    continue
-                if game_model == self.OVER_QUOTA_ERROR:
+            if runner == self.OVER_QUOTA_ERROR:
+                self.error( 403 )
+                if self.format == 'html':
+                    self.render( "403.html", user=user )
+                return
+            username = runner.username
+            gravatar = util.get_gravatar_url( runner.gravatar, size=120 )
+
+            if q == 'view-all':
+                # List all runs for this runner
+                runlist = self.get_runlist_for_runner( username )
+                if runlist == self.OVER_QUOTA_ERROR:
+                    self.error( 403 )
+                    self.render( "403.html", user=user )
+                elif self.format == 'html':
+                    self.render( "listruns.html", user=user, runner=runner,
+                                 username_code=username_code, runlist=runlist,
+                                 gravatar=gravatar )
+                elif self.format == 'json':
+                    self.render_json( runlist )
+            else:
+                # By default, list pbs for this runner
+                pblist = self.get_pblist( username )
+                if pblist == self.OVER_QUOTA_ERROR:
                     self.error( 403 )
                     self.render( "403.html", user=user )
                     return
-                gameinfolist = json.loads( game_model.info )
-                for runinfo in pb['infolist']:
-                    # Find the matching gameinfo
-                    for gameinfo in gameinfolist:
-                        if gameinfo['category'] == runinfo['category']:
-                            runinfo['bk_runner'] = gameinfo.get( 'bk_runner' )
-                            runinfo['bk_time'] = util.seconds_to_timestr(
-                                gameinfo.get( 'bk_seconds' ) )
-                            runinfo['bk_video'] = gameinfo.get( 'bk_video' )
-                            break
+                # We are also going to list the best known times for each game.
+                # Let's gather those times here and add them to the pblist
+                # info.
+                for pb in pblist:
+                    game_model = self.get_game_model( pb['game_code'] )
+                    if game_model is None:
+                        logging.error( "No game_model for game " + pb['game'] )
+                        continue
+                    if game_model == self.OVER_QUOTA_ERROR:
+                        self.error( 403 )
+                        self.render( "403.html", user=user )
+                        return
+                    gameinfolist = json.loads( game_model.info )
+                    for runinfo in pb['infolist']:
+                        # Find the matching gameinfo
+                        for gameinfo in gameinfolist:
+                            if gameinfo['category'] == runinfo['category']:
+                                runinfo['bk_runner'] = gameinfo.get(
+                                    'bk_runner' )
+                                runinfo['bk_time'] = util.seconds_to_timestr(
+                                    gameinfo.get( 'bk_seconds' ) )
+                                runinfo['bk_video'] = gameinfo.get(
+                                    'bk_video' )
+                                break
 
-            if runner.visible_columns:
-                visible_columns = json.loads( runner.visible_columns )
-            else:
-                visible_columns = util.get_default_visible_columns( )
+                if runner.visible_columns:
+                    visible_columns = json.loads( runner.visible_columns )
+                else:
+                    visible_columns = util.get_default_visible_columns( )
 
-            if self.format == 'html':
-                self.render( "runnerpage.html", user=user, runner=runner,
-                             username_code=username_code, pblist=pblist,
-                             gravatar=gravatar, 
-                             visible_columns=visible_columns )
-            elif self.format == 'json':
-                self.render_json( pblist )
+                if self.format == 'html':
+                    self.render( "runnerpage.html", user=user, runner=runner,
+                                 username_code=username_code, pblist=pblist,
+                                 gravatar=gravatar, 
+                                 visible_columns=visible_columns )
+                elif self.format == 'json':
+                    self.render_json( pblist )
+
+        except google.appengine.runtime.DeadlineExceededError:
+            self.error( 403 )
+            self.render( "deadline_exceeded.html", user=user )

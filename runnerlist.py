@@ -11,16 +11,21 @@ import handler
 
 class RunnerList( handler.Handler ):
     def get( self ):
-        user = self.get_user( )
-        if user == self.OVER_QUOTA_ERROR:
-            user = None
+        try:
+            user = self.get_user( )
+            if user == self.OVER_QUOTA_ERROR:
+                user = None
 
-        runnerlist = self.get_runnerlist( )
+            runnerlist = self.get_runnerlist( )
 
-        if runnerlist == self.OVER_QUOTA_ERROR:
+            if runnerlist == self.OVER_QUOTA_ERROR:
+                self.error( 403 )
+                self.render( "403.html", user=user )
+            elif self.format == 'html':
+                self.render( "runners.html", user=user, runnerlist=runnerlist )
+            elif self.format == 'json':
+                self.render_json( runnerlist )
+
+        except google.appengine.runtime.DeadlineExceededError:
             self.error( 403 )
-            self.render( "403.html", user=user )
-        elif self.format == 'html':
-            self.render( "runners.html", user=user, runnerlist=runnerlist )
-        elif self.format == 'json':
-            self.render_json( runnerlist )
+            self.render( "deadline_exceeded.html", user=user )
