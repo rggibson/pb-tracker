@@ -28,63 +28,68 @@ from google.appengine.ext import db
 
 class Submit( runhandler.RunHandler ):
     def get( self, game_code ):
-        user = self.get_user( )
-        if not user:
-            self.redirect( "/" )
-            return
-        elif user == self.OVER_QUOTA_ERROR:
-            self.error( 403 )
-            self.render( "403.html" )
-            return
-
-        params = dict( user=user )
-
-        game_model = self.get_game_model( game_code )
-        if game_model is None:
-            self.error( 404 )
-            self.render( "404.html", user=user )
-            return
-        if game_model == self.OVER_QUOTA_ERROR:
-            self.error( 403 )
-            self.render( "403.html", user=user )
-            return        
-
-        # Are we editing an existing run?
-        run_id = self.request.get( 'edit' )
-        if run_id:
-            # Grab the run to edit
-            run = self.get_run_by_id( run_id )
-            if run == self.OVER_QUOTA_ERROR:
-                self.error( 403 )
-                self.render( "403.html", user=user )
+        try:
+            user = self.get_user( )
+            if not user:
+                self.redirect( "/" )
                 return
-            if not run or ( not user.is_mod 
-                            and user.username != run.username ):
+            elif user == self.OVER_QUOTA_ERROR:
+                self.error( 403 )
+                self.render( "403.html" )
+                return
+
+            params = dict( user=user )
+
+            game_model = self.get_game_model( game_code )
+            if game_model is None:
                 self.error( 404 )
                 self.render( "404.html", user=user )
                 return
-            params[ 'game' ] = run.game
-            params[ 'game_code' ] = game_code
-            params[ 'category' ] = run.category
-            params[ 'time' ] = util.seconds_to_timestr( run.seconds )
-            if run.date is not None:
-                params[ 'datestr' ] = run.date.strftime( "%m/%d/%Y" );
-            params[ 'run_id' ] = run_id
-            if run.video is not None:
-                params[ 'video' ] = run.video
-            if run.version is not None:
-                params[ 'version' ] = run.version
-            if run.notes is not None:
-                params[ 'notes' ] = run.notes
-        else:
-            params['game'] = game_model.game
-            params['game_code'] = game_code
-            params['set_date_to_today'] = True;            
-                    
-        # Grab all of the categories for autocompleting
-        params['categories'] = game_model.categories( )
+            if game_model == self.OVER_QUOTA_ERROR:
+                self.error( 403 )
+                self.render( "403.html", user=user )
+                return        
 
-        self.render( "submit.html", **params )
+            # Are we editing an existing run?
+            run_id = self.request.get( 'edit' )
+            if run_id:
+                # Grab the run to edit
+                run = self.get_run_by_id( run_id )
+                if run == self.OVER_QUOTA_ERROR:
+                    self.error( 403 )
+                    self.render( "403.html", user=user )
+                    return
+                if not run or ( not user.is_mod 
+                                and user.username != run.username ):
+                    self.error( 404 )
+                    self.render( "404.html", user=user )
+                    return
+                params[ 'game' ] = run.game
+                params[ 'game_code' ] = game_code
+                params[ 'category' ] = run.category
+                params[ 'time' ] = util.seconds_to_timestr( run.seconds )
+                if run.date is not None:
+                    params[ 'datestr' ] = run.date.strftime( "%m/%d/%Y" );
+                params[ 'run_id' ] = run_id
+                if run.video is not None:
+                    params[ 'video' ] = run.video
+                if run.version is not None:
+                    params[ 'version' ] = run.version
+                if run.notes is not None:
+                    params[ 'notes' ] = run.notes
+            else:
+                params['game'] = game_model.game
+                params['game_code'] = game_code
+                params['set_date_to_today'] = True;            
+                    
+            # Grab all of the categories for autocompleting
+            params['categories'] = game_model.categories( )
+
+            self.render( "submit.html", **params )
+
+        except google.appengine.runtime.DeadlineExceededError:
+            self.error( 403 )
+            self.render( "deadline_exceeded.html", user=user )
 
     def post( self, game_code ):
         user = self.get_user( )
@@ -236,11 +241,14 @@ class Submit( runhandler.RunHandler ):
             self.redirect( "/runner/" + util.get_code( user.username )
                            + "?q=view-all" )
         elif game_model is not None:
-            # Grab all of the categories for autocompleting
-            params['categories'] = game_model.categories( )
-            params['user'] = user
-            self.render( "submit.html", **params )
+            try:
+                # Grab all of the categories for autocompleting
+                params['categories'] = game_model.categories( )
+                params['user'] = user
+                self.render( "submit.html", **params )
+            except google.appengine.runtime.DeadlineExceededError:
+                self.error( 403 )
+                self.render( "deadline_exceeded.html", user=user )
         else:
             self.error( 404 )
             self.render( "404.html", user=user )
-            

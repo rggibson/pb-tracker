@@ -19,6 +19,8 @@ import util
 from datetime import datetime
 from pytz.gae import pytz
 
+from google.appengine.runtime import apiproxy_errors
+
 class Asup( runhandler.RunHandler ):
     def get_success_response( self, data=None ):
         response = dict( result='success' )
@@ -90,6 +92,10 @@ class Asup( runhandler.RunHandler ):
             self.render_json( self.get_response( body ) )
         except google.appengine.runtime.DeadlineExceededError:
             return self.get_fail_response( "Server timed out" )
+        except apiproxy_errors.OverQuotaError, msg:
+            logging.error( msg )
+            return self.get_fail_response( "PB Tracker over quota for the day."
+                                           + " Please try again tomorrow." )
 
     def get_response( self, body ):
         body_type = body.get( 'type' )
