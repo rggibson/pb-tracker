@@ -8,6 +8,9 @@
 #
 
 import handler
+import logging
+
+from google.appengine.runtime import DeadlineExceededError
 
 class RunnerList( handler.Handler ):
     def get( self ):
@@ -26,6 +29,7 @@ class RunnerList( handler.Handler ):
             elif self.format == 'json':
                 self.render_json( runnerlist )
 
-        except google.appengine.runtime.DeadlineExceededError:
+        except DeadlineExceededError, msg:
+            logging.error( msg )
             self.error( 403 )
             self.render( "deadline_exceeded.html", user=user )

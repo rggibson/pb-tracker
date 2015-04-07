@@ -5,6 +5,9 @@
 #
 
 import handler
+import logging
+
+from google.appengine.runtime import DeadlineExceededError
 
 class GameList( handler.Handler ):
     def get( self ):
@@ -22,6 +25,7 @@ class GameList( handler.Handler ):
             elif self.format == 'json':
                 self.render_json( gamelist )
 
-        except google.appengine.runtime.DeadlineExceededError:
+        except DeadlineExceededError, msg:
+            logging.error( msg )
             self.error( 403 )
             self.render( "deadline_exceeded.html", user=user )

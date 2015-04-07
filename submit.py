@@ -25,6 +25,7 @@ import games
 from operator import itemgetter
 from datetime import date
 from google.appengine.ext import db
+from google.appengine.runtime import DeadlineExceededError
 
 class Submit( runhandler.RunHandler ):
     def get( self, game_code ):
@@ -87,7 +88,8 @@ class Submit( runhandler.RunHandler ):
 
             self.render( "submit.html", **params )
 
-        except google.appengine.runtime.DeadlineExceededError:
+        except DeadlineExceededError, msg:
+            logging.error( msg )
             self.error( 403 )
             self.render( "deadline_exceeded.html", user=user )
 
@@ -246,7 +248,8 @@ class Submit( runhandler.RunHandler ):
                 params['categories'] = game_model.categories( )
                 params['user'] = user
                 self.render( "submit.html", **params )
-            except google.appengine.runtime.DeadlineExceededError:
+            except DeadlineExceededError, msg:
+                logging.error( msg )
                 self.error( 403 )
                 self.render( "deadline_exceeded.html", user=user )
         else:

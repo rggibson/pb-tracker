@@ -22,6 +22,8 @@ import logging
 import json
 import util
 
+from google.appengine.runtime import DeadlineExceededError
+
 class RunnerPage( handler.Handler ):
     def get( self, username_code ):
         try:
@@ -101,6 +103,7 @@ class RunnerPage( handler.Handler ):
                 elif self.format == 'json':
                     self.render_json( pblist )
 
-        except google.appengine.runtime.DeadlineExceededError:
+        except DeadlineExceededError, msg:
+            logging.error( msg )
             self.error( 403 )
             self.render( "deadline_exceeded.html", user=user )
