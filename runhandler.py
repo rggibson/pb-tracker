@@ -672,7 +672,7 @@ class RunHandler( handler.Handler ):
         self.update_cache_last_run( user.username, new_run )
                      
         if num_runs <= 0:
-            logging.error( "Unexpected count [" + str(count) 
+            logging.error( "Unexpected count [" + str( num_runs ) 
                            + "] for number of runs for "
                            + username + ", " + game + ", " + category )
             self.update_cache_gamelist( None, get_num_pbs=True )
