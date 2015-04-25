@@ -33,6 +33,16 @@
     {% endfor %}
   </div>
 </div>
+<div class="pager">
+  <ul>
+    <li{% if not has_prev %} class="hidden"{% endif %}>
+      <a href="/games?page={{page_num-1}}">Previous</a>
+    </li>
+    <li{% if not has_next %} class="hidden"{% endif %}>
+      <a href="/games?page={{page_num+1}}">Next</a>
+    </li>
+  </ul>
+</div>
 
 {% endblock %}
 

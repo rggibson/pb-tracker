@@ -23,6 +23,7 @@ from operator import itemgetter
 from google.appengine.api import memcache
 from google.appengine.ext import db
 from google.appengine.runtime import apiproxy_errors
+from google.appengine.ext.db import BadRequestError
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.join
@@ -31,6 +32,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 
 
 class Handler(webapp2.RequestHandler):
+    PAGE_LIMIT = 50
     OVER_QUOTA_ERROR = 'OVER_QUOTA_ERROR'
 
     # Writing and rendering utility functions
@@ -455,57 +457,108 @@ class Handler(webapp2.RequestHandler):
         else:
             logging.error( "Failed to update " + key + " in memcache" )
 
-    def get_gamelist_memkey( self, get_num_pbs ):
-        if get_num_pbs:
-            return "gamelist"
-        else:
-            return "gamelist-skip-num-pbs"
+    def get_gamelist_cursor_memkey( self, page_num ):
+        return "gamelist-cursor:page-" + str( page_num )
 
-    def get_gamelist( self, no_refresh=False, get_num_pbs=True ):
-        key = self.get_gamelist_memkey( get_num_pbs )
-        gamelist = memcache.get( key )
-        if gamelist is None and not no_refresh:
+    def get_gamelist_memkey( self ):
+        return "gamelist"
+
+    # On succes, returns a dict res with the following entries:
+    # res['has_next'] - boolean indicating whether there's a next page
+    # res['page_num'] - the page num for the results returned
+    # res['gamelist'] - the gamelist for this page_num
+    # May fail and return OVER_QUOTA_ERROR
+    def get_gamelist( self, page_num ):
+        key = self.get_gamelist_memkey( )
+        data = memcache.get( key )
+        if data is None:
+            data = dict( )
+        res = data.get( page_num )
+        if res is None:
             # Build the gamelist, which is a list of dictionaries where each
             # dict gives the game, game_code and number of pbs for that game.
             # The list is sorted by numbers of pbs for the game
+            res = dict( page_num=page_num )
             gamelist = [ ]
-            projection = [ 'game' ]
-            if get_num_pbs:
-                projection.append( 'num_pbs' )
+            projection = [ 'game', 'num_pbs' ]
             try:
                 q = db.Query( games.Games, projection=projection )
                 q.ancestor( games.key() )
-                if get_num_pbs:
-                    q.order( '-num_pbs' )
+                q.order( '-num_pbs' )
                 q.order( 'game' )
-                for game_model in q.run( limit=10000 ):
-                    if get_num_pbs and game_model.num_pbs <= 0:
+                c = memcache.get( self.get_gamelist_cursor_memkey( page_num ) )
+                if c:
+                    try:
+                        q.with_cursor( start_cursor=c )
+                    except BadRequestError:
+                        res['page_num'] = 1
+                else:
+                    # Send the user back to the first page
+                    res['page_num'] = 1
+                for game_model in q.run( limit=self.PAGE_LIMIT ):
+                    if game_model.num_pbs <= 0:
                         break
-                    if get_num_pbs:
-                        d = dict( game = game_model.game,
-                                  game_code = util.get_code( game_model.game ),
-                                  num_pbs = game_model.num_pbs )
-                        gamelist.append( d )
-                    else:
-                        gamelist.append( str( game_model.game ) )
+                    d = dict( game = game_model.game,
+                              game_code = util.get_code( game_model.game ),
+                              num_pbs = game_model.num_pbs )
+                    gamelist.append( d )
+                c = q.cursor( )
+                cursor_key = self.get_gamelist_cursor_memkey(
+                    res['page_num'] + 1 )
+                if memcache.set( cursor_key, c ):
+                    logging.debug( "Set " + cursor_key + " in memcache" )
+                else:
+                    logging.warning( "Failed to set new " + cursor_key
+                                     + " in memcache" )
+                if len( gamelist ) >= self.PAGE_LIMIT:
+                    res['has_next'] = True
+                else:
+                    res['has_next'] = False
+                res['gamelist'] = gamelist
             except apiproxy_errors.OverQuotaError, msg:
                 logging.error( msg )
                 return self.OVER_QUOTA_ERROR
 
-            if memcache.set( key, gamelist ):
+            data[ res['page_num'] ] = res
+            if memcache.set( key, data ):
                 logging.debug( "Set " + key + " in memcache" )
             else:
                 logging.warning( "Failed to set new " + key + " in memcache" )
-        elif gamelist is not None:
+        else:
             logging.debug( "Got " + key + " from memcache" )
-        return gamelist
+        return res
 
-    def update_cache_gamelist( self, gamelist, get_num_pbs=True ):
-        key = self.get_gamelist_memkey( get_num_pbs )
-        if memcache.set( key, gamelist ):
+    def get_cached_gamelists( self ):
+        key = self.get_gamelist_memkey( )
+        return memcache.get( key )
+
+    def update_cache_gamelist( self, data ):
+        key = self.get_gamelist_memkey( )
+        if memcache.set( key, data ):
             logging.debug( "Updated " + key + " in memcache" )
         else:
             logging.error( "Failed to update " + key + " in memcache" )
+
+    def get_static_gamelist_memkey( self ):
+        return 'static-gamelist'
+
+    def get_static_gamelist( self ):
+        key = self.get_static_gamelist_memkey( )
+        static_gl = memcache.get( key )
+        if static_gl is None:
+            static_gl = [ ]
+            with open( 'json/gamelist.json', 'r' ) as data_file:
+                data = json.load( data_file )
+                for game_code, game in data['data'].iteritems( ):
+                    static_gl.append( str( game ) )
+            static_gl.sort( )
+            if memcache.set( key, static_gl ):
+                logging.debug( "Set " + key + " in memcache" )
+            else:
+                logging.warning( "Failed to set " + key + " in memcache" )
+        else:
+            logging.debug( "Got " + key + " from memcache" )
+        return static_gl
 
     def get_runnerlist_memkey( self ):
         return "runnerlist"

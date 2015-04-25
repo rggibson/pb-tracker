@@ -87,19 +87,17 @@ class CleanupGamesBase( handler.Handler ):
             for game in games_to_delete:
                 del categories[ game ]
             self.update_cache_categories( categories )
-        gamelist = self.get_gamelist( no_refresh=True, get_num_pbs=True )
-        if gamelist == self.OVER_QUOTA_ERROR:
-            gamelist = None
-        gamelist_snp = self.get_gamelist( no_refresh=True, get_num_pbs=False )
-        if gamelist_snp == self.OVER_QUOTA_ERROR:
-            gamelist_snp = None
+        cached_gamelists = self.get_cached_gamelists( )
+        if cached_gamelists is None:
+            return
         for game in games_to_delete:
-            if gamelist is not None:
-                for i, d in enumerate( gamelist ):
+            done = False
+            for page_num, res in cached_gamelists.iteritems( ):
+                if done:
+                    break
+                for i, d in enumerate( res['gamelist'] ):
                     if d['game'] == game:
-                        del( gamelist[ i ] )
+                        del( cached_gamelists[ page_num ]['gamelist'][ i ] )
+                        done = True
                         break
-            if gamelist_snp is not None and game in gamelist_snp:
-                gamelist_snp.remove( game )
-        self.update_cache_gamelist( gamelist, get_num_pbs=True )
-        self.update_cache_gamelist( gamelist_snp, get_num_pbs=False )
+        self.update_cache_gamelist( cached_gamelists )

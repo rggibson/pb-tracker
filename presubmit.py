@@ -32,7 +32,7 @@ class PreSubmit( runhandler.RunHandler ):
         params = dict( user=user )
                     
         # Grab all of the games for autocompleting
-        params['games'] = self.get_gamelist( get_num_pbs=False )
+        params['games'] = self.get_static_gamelist( )
         if params['games'] == self.OVER_QUOTA_ERROR:
             self.error( 403 )
             self.render( "403.html", user=user )
@@ -79,7 +79,7 @@ class PreSubmit( runhandler.RunHandler ):
             
         if not valid:
             # Grab all of the games for autocompleting
-            params['games'] = self.get_gamelist( get_num_pbs=False )   
+            params['games'] = self.get_static_gamelist( )   
             if params['games'] == self.OVER_QUOTA_ERROR:
                 self.error( 403 )
                 self.render( "403.html", user=user )
@@ -98,7 +98,7 @@ class PreSubmit( runhandler.RunHandler ):
             self.redirect( "/submit/" + game_code + '/' )
         else:
             # Grab all of the games for autocompleting
-            params['games'] = self.get_gamelist( get_num_pbs=False )
+            params['games'] = self.get_static_gamelist( )
             if params['games'] == self.OVER_QUOTA_ERROR:
                 self.error( 403 )
                 self.render( "403.html", user=user )

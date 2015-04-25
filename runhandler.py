@@ -508,62 +508,46 @@ class RunHandler( handler.Handler ):
                           reverse=True )
             self.update_cache_runlist_for_runner( user.username, runlist )
 
-    def update_gamelist_snp_put( self, game ):
-        # Update gamelist-skip-num-pbs in memcache if necessary
-        gamelist_snp = self.get_gamelist( no_refresh=True, get_num_pbs=False )
-        if gamelist_snp == self.OVER_QUOTA_ERROR:
-            self.update_cache_gamelist( None, get_num_pbs=False )
-        elif gamelist_snp is not None:
-            if game not in gamelist_snp:
-                # This game wasn't found in the gamelist_snp, so add it
-                gamelist_snp.append( game )
-                gamelist_snp.sort( )
-                self.update_cache_gamelist( gamelist_snp, get_num_pbs=False )
-
     def update_gamelist_put( self, params ):
         game_code = params[ 'game_code' ]
         game = params[ 'game' ]
 
-        # Update gamelist in memcache if necessary
-        gamelist = self.get_gamelist( no_refresh=True, get_num_pbs=True )
-        if gamelist == self.OVER_QUOTA_ERROR:
-            self.update_cache_gamelist( None, get_num_pbs=True )
-        elif gamelist is not None:
-            found_game = False
-            for gamedict in gamelist:
+        # Update gamelists in memcache if necessary
+        cached_gamelists = self.get_cached_gamelists( )
+        if cached_gamelists is None:
+            return
+        found_game = False
+        for page_num, res in cached_gamelists.iteritems( ):
+            if found_game:
+                break
+            for gamedict in res['gamelist']:
                 if( gamedict['game_code'] == game_code ):
                     found_game = True
                     gamedict['num_pbs'] += 1
-                    gamelist.sort( key=itemgetter('num_pbs'), 
-                                   reverse=True )
-                    self.update_cache_gamelist( gamelist, get_num_pbs=True )
+                    res['gamelist'].sort( key=itemgetter('num_pbs'), 
+                                          reverse=True )
+                    self.update_cache_gamelist( cached_gamelists )
                     break
-            if not found_game:
-                # This game wasn't found in the gamelist, so add it
-                gamelist.append( dict( game = game, game_code = game_code,
-                                       num_pbs = 1 ) )
-                gamelist.sort( key=itemgetter('game') )
-                gamelist.sort( key=itemgetter('num_pbs'), reverse=True )
-                self.update_cache_gamelist( gamelist, get_num_pbs=True )
-
-        # Update gamelist-skip-num-pbs in memcache if necessary
-        self.update_gamelist_snp_put( game )
+        if not found_game:
+            # This game wasn't found in the gamelists, so we'll just clear
+            # the cached gamelists
+            self.update_cache_gamelist( None )
 
     def update_gamelist_delete( self, old_run ):
         # Fix the gamelist with the removal of the old run
-        gamelist = self.get_gamelist( no_refresh=True, get_num_pbs=True )
-        if gamelist == self.OVER_QUOTA_ERROR:
-            self.update_cache_gamelist( None, get_num_pbs=True )
-        elif gamelist is not None:
-            for i, gamedict in enumerate( gamelist ):
-                if( gamedict[ 'game' ] == old_run[ 'game' ] ):
-                    gamedict['num_pbs'] -= 1
-                    if gamedict['num_pbs'] <= 0:
-                        del gamelist[ i ]
-                    gamelist.sort( key=itemgetter('num_pbs'), 
-                                   reverse=True )
-                    self.update_cache_gamelist( gamelist, get_num_pbs=True )
-                    break
+        cached_gamelists = self.get_cached_gamelists( )
+        if cached_gamelists is None:
+            return
+        for page_num, res in cached_gamelists.iteritems( ):
+            for i, d in enumerate( res['gamelist'] ):
+                if d['game'] == old_run['game']:
+                    d['num_pbs'] -= 1
+                    if d['num_pbs'] <= 0:
+                        del cached_gamelists[ page_num ]['gamelist'][ i ]
+                    res['gamelist'].sort( key=itemgetter('num_pbs'),
+                                          reverse=True )
+                    self.update_cache_gamelist( cached_gamelists )
+                    return
 
     def update_runnerlist_put( self, params ):
         user = params[ 'user' ]
@@ -840,8 +824,5 @@ class RunHandler( handler.Handler ):
         
         game_model.put( )
         logging.warning( "Put new game " + game + " in database." )
-
-        # Update memcache
-        self.update_gamelist_snp_put( game )
 
         return True
