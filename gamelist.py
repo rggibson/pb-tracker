@@ -35,7 +35,7 @@ class GameList( handler.Handler ):
                              has_prev=has_prev, has_next=d['has_next'],
                              page_num=d['page_num'] )
             elif self.format == 'json':
-                self.render_json( gamelist )
+                self.render_json( d['gamelist'] )
 
         except DeadlineExceededError, msg:
             logging.error( msg )

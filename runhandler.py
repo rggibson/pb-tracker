@@ -516,22 +516,17 @@ class RunHandler( handler.Handler ):
         cached_gamelists = self.get_cached_gamelists( )
         if cached_gamelists is None:
             return
-        found_game = False
         for page_num, res in cached_gamelists.iteritems( ):
-            if found_game:
-                break
             for gamedict in res['gamelist']:
                 if( gamedict['game_code'] == game_code ):
-                    found_game = True
                     gamedict['num_pbs'] += 1
                     res['gamelist'].sort( key=itemgetter('num_pbs'), 
                                           reverse=True )
                     self.update_cache_gamelist( cached_gamelists )
-                    break
-        if not found_game:
-            # This game wasn't found in the gamelists, so we'll just clear
-            # the cached gamelists
-            self.update_cache_gamelist( None )
+                    return
+        # This game wasn't found in the gamelists, so we'll just clear
+        # the cached gamelists
+        self.update_cache_gamelist( None )
 
     def update_gamelist_delete( self, old_run ):
         # Fix the gamelist with the removal of the old run
@@ -548,43 +543,42 @@ class RunHandler( handler.Handler ):
                                           reverse=True )
                     self.update_cache_gamelist( cached_gamelists )
                     return
+        # Failed to find game
+        self.update_cache_gamelist( None )
 
     def update_runnerlist_put( self, params ):
         user = params[ 'user' ]
 
         # Update runnerlist in memcache if necessary
-        runnerlist = self.get_runnerlist( no_refresh=True )
-        if runnerlist == self.OVER_QUOTA_ERROR:
+        cached_runnerlists = self.get_cached_runnerlists( )
+        if cached_runnerlists is not None:
+            for page_num, res in cached_runnerlists.iteritems( ):
+                for runnerdict in res['runnerlist']:
+                    if( runnerdict['username'] == user.username ):
+                        runnerdict['num_pbs'] += 1
+                        res['runnerlist'].sort( key=itemgetter('username') )
+                        res['runnerlist'].sort( key=itemgetter('num_pbs'), 
+                                                reverse=True )
+                        self.update_cache_runnerlist( cached_runnerlists )
+                        return
+            # Clear the cache
             self.update_cache_runnerlist( None )
-        elif runnerlist is not None:
-            found_runner = False
-            for runnerdict in runnerlist:
-                if( runnerdict['username'] == user.username ):
-                    found_runner = True
-                    runnerdict['num_pbs'] += 1
-                    runnerlist.sort( key=itemgetter('username') )
-                    runnerlist.sort( key=itemgetter('num_pbs'), 
-                                     reverse=True )
-                    self.update_cache_runnerlist( runnerlist )
-                    break
-            if not found_runner:
-                logging.error( "Failed to find " + user.username 
-                               + " in runnerlist" )
 
     def update_runnerlist_delete( self, user ):
         # Fix the runnerlist with the removal of the old run
-        runnerlist = self.get_runnerlist( no_refresh=True )
-        if runnerlist == self.OVER_QUOTA_ERROR:
+        cached_runnerlists = self.get_cached_runnerlists( )
+        if cached_runnerlists is not None:
+            for page_num, res in cached_runnerlists.iteritems( ):
+                for runnerdict in res['runnerlist']:
+                    if( runnerdict['username'] == user.username ):
+                        runnerdict['num_pbs'] -= 1
+                        res['runnerlist'].sort( key=itemgetter('username') )
+                        res['runnerlist'].sort( key=itemgetter('num_pbs'), 
+                                                reverse=True )
+                        self.update_cache_runnerlist( cached_runnerlists )
+                        return
+            # Failed to find runner
             self.update_cache_runnerlist( None )
-        elif runnerlist is not None:
-            for runnerdict in runnerlist:
-                if( runnerdict['username'] == user.username ):
-                    runnerdict['num_pbs'] -= 1
-                    runnerlist.sort( key=itemgetter('username') )
-                    runnerlist.sort( key=itemgetter('num_pbs'), 
-                                     reverse=True )
-                    self.update_cache_runnerlist( runnerlist )
-                    break
 
     def update_user_has_run_delete( self, user, old_run ):
         # This refresh is so cheap, let's just kill the old value

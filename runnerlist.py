@@ -19,15 +19,26 @@ class RunnerList( handler.Handler ):
             if user == self.OVER_QUOTA_ERROR:
                 user = None
 
-            runnerlist = self.get_runnerlist( )
+            page_num = self.request.get( 'page', default_value=1 )
+            try:
+                page_num = int( page_num )
+            except ValueError:
+                # Default to first page
+                page_num = 1
 
-            if runnerlist == self.OVER_QUOTA_ERROR:
+            res = self.get_runnerlist( page_num )
+
+            if res == self.OVER_QUOTA_ERROR:
                 self.error( 403 )
                 self.render( "403.html", user=user )
             elif self.format == 'html':
-                self.render( "runners.html", user=user, runnerlist=runnerlist )
+                self.render( "runners.html",
+                             user=user,
+                             runnerlist=res['runnerlist'],
+                             has_next=res['has_next'],
+                             page_num=res['page_num'] )
             elif self.format == 'json':
-                self.render_json( runnerlist )
+                self.render_json( res['runnerlist'] )
 
         except DeadlineExceededError, msg:
             logging.error( msg )

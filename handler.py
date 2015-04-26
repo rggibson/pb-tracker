@@ -528,6 +528,8 @@ class Handler(webapp2.RequestHandler):
             logging.debug( "Got " + key + " from memcache" )
         return res
 
+    # Returns a dictionary where keys are page_nums and entries are
+    # objects returned by get_gamelist( page_num )
     def get_cached_gamelists( self ):
         key = self.get_gamelist_memkey( )
         return memcache.get( key )
@@ -560,48 +562,87 @@ class Handler(webapp2.RequestHandler):
             logging.debug( "Got " + key + " from memcache" )
         return static_gl
 
+    def get_runnerlist_cursor_memkey( self, page_num ):
+        return "runnerlist-cursor:page-" + str( page_num )
+
     def get_runnerlist_memkey( self ):
         return "runnerlist"
 
-    def get_runnerlist( self, no_refresh=False ):
+    # On succes, returns a dict res with the following entries:
+    # res['has_next'] - boolean indicating whether there's a next page
+    # res['page_num'] - the page num for the results returned
+    # res['runnerlist'] - the runnerlist for this page_num
+    # May fail and return OVER_QUOTA_ERROR
+    def get_runnerlist( self, page_num ):
         key = self.get_runnerlist_memkey( )
-        runnerlist = memcache.get( key )
-        if runnerlist is None and not no_refresh:
+        data = memcache.get( key )
+        if data is None:
+            data = dict( )
+        res = data.get( page_num )
+        if res is None:
             # Build the runnerlist, which is a list of dictionaries where each
             # dict gives the username and number of pbs for that user.
             # The list is sorted by numbers of pbs for the user.
-            runnerlist = [ ]
+            res = dict( page_num=page_num,
+                        runnerlist=[ ],
+                        has_next=True )
             try:
                 q = db.Query( runners.Runners, 
-                              projection=('username', 'gravatar', 'num_pbs') )
+                              projection=['username', 'gravatar', 'num_pbs'] )
                 q.ancestor( runners.key() )
                 q.order( '-num_pbs' )
                 q.order( 'username' )
-                for runner in q.run( limit=100000 ):
-                    runnerlist.append( 
-                        dict( username = runner.username, 
+                c = memcache.get( self.get_runnerlist_cursor_memkey(
+                    page_num ) )
+                if c:
+                    try:
+                        q.with_cursor( start_cursor=c )
+                    except BadRequestError:
+                        res['page_num'] = 1
+                else:
+                    res['page_num'] = 1
+                for runner in q.run( limit=self.PAGE_LIMIT ):
+                    res['runnerlist'].append( 
+                        dict( username = runner.username,
                               username_code = util.get_code( runner.username ),
                               num_pbs = runner.num_pbs,
                               gravatar_url = util.get_gravatar_url( 
                                   runner.gravatar ) ) )
+                c = q.cursor( )
+                cursor_key = self.get_runnerlist_cursor_memkey(
+                    res['page_num'] + 1 )
+                if memcache.set( cursor_key, c ):
+                    logging.debug( "Set " + cursor_key + " in memcache" )
+                else:
+                    logging.warning( "Failed to set new " + cursor_key
+                                     + " in memcache" )
+                if len( res['runnerlist'] ) < self.PAGE_LIMIT:
+                    res['has_next'] = False
             except apiproxy_errors.OverQuotaError, msg:
                 logging.error( msg )
                 return self.OVER_QUOTA_ERROR
 
-            if memcache.set( key, runnerlist ):
-                logging.debug( "Set runnerlist in memcache" )
+            data[ res['page_num'] ] = res
+            if memcache.set( key, data ):
+                logging.debug( "Set " + key + " in memcache" )
             else:
-                logging.warning( "Failed to set new runnerlist in memcache" )
-        elif runnerlist is not None:
-            logging.debug( "Got runnerlist from memcache" )
-        return runnerlist
-
-    def update_cache_runnerlist( self, runnerlist ):
-        key = self.get_runnerlist_memkey( )
-        if memcache.set( key, runnerlist ):
-            logging.debug( "Updated runnerlist in memcache" )
+                logging.warning( "Failed to set new " + key + " in memcache" )
         else:
-            logging.error( "Failed to update runnerlist in memcache" )
+            logging.debug( "Got " + key + " from memcache" )
+        return res
+
+    # Returns a dictionary where keys are page_nums and entries are
+    # objects returned by get_runnerlist( page_num )
+    def get_cached_runnerlists( self ):
+        key = self.get_runnerlist_memkey( )
+        return memcache.get( key )
+
+    def update_cache_runnerlist( self, runnerlists ):
+        key = self.get_runnerlist_memkey( )
+        if memcache.set( key, runnerlists ):
+            logging.debug( "Updated " + key + " in memcache" )
+        else:
+            logging.error( "Failed to update " + key + " in memcache" )
 
     def get_runlist_for_runner_memkey( self, username ):
         return username + ":runlist_for_runner"

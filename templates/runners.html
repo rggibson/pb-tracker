@@ -31,6 +31,16 @@
     {% endfor %}
   </div>
 </div>
+<div class="pager">
+  <ul>
+    <li{% if page_num <= 1 %} class="hidden"{% endif %}>
+      <a href="/runners?page={{page_num-1}}">Previous</a>
+    </li>
+    <li{% if not has_next %} class="hidden"{% endif %}>
+      <a href="/runners?page={{page_num+1}}">Next</a>
+    </li>
+  </ul>
+</div>
 
 {% endblock %}
 
