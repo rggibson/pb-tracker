@@ -15,6 +15,8 @@ import runs
 import util
 import logging
 
+from operator import itemgetter
+
 from google.appengine.ext import db
 from google.appengine.runtime import DeadlineExceededError
 
@@ -48,15 +50,42 @@ class GamePage( handler.Handler ):
                     user_has_run = False
             else:
                 user_has_run = False
+
+            # Look for a specific category to display
+            category_code = self.request.get( 'c' )
+            if category_code:
+                category_code = util.get_code( category_code )
+            else:
+                category_code = None
+
+            # Grab the categories with their codes
+            categories = [ ]
+            category = None
+            for this_category in game_model.categories( ):
+                this_category_code = util.get_code( this_category )
+                categories.append( dict( category=this_category,
+                                         category_code=this_category_code ) )
+                if category_code == this_category_code:
+                    category = this_category
+            categories.sort( key=itemgetter( 'category_code' ) )
+
+            # Grab the page num
+            page_num = self.request.get( 'page' )
+            try:
+                page_num = int( page_num )
+            except ValueError:
+                page_num = 1
             
-            gamepage = self.get_gamepage( game_model.game )
+            gamepage = self.get_gamepage( game_model.game, category, page_num )
             if gamepage == self.OVER_QUOTA_ERROR:
                 self.error( 403 )
                 self.render( "403.html", user=user )
-                return        
+                return
+            page_num = gamepage['page_num']
         
             # Add gravatar images to the gamepage
-            for d in gamepage:
+            d = gamepage['d']
+            if d is not None:
                 for run in d['infolist']:
                     runner = self.get_runner( util.get_code(
                         run['username'] ) )
@@ -68,13 +97,21 @@ class GamePage( handler.Handler ):
                     if runner is not None:
                         run['gravatar_url'] = util.get_gravatar_url( 
                             runner.gravatar, size=20 )
-
+            
+            has_prev = False
+            if page_num > 1:
+                has_prev = True
+            
             if self.format == 'html':
                 self.render( "gamepage.html", user=user, game=game_model.game, 
-                             game_code=game_code, gamepage=gamepage,
-                             user_has_run=user_has_run )
+                             game_code=game_code, d=d, categories=categories,
+                             user_has_run=user_has_run, has_prev=has_prev,
+                             has_next=gamepage['has_next'], page_num=page_num )
             elif self.format == 'json':
-                self.render_json( gamepage )
+                if d is None:
+                    self.render_json( categories )
+                else:
+                    self.render_json( d )
 
         except DeadlineExceededError, msg:
             logging.error( msg )

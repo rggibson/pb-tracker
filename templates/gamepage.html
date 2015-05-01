@@ -27,13 +27,13 @@
 
 <h3>Categories:</h3>
 <ul class="nav nav-pills" style="margin-bottom: -35px;">
-  {% for d in gamepage %}
-  <li><a href="#{{d['category_code']}}">{{d['category']}}</a></li>
+  {% for c in categories %}
+  <li><a href="/game/{{game_code}}?c={{c['category_code']}}"{% if d and c['category'] == d['category'] %} class="active"{% endif %}>{{c['category']}}</a></li>
   {% endfor %}
 </ul>
 
-{% for d in gamepage %}
 <div class="row">
+{% if d %}
 <h2 id="{{d['category_code']}}" style="padding-top: 65px;"><i class="icon-compass"></i> 
   {{d['category']}}
 </h2>
@@ -60,7 +60,7 @@
 </h4>
 {% endif %}
 <div class="table-responsive">
-<table id="table-{{loop.index}}" 
+<table id="table-data" 
        class="table table-striped table-bordered mydatatable">
   <thead>
     <tr>
@@ -69,8 +69,6 @@
       <th width="10%"><i class="icon-star icon-large"></i> PB</th>
       <th width="15%"><i class="icon-calendar icon-large"></i> Date</th>
       <th width="25%"><i class="icon-desktop icon-large"></i> Version</th>
-      <th width="15%"><i class="icon-flag-checkered icon-large"></i> Runs</th>
-      <th width="10%"><i class="icon-time icon-large"></i> Avg Time</th>
     </tr>
   </thead>
   {% for run in d['infolist'] %}
@@ -92,19 +90,27 @@
     </td>
     <td>{% if run['pb_date'] %}{{run['pb_date'].strftime( "%b %d %Y" )}}{% else %}-{% endif %}</td>
     <td>{% if run['version'] %}{{run['version']}}{% else %}-{% endif %}</td>
-    <td>{{run['num_runs']}}</td>
-    <td>{{run['avg_time']}}</td>
   </tr>
   {% endfor %}
 </table>
 </div>
 </div>
-{% endfor %}
+<div class="pager">
+  <ul>
+    <li{% if not has_prev %} class="hidden"{% endif %}>
+      <a href="/game/{{game_code}}?c={{d['category_code']}}&page={{page_num-1}}">Previous</a>
+    </li>
+    <li{% if not has_next %} class="hidden"{% endif %}>
+      <a href="/game/{{game_code}}?c={{d['category_code']}}&page={{page_num+1}}">Next</a>
+    </li>
+  </ul>
+{% endif %}
+</div>
 
 {% endblock %}
 
 {% block morefoot %}
-<a href="/game/{{game_code}}.json"><i class="icon-rss icon-large"></i></a>
+<a href="/game/{{game_code}}.json{% if d %}?c={{d['category_code']}}{% endif %}"><i class="icon-rss icon-large"></i></a>
 {% endblock %}
 
 {% block js %}
@@ -123,26 +129,26 @@
   $( document ).ready( function( ) {
     $( "[data-toggle=tooltip]" ).tooltip( );
 
-    {% for d in gamepage %}
+    {% if d %}
     /* datatables.net */
-    var oTable = $( "#table-{{loop.index}}" ).dataTable( {
+    var oTable = $( "#table-data" ).dataTable( {
       "bSortClasses": false, /* Don't add some of the extra css classes */
       "asStripClasses": [ ], /* Remove table-striping classes */
       "bAutoWidth": false,
       "bPaginate": false,
       "bProcessing": true, /* Display a processing message when thinking */
       "aoColumnDefs": [
-        { "bSearchable": false, "aTargets": [ 0, 2, 3, 5, 6 ] },
+        { "bSearchable": false, "aTargets": [ 0, 2, 3 ] },
         { "bSortable": false, "aTargets": [ 0 ] },
         { "sType": "mydate", "aTargets": [ 3 ] },
-        { "sType": "time", "aTargets": [ 2, 6 ] }
+        { "sType": "time", "aTargets": [ 2 ] }
       ],
       "oLanguage": { "sSearch": "Filter runner and/or version:" }
     } );
 
     /* Set default sort on page ready */
     oTable.fnSort( [ [ 2, 'asc' ] ] );  
-    {% endfor %}
+    {% endif %}
   } );
 </script>
 {% endblock %}

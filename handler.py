@@ -33,6 +33,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 
 class Handler(webapp2.RequestHandler):
     PAGE_LIMIT = 50
+    GAMEPAGE_PAGE_LIMIT = 500
     OVER_QUOTA_ERROR = 'OVER_QUOTA_ERROR'
 
     # Writing and rendering utility functions
@@ -249,7 +250,7 @@ class Handler(webapp2.RequestHandler):
         key = self.get_runinfo_memkey( username, game, category )
         runinfo = memcache.get( key )
         if runinfo is None and not no_refresh:
-            # Not in memcache, so constrcut the runinfo dictionary
+            # Not in memcache, so construct the runinfo dictionary
             pb_run = None
             avg_seconds = 0
             num_runs = 0
@@ -371,88 +372,135 @@ class Handler(webapp2.RequestHandler):
         else:
             logging.error( "Failed to update " + key + " in memcache" )
 
-    def get_gamepage_memkey( self, game ):
-        return game + ":gamepage"
+    def get_gamepage_cursor_memkey( self, game, category_code, page_num ):
+        return game + ":" + category_code + ":page-cursor-" + str( page_num )
 
-    def get_gamepage( self, game, no_refresh=False ):
-        key = self.get_gamepage_memkey( game )
-        gamepage = memcache.get( key )
-        if gamepage is None and not no_refresh:
+    def get_gamepage_memkey( self, game, category_code ):
+        return game + ":" + category_code + ":gamepage"
+
+    # On success, returns a dictionary 'gamepage' containing 3 entries:
+    # gamepage['has_next']: True if there's a next page, false otherwise
+    # gamepage['page_num']: The page num for this result
+    # gamepage['d']: Dictionary object containing run info for this game and
+    #                category_code and page_num
+    # On failure, returns self.OVER_QUOTA_ERROR
+    def get_gamepage( self, game, category, page_num ):
+        if category is None:
+            return dict( has_next=False, page_num=0, d=None )
+
+        category_code = util.get_code( category )
+        key = self.get_gamepage_memkey( game, category_code )
+        cached_gamepages = memcache.get( key )
+        if cached_gamepages is None:
+            cached_gamepages = dict( )
+        gamepage = cached_gamepages.get( page_num )
+        if gamepage is None:
             # Not in memcache, so construct the gamepage and store it in 
             # memcache.
-            # Gamepage is a list of dictionaries. These dictionaries have up
-            # to 5 keys, 'category', 'bk_runner', 'bk_time', 'bk_video' and
-            # 'infolist'.
-            gamepage = [ ]
+            # gamepage['d'] has up to 7 keys:
+            # 'category', 'category_code', 'bk_runner', 'bk_time',
+            # 'bk_date', 'bk_video' and 'infolist'.
+            gamepage = dict( page_num=page_num,
+                             has_next=True )
+            d = dict( category=category,
+                      category_code=category_code,
+                      infolist=[ ] )
 
             # Grab the game model
             game_model = self.get_game_model( util.get_code( game ) )
             if game_model is None:
                 logging.error( "Could not create " + key + " due to no "
                                + "game model" )
-                return None
+                return dict( has_next=False, page_num=0, d=None )
             if game_model == self.OVER_QUOTA_ERROR:
                 return self.OVER_QUOTA_ERROR
             gameinfolist = json.loads( game_model.info )
 
+            # Check for a best known time for this category
+            for gameinfo in gameinfolist:
+                if gameinfo['category'] == category:
+                    d['bk_runner'] = gameinfo.get( 'bk_runner' )
+                    d['bk_time'] = util.seconds_to_timestr(
+                        gameinfo.get( 'bk_seconds' ) )
+                    d['bk_date'] = util.datestr_to_date( 
+                        gameinfo.get( 'bk_datestr' ) )[ 0 ]
+                    d['bk_video'] = gameinfo.get( 'bk_video' )
+                    break
             try:
-                # Use a projection query to get all of the unique 
-                # username, category pairs
-                q = db.Query( runs.Runs, projection=('username', 'category'), 
+                # Get 1 run per username
+                q = db.Query( runs.Runs,
+                              projection=['username', 'seconds',
+                                          'date', 'video', 'version'],
                               distinct=True )
                 q.ancestor( runs.key() )
                 q.filter( 'game =', game )
-                q.order( 'category' )
-                cur_category = None
-                for run in q.run( limit = 1000 ):
-                    if run.category != cur_category:
-                        # New category
-                        d = dict( category=run.category, 
-                                  category_code=util.get_code( run.category ), 
-                                  infolist=[ ] )
-                        gamepage.append( d )
-                        cur_category = run.category
-                        # Check for a best known time for this category
-                        for gameinfo in gameinfolist:
-                            if gameinfo['category'] == run.category:
-                                d['bk_runner'] = gameinfo.get( 'bk_runner' )
-                                d['bk_time'] = util.seconds_to_timestr(
-                                    gameinfo.get( 'bk_seconds' ) )
-                                d['bk_date'] = util.datestr_to_date( 
-                                    gameinfo.get( 'bk_datestr' ) )[ 0 ]
-                                d['bk_video'] = gameinfo.get( 'bk_video' )
-                                break
-
+                q.filter( 'category =', category )
+                q.order( 'seconds' )
+                q.order( 'date' )
+                usernames_seen = set( )
+                cached_cursor = memcache.get( self.get_gamepage_cursor_memkey(
+                    game, category_code, page_num ) )
+                if cached_cursor:
+                    try:
+                        q.with_cursor( start_cursor=cached_cursor['c'] )
+                        usernames_seen = cached_cursor['usernames_seen']
+                    except BadRequestError:
+                        gamepage['page_num'] = page_num
+                else:
+                    gamepage['page_num'] = 1
+                num_runs = 0
+                for run in q.run( limit = self.GAMEPAGE_PAGE_LIMIT ):
+                    num_runs += 1
+                    if run.username in usernames_seen:
+                        continue
                     # Add the info to the gamepage
-                    info = self.get_runinfo( run.username, game, run.category )
-                    if info == self.OVER_QUOTA_ERROR:
-                        return self.OVER_QUOTA_ERROR
+                    info = dict( username = run.username,
+                                 username_code = util.get_code(
+                                     run.username ),
+                                 category = category,
+                                 category_code = category_code,
+                                 pb_seconds = run.seconds,
+                                 pb_time = util.seconds_to_timestr(
+                                     run.seconds ),
+                                 pb_date = run.date,
+                                 video = run.video,
+                                 version = run.version )
                     d['infolist'].append( info )
+                    usernames_seen.add( run.username )
+                c = q.cursor( )
+                cached_cursor = dict( c=c, usernames_seen=usernames_seen )
+                cursor_key = self.get_gamepage_cursor_memkey(
+                    game, category_code, gamepage['page_num'] + 1 )
+                if memcache.set( cursor_key, cached_cursor ):
+                    logging.debug( "Set " + cursor_key + " in memcache" )
+                else:
+                    logging.warning( "Failed to set new " + cursor_key
+                                     + " in memcache" )
+                if num_runs < self.GAMEPAGE_PAGE_LIMIT:
+                    gamepage['has_next'] = False
             except apiproxy_errors.OverQuotaError, msg:
                 logging.error( msg )
                 return self.OVER_QUOTA_ERROR
-                
-            # For each category, sort the runlist by seconds, breaking ties
-            # by date
-            for runlist in gamepage:
-                runlist['infolist'].sort( key=lambda x: util.get_valid_date(
-                        x['pb_date'] ) )
-                runlist['infolist'].sort( key=itemgetter('pb_seconds') )
-            
-            # Sort the categories by number of runners
-            gamepage.sort( key=lambda x: len(x['infolist']), reverse=True )
 
-            if memcache.set( key, gamepage ):
+            gamepage['d'] = d
+            cached_gamepages[ gamepage['page_num'] ] = gamepage
+            if memcache.set( key, cached_gamepages ):
                 logging.debug( "Set " + key + " in memcache" )
             else:
                 logging.warning( "Failed to set " + key + " in memcache" )
-        elif gamepage is not None:
+        else:
             logging.debug( "Got " + key + " from memcache" )
         return gamepage
 
-    def update_cache_gamepage( self, game, gamepage ):
-        key = self.get_gamepage_memkey( game )
-        if memcache.set( key, gamepage ):
+    # Returns a dictionary where keys are page_nums and entries are
+    # objects returned by get_gamepage( game, category, page_num )
+    def get_cached_gamepages( self, game, category_code ):
+        key = self.get_gamepage_memkey( game, category_code )
+        return memcache.get( key )
+
+    def update_cache_gamepage( self, game, category_code, cached_gamepages ):
+        key = self.get_gamepage_memkey( game, category_code )
+        if memcache.set( key, cached_gamepages ):
             logging.debug( "Updated " + key + " in memcache" )
         else:
             logging.error( "Failed to update " + key + " in memcache" )

@@ -209,19 +209,18 @@ class UpdateBkt( handler.Handler ):
         self.update_cache_game_model( game_code, game_model )
 
         # Update gamepage in memcache
-        gamepage = self.get_gamepage( game_model.game, no_refresh=True )
-        if gamepage == self.OVER_QUOTA_ERROR:
-            self.update_cache_gamepage( game, None )
-        elif gamepage is not None:
-            for d in gamepage:
-                if d['category'] == gameinfo['category']:
-                    d['bk_runner'] = gameinfo['bk_runner']
-                    d['bk_time'] = util.seconds_to_timestr( 
-                        gameinfo['bk_seconds'] )
-                    d['bk_date'] = date
-                    d['bk_video'] = gameinfo['bk_video']
-                    break
-            self.update_cache_gamepage( game_model.game, gamepage )
+        cached_gamepages = self.get_cached_gamepages( game_model.game,
+                                                      category_code )
+        if cached_gamepages is not None:
+            for page_num, gamepage in cached_gamepages.iteritems( ):
+                d = gamepage['d']
+                d['bk_runner'] = gameinfo['bk_runner']
+                d['bk_time'] = util.seconds_to_timestr(
+                    gameinfo['bk_seconds'] )
+                d['bk_date'] = date
+                d['bk_video'] = gameinfo['bk_video']
+            self.update_cache_gamepage( game_model.game, category_code,
+                                        cached_gamepages )
 
         # All dun
         self.redirect( return_url )

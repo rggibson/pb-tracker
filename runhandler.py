@@ -354,125 +354,18 @@ class RunHandler( handler.Handler ):
         self.update_cache_pblist( user.username, None )
 
     def update_gamepage_put( self, params ):
-        user = params[ 'user' ]
-        game = params[ 'game' ]
-        category = params[ 'category' ]
-        seconds = params[ 'seconds' ]
-        time = params[ 'time' ]
-        date = params[ 'date' ]
-        video = params[ 'video' ]
-        is_bkt = params[ 'is_bkt' ]
-
         # Update gamepage in memcache
-        gamepage = self.get_gamepage( game, no_refresh=True )
-        if gamepage is None:
-            return
-        if gamepage == self.OVER_QUOTA_ERROR:
-            self.update_cache_gamepage( game, None )
-            return
-
-        for d in gamepage:
-            if d[ 'category' ] == category:
-                if is_bkt:
-                    # Update best known time for this category
-                    d['bk_runner'] = user.username
-                    d['bk_time'] = util.seconds_to_timestr( seconds )
-                    d['bk_date'] = date
-                    d['bk_video'] = video
-                for i, runinfo in enumerate( d['infolist'] ):
-                    if runinfo['username'] == user.username:
-                        # User has run this category before
-                        d['infolist'][i] = self.get_runinfo( user.username, 
-                                                             game, category )
-                        if d['infolist'][i] == self.OVER_QUOTA_ERROR:
-                            gamepage = None
-                        else:
-                            d['infolist'].sort(
-                                key=lambda x: util.get_valid_date(
-                                    x['pb_date'] ) )
-                            d['infolist'].sort( key=itemgetter('pb_seconds') )
-                        self.update_cache_gamepage( game, gamepage )
-                        return
-                
-                # Category found, but user has not prev. run this category
-                runinfo = self.get_runinfo( user.username, game, category )
-                if runinfo == self.OVER_QUOTA_ERROR:
-                    gamepage = None
-                else:
-                    d['infolist'].append( runinfo )
-                    d['infolist'].sort( key=lambda x: util.get_valid_date(
-                        x['pb_date'] ) )                
-                    d['infolist'].sort( key=itemgetter('pb_seconds') )
-                    gamepage.sort( key=lambda x: len(x['infolist']),
-                                   reverse=True )
-                self.update_cache_gamepage( game, gamepage )
-                return
+        game = params['game']
+        category = params[ 'category' ]
+        category_code = util.get_code( category )
+        self.update_cache_gamepage( game, category_code, None )
         
-        # This is a new category for this game
-        runinfo = self.get_runinfo( user.username, game, category )
-        if runinfo == self.OVER_QUOTA_ERROR:
-            self.update_cache_gamepage( game, gamepage )
-            return
-        d = dict( category=category, 
-                  category_code=util.get_code( category ),
-                  infolist=[runinfo] )
-        # Check for best known time. Since we update games.Games before 
-        # updating gamepage, this will catch the case for when is_bkt is true.
-        game_model = self.get_game_model( util.get_code( game ) )
-        if game_model is None:
-            logging.error( "Failed to update gamepage for " + game )
-            self.update_cache_gamepage( game, None )
-            return
-        if game_model == self.OVER_QUOTA_ERROR:
-            self.update_cache_gamepage( game, None )
-            return        
-        gameinfolist = json.loads( game_model.info )
-        for gameinfo in gameinfolist:
-            if gameinfo['category'] == category:
-                d['bk_runner'] = gameinfo.get( 'bk_runner' )
-                d['bk_time'] = util.seconds_to_timestr( 
-                        gameinfo.get( 'bk_seconds' ) )
-                d['bk_date'] = util.datestr_to_date( 
-                    gameinfo.get( 'bk_datestr' ) )[ 0 ]
-                d['bk_video'] = gameinfo.get( 'bk_video' )
-                break
-        gamepage.append( d )
-        self.update_cache_gamepage( game, gamepage )
-
     def update_gamepage_delete( self, user, old_run ):
         # Update gamepage in memcache
-        gamepage = self.get_gamepage( old_run['game'], no_refresh=True )
-        if gamepage is None:
-            return
-        if gamepage == self.OVER_QUOTA_ERROR:
-            self.update_cache_gamepage( game, None )
-            return        
-
-        for j, d in enumerate( gamepage ):
-            if d['category'] == old_run['category']:
-                for i, runinfo in enumerate( d['infolist'] ):
-                    if runinfo['username'] == user.username:
-                        new_info = self.get_runinfo( user.username, 
-                                                     old_run['game'], 
-                                                     old_run['category'] )
-                        if new_info == self.OVER_QUOTA_ERROR:
-                            self.update_cache_gamepage( old_run['game'], None )
-                            return
-                        if new_info['num_runs'] <= 0:
-                            del d['infolist'][ i ]
-                            if len( d['infolist'] ) <= 0:
-                                del gamepage[ j ]
-                        else:
-                            d['infolist'][i] = new_info
-                            d['infolist'].sort( key=itemgetter('pb_seconds') )
-                            gamepage.sort( key=lambda x: len(x['infolist']),
-                                           reverse=True )
-                        self.update_cache_gamepage( old_run['game'], 
-                                                    gamepage )
-                        return
-                break
-        logging.error( "Failed to correctly update gamepage in memcache" )
-        self.update_cache_gamepage( old_run['game'], None )
+        game = old_run['game']
+        category = old_run['category']
+        category_code = util.get_code( category )
+        self.update_cache_gamepage( game, category_code, None )
 
     def update_runlist_for_runner_put( self, params ):
         user = params[ 'user' ]

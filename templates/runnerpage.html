@@ -56,7 +56,7 @@
 	  {{pb['game']}}
 	</a>
       </td>
-      <td class="{% if not visible_columns['category'] %}hidden{% endif %}"><a href="/game/{{pb['game_code']}}#{{info['category_code']}}">{{info['category']}}</a></td>
+      <td class="{% if not visible_columns['category'] %}hidden{% endif %}"><a href="/game/{{pb['game_code']}}?c={{info['category_code']}}">{{info['category']}}</a></td>
       <td class="{% if not visible_columns['pb'] %}hidden{% endif %}">
 	{% if info['video'] %}
 	<a href="{{info['video']}}" data-toggle="tooltip" title="See video">{% endif %}
