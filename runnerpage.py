@@ -32,6 +32,13 @@ class RunnerPage( handler.Handler ):
                 user = None
             q = self.request.get( 'q', default_value=None )
 
+            # Grab the page num
+            page_num = self.request.get( 'page', default_value=1 )
+            try:
+                page_num = int( page_num )
+            except ValueError:
+                page_num = 1
+
             # Make sure the runner exists
             runner = self.get_runner( username_code )
             if runner is None:
@@ -48,13 +55,17 @@ class RunnerPage( handler.Handler ):
 
             if q == 'view-all':
                 # List all runs for this runner
-                runlist = self.get_runlist_for_runner( username )
-                if runlist == self.OVER_QUOTA_ERROR:
+                res = self.get_runlist_for_runner( username, page_num )
+                if res == self.OVER_QUOTA_ERROR:
                     self.error( 403 )
                     self.render( "403.html", user=user )
                 elif self.format == 'html':
                     self.render( "listruns.html", user=user, runner=runner,
-                                 username_code=username_code, runlist=runlist,
+                                 username_code=username_code,
+                                 runlist=res['runlist'],
+                                 page_num=res['page_num'],
+                                 has_next=res['has_next'],
+                                 has_prev=(res['page_num'] > 1),
                                  gravatar=gravatar )
                 elif self.format == 'json':
                     self.render_json( runlist )

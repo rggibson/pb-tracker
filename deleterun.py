@@ -97,17 +97,20 @@ class DeleteRun( runhandler.RunHandler ):
             self.update_runnerlist_delete( runner )
 
         # Update runlist for runner in memcache
-        runlist = self.get_runlist_for_runner( runner.username, 
-                                               no_refresh=True )
-        if runlist == self.OVER_QUOTA_ERROR:
-            self.update_cache_runlist_for_runner( runner.username, None )
-        elif runlist is not None:
-            for i, run in enumerate( runlist ):
-                if run[ 'run_id' ] == run_id:
-                    del runlist[ i ]
-                    self.update_cache_runlist_for_runner( runner.username,
-                                                          runlist )
+        cached_runlists = self.get_cached_runlists_for_runner(
+            runner.username )
+        if cached_runlists is not None:
+            found_run = False
+            for page_num, res in cached_runlists.iteritems( ):
+                if found_run:
                     break
+                for i, run in enumerate( res['runlist'] ):
+                    if run[ 'run_id' ] == run_id:
+                        del cached_runlists[ page_num ]['runlist'][ i ]
+                        self.update_cache_runlist_for_runner( runner.username,
+                                                              cached_runlists )
+                        found_run = True
+                        break
 
         # Update last run
         last_run = self.get_last_run( runner.username, no_refresh=True )

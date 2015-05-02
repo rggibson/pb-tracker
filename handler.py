@@ -33,6 +33,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 
 class Handler(webapp2.RequestHandler):
     PAGE_LIMIT = 50
+    RUNLIST_PAGE_LIMIT = 200
     GAMEPAGE_PAGE_LIMIT = 500
     OVER_QUOTA_ERROR = 'OVER_QUOTA_ERROR'
 
@@ -691,15 +692,25 @@ class Handler(webapp2.RequestHandler):
             logging.debug( "Updated " + key + " in memcache" )
         else:
             logging.error( "Failed to update " + key + " in memcache" )
+            
+    def get_runlist_for_runner_cursor_memkey( self, username, page_num ):
+        return username + ":runlist_for_runner:cursor-page-" + str( page_num )
 
     def get_runlist_for_runner_memkey( self, username ):
         return username + ":runlist_for_runner"
 
-    def get_runlist_for_runner( self, username, no_refresh=False ):
+    # Similar to other get methods here, returns a dict with page_num, has_next
+    # and runlist keys on success, or OVER_QUOTA_ERROR on failure
+    def get_runlist_for_runner( self, username, page_num ):
         key = self.get_runlist_for_runner_memkey( username )
-        runlist = memcache.get( key )
-        if runlist is None and not no_refresh:
+        cached_runlists = memcache.get( key )
+        if cached_runlists is None:
+            cached_runlists = dict( )
+        res = cached_runlists.get( page_num )
+        if res is None:
             # Not in memcache, so construct the runlist and store in memcache.
+            res = dict( page_num=page_num,
+                        has_next=True )
             runlist = [ ]
             try:
                 q = runs.Runs.all( )
@@ -707,35 +718,60 @@ class Handler(webapp2.RequestHandler):
                 q.filter( 'username =', username )
                 q.order( '-date' )
                 q.order( '-datetime_created' )
-                for run in q.run( limit = 1000 ):
-                    runlist.append( dict( run_id = str( run.key().id() ),
-                                          game = run.game,
-                                          game_code = util.get_code( run.game ),
-                                          category = run.category,
-                                          category_code = util.get_code( 
-                                              run.category ),
-                                          time = util.
-                                          seconds_to_timestr( run.seconds ),
-                                          date = run.date,
-                                          datetime_created = run.datetime_created,
-                                          video = run.video,
-                                          version = run.version,
-                                          notes = run.notes ) )
+                c = memcache.get( self.get_runlist_for_runner_cursor_memkey(
+                    username, page_num ) )
+                if c:
+                    try:
+                        q.with_cursor( start_cursor=c )
+                    except BadRequestError:
+                        res['page_num'] = 1
+                else:
+                    res['page_num'] = 1
+                for run in q.run( limit = self.RUNLIST_PAGE_LIMIT ):
+                    runlist.append( dict(
+                        run_id = str( run.key().id() ),
+                        game = run.game,
+                        game_code = util.get_code( run.game ),
+                        category = run.category,
+                        category_code = util.get_code( run.category ),
+                        time = util.
+                        seconds_to_timestr( run.seconds ),
+                        date = run.date,
+                        datetime_created = run.datetime_created,
+                        video = run.video,
+                        version = run.version,
+                        notes = run.notes ) )
+                c = q.cursor( )
+                cursor_key = self.get_runlist_for_runner_cursor_memkey(
+                    username, res['page_num'] + 1 )
+                if memcache.set( cursor_key, c ):
+                    logging.debug( "Set " + cursor_key + " in memcache" )
+                else:
+                    logging.warning( "Failed to set new " + cursor_key
+                                     + " in memcache" )
+                if len( runlist ) < self.RUNLIST_PAGE_LIMIT:
+                    res['has_next'] = False
             except apiproxy_errors.OverQuotaError, msg:
                 logging.error( msg )
                 return self.OVER_QUOTA_ERROR
 
-            if memcache.set( key, runlist ):
+            res['runlist'] = runlist
+            cached_runlists[ res['page_num'] ] = res
+            if memcache.set( key, cached_runlists ):
                 logging.debug( "Set " + key + " in memcache" )
             else:
                 logging.warning( "Failed to set " + key + " in memcache" )
-        elif runlist is not None:
+        else:
             logging.debug( "Got " + key + " from memcache" )
-        return runlist
+        return res
 
-    def update_cache_runlist_for_runner( self, username, runlist ):
+    def get_cached_runlists_for_runner( self, username ):
         key = self.get_runlist_for_runner_memkey( username )
-        if memcache.set( key, runlist ):
+        return memcache.get( key )
+
+    def update_cache_runlist_for_runner( self, username, cached_runlists ):
+        key = self.get_runlist_for_runner_memkey( username )
+        if memcache.set( key, cached_runlists ):
             logging.debug( "Updated " + key + " in memcache" )
         else:
             logging.error( "Failed to update " + key + " in memcache" )

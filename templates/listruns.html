@@ -67,6 +67,17 @@
   </tbody>
 </table>
 </div>
+<div class="pager">
+  <ul>
+    <li{% if not has_prev %} class="hidden"{% endif %}>
+      <a href="/runner/{{username_code}}?q=view-all&page={{page_num-1}}">Previous</a>
+    </li>
+    <li{% if not has_next %} class="hidden"{% endif %}>
+      <a href="/runner/{{username_code}}?q=view-all&page={{page_num+1}}">Next</a>
+    </li>
+  </ul>
+</div>
+
 {% endblock %}
 
 <!-- Total hack to get the query string in the return urls -->

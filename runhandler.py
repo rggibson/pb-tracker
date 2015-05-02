@@ -381,25 +381,27 @@ class RunHandler( handler.Handler ):
         run_id = params[ 'run_id' ]
 
         # Update runlist for runner in memcache
-        runlist = self.get_runlist_for_runner( user.username, 
-                                               no_refresh=True )
-        if runlist == self.OVER_QUOTA_ERROR:
-            self.update_cache_runlist_for_runner( user.username, None )
-        elif runlist is not None:
-            runlist.insert( 0, dict( run_id = run_id,
-                                     game = game, 
-                                     game_code = game_code,
-                                     category = category, 
-                                     category_code = util.get_code( category ),
-                                     time = time,
-                                     date = date, 
-                                     datetime_created = datetime_created,
-                                     video = video,
-                                     version = version,
-                                     notes = notes ) )
-            runlist.sort( key=lambda x: util.get_valid_date( x['date'] ),
-                          reverse=True )
-            self.update_cache_runlist_for_runner( user.username, runlist )
+        cached_runlists = self.get_cached_runlists_for_runner( user.username )
+        if cached_runlists is not None:
+            res = cached_runlists.get( 1 )
+            if res is not None:
+                res['runlist'].insert( 
+                    0, 
+                    dict( run_id = run_id,
+                          game = game, 
+                          game_code = game_code,
+                          category = category, 
+                          category_code = util.get_code( category ),
+                          time = time,
+                          date = date, 
+                          datetime_created = datetime_created,
+                          video = video,
+                          version = version,
+                          notes = notes ) )
+                res['runlist'].sort( key=lambda x: util.get_valid_date(
+                    x['date'] ), reverse=True )
+                self.update_cache_runlist_for_runner( user.username,
+                                                      cached_runlists )
 
     def update_gamelist_put( self, params ):
         game_code = params[ 'game_code' ]
@@ -666,27 +668,30 @@ class RunHandler( handler.Handler ):
             self.update_runnerlist_put( params )
 
         # Replace the old run in the runlist for runner in memcache
-        runlist = self.get_runlist_for_runner( runner.username, 
-                                               no_refresh=True )
-        if runlist == self.OVER_QUOTA_ERROR:
-            self.update_cache_runlist_for_runner( runner.username, None )
-        elif runlist is not None:
-            for run in runlist:
-                if run[ 'run_id' ] == run_id:
-                    run[ 'game' ] = game
-                    run[ 'game_code' ] = game_code
-                    run[ 'category' ] = category
-                    run[ 'category_code' ] = util.get_code( category )
-                    run[ 'time' ] = time
-                    run[ 'date' ] = new_run.date
-                    run[ 'video' ] = video
-                    run[ 'version' ] = version
-                    run[ 'notes' ] = notes
-                    runlist.sort( key=lambda x: util.get_valid_date( 
-                        x['date'] ), reverse=True )
-                    self.update_cache_runlist_for_runner( runner.username, 
-                                                          runlist )
+        cached_runlists = self.get_cached_runlists_for_runner(
+            runner.username )
+        if cached_runlists is not None:
+            found_run = False
+            for page_num, res in cached_runlists.iteritems( ):
+                if found_run:
                     break
+                for run in res['runlist']:
+                    if run[ 'run_id' ] == run_id:
+                        run[ 'game' ] = game
+                        run[ 'game_code' ] = game_code
+                        run[ 'category' ] = category
+                        run[ 'category_code' ] = util.get_code( category )
+                        run[ 'time' ] = time
+                        run[ 'date' ] = new_run.date
+                        run[ 'video' ] = video
+                        run[ 'version' ] = version
+                        run[ 'notes' ] = notes
+                        res['runlist'].sort( key=lambda x: util.get_valid_date(
+                            x['date'] ), reverse=True )
+                        self.update_cache_runlist_for_runner( runner.username, 
+                                                              cached_runlists )
+                        found_run = True
+                        break
 
         # Check to see if we need to replace the last run for this user
         last_run = self.get_last_run( runner.username, no_refresh=True )
