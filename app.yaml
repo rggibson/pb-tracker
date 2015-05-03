@@ -8,10 +8,6 @@ handlers:
 - url: /static
   static_dir: static 
 
-- url: /cleanup-games
-  script: main.app
-  login: admin
-
 - url: /favicon\.ico
   static_files: static/icons/favicon.ico
   upload: static/icons/favicon\.ico
@@ -30,6 +26,6 @@ builtins:
 - appstats: on
 
 error_handlers:
-- file: default_error.html
 - error_code: over_quota
   file: over_quota.html
+- file: default_error.html

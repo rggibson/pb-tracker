@@ -135,8 +135,58 @@ class RunHandler( handler.Handler ):
             game_model.put( )
             self.update_cache_game_model( game_code, game_model )
 
-    def update_games_delete( self, game_model, delta_num_pbs ):
-        if delta_num_pbs != 0:
+    def update_games_delete( self, game_model, category, delta_num_pbs ):
+        # Check if any runs exist now for this category
+        num_category_runs = 1
+        try:
+            q = db.Query( runs.Runs, keys_only=True )
+            q.ancestor( runs.key() )
+            q.filter( 'game =', game_model.game )
+            q.filter( 'category =', category )
+            num_category_runs = q.count( limit=1 )
+        except apiproxy_errors.OverQuotaError, msg:
+            logging.error( msg )
+        if num_category_runs <= 0:
+            # Check if any runs exist now for this game at all
+            num_runs = 0
+            try:
+                q = db.Query( runs.Runs, keys_only=True )
+                q.ancestor( runs.key() )
+                q.filter( 'game =', game_model.game )
+                num_runs = q.count( limit=1 )
+            except apiproxy_errors.OverQuotaError, msg:
+                logging.error( msg )
+            if num_runs <= 0:
+                # No runs exist. Delete this game from the db
+                game = game_model.game
+                game_model.delete( )
+                logging.info( game + " deleted" )
+                self.update_cache_game_model( util.get_code( game ), None )
+                # From gamelist in memcache too
+                cached_gamelists = self.get_cached_gamelists( )
+                if cached_gamelists is not None:
+                    done = False
+                    for page_num, res in cached_gamelists.iteritems( ):
+                        if done:
+                            break
+                        for i, d in enumerate( res['gamelist'] ):
+                            if d['game'] == game:
+                                del cached_gamelists[ page_num ]['gamelist'][ i ]
+                                done = True
+                                break
+                    self.update_cache_gamelist( cached_gamelists )
+                return
+            else:
+                # Just delete the category from this game
+                gameinfolist = json.loads( game_model.info )
+                for i, gameinfo in enumerate( gameinfolist ):
+                    if category == gameinfo['category']:
+                        del gameinfolist[ i ]
+                        logging.info( 'Removed ' + category
+                                      + ' from ' + game_model.game )
+                        game_model.info = json.dumps( gameinfolist )
+
+        if num_category_runs <= 0 or delta_num_pbs != 0:
             game_model.num_pbs += delta_num_pbs
             game_model.put( )
             self.update_cache_game_model( util.get_code( game_model.game ), 
@@ -648,9 +698,11 @@ class RunHandler( handler.Handler ):
         # Update games.Games and runners.Runners
         self.update_runner( runner, delta_num_pbs_old + delta_num_pbs_new )
         if game == old_run['game']:
-            self.update_games_delete( params['game_model'], delta_num_pbs_old )
+            self.update_games_delete( params['game_model'],
+                                      old_run['category'], delta_num_pbs_old )
         else:
-            self.update_games_delete( old_game_model, delta_num_pbs_old )
+            self.update_games_delete( old_game_model, old_run['category'],
+                                      delta_num_pbs_old )
         self.update_games_put( params, delta_num_pbs_new )
 
         # Update memcache with the removal of the old run and addition of the

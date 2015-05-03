@@ -14,6 +14,7 @@ import handler
 import runs
 import util
 import logging
+import json
 
 from operator import itemgetter
 
@@ -97,6 +98,45 @@ class GamePage( handler.Handler ):
                     if runner is not None:
                         run['gravatar_url'] = util.get_gravatar_url( 
                             runner.gravatar, size=20 )
+                if len( d['infolist'] ) <= 0:
+                    # Delete this category for the game model
+                    gameinfolist = json.loads( game_model.info )
+                    for i, gameinfo in enumerate( gameinfolist ):
+                        if category == gameinfo['category']:
+                            del gameinfolist[ i ]
+                            logging.info( 'Removed ' + category
+                                          + ' from ' + game_model.game )
+                            if len( gameinfolist ) == 0:
+                                # Remove the game
+                                game = game_model.game
+                                game_model.delete( )
+                                logging.info( game + " deleted" )
+                                self.update_cache_game_model( game_code, None )
+                                # From gamelist in memcache too
+                                cached_gamelists = self.get_cached_gamelists( )
+                                if cached_gamelists is not None:
+                                    done = False
+                                    for page_num, res in cached_gamelists.iteritems( ):
+                                        if done:
+                                            break
+                                        for i, d in enumerate( res['gamelist'] ):
+                                            if d['game'] == game:
+                                                del cached_gamelists[ page_num ]['gamelist'][ i ]
+                                                done = True
+                                                break
+                                    self.update_cache_gamelist(
+                                        cached_gamelists )
+                                self.error( 404 )
+                                self.render( "404.html", user=user )
+                                return
+                                                
+                            else:
+                                # Update game
+                                game_model.info = json.dumps( gameinfolist )
+                                game_model.put( )
+                                self.update_cache_game_model( game_code,
+                                                              game_model )
+                            break
             
             has_prev = False
             if page_num > 1:

@@ -83,8 +83,8 @@ class DeleteRun( runhandler.RunHandler ):
         if game_model == self.OVER_QUOTA_ERROR:
             self.error( 403 )
             self.render( "403.html", user=user )
-            return        
-        self.update_games_delete( game_model, delta_num_pbs )
+            return
+        self.update_games_delete( game_model, run.category, delta_num_pbs )
 
         # Must update runinfo before pblist and gamepage because pblist and
         # gamepage rely on accurate runinfo
