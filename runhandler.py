@@ -153,11 +153,10 @@ class RunHandler( handler.Handler ):
         version = params[ 'version' ]
 
         # Update runinfo in memcache
-        runinfo = self.get_runinfo( user.username, game, category, 
+        runinfo = self.get_runinfo( user.username, game, category,
+                                    self.PB_PAGE_LIMIT,
                                     no_refresh=True )
-        if runinfo is None:
-            return
-        if runinfo == self.OVER_QUOTA_ERROR:
+        if runinfo is None or runinfo == self.OVER_QUOTA_ERROR:
             self.update_cache_runinfo( user.username, game, category, None )
             return
 
@@ -179,11 +178,11 @@ class RunHandler( handler.Handler ):
     def update_runinfo_delete( self, user, old_run ):
         # Update avg, num runs
         runinfo = self.get_runinfo( user.username, old_run['game'],
-                                    old_run['category'], no_refresh=True )
-        if runinfo is None:
-            return
-        if runinfo == self.OVER_QUOTA_ERROR:
-            self.update_cache_runinfo( user.username, game, category, None )
+                                    old_run['category'],
+                                    self.PB_PAGE_LIMIT, no_refresh=True )
+        if runinfo is None or runinfo == self.OVER_QUOTA_ERROR:
+            self.update_cache_runinfo( user.username, old_run['game'],
+                                       old_run['category'], None )
             return
 
         if runinfo['num_runs'] <= 0:
@@ -263,95 +262,103 @@ class RunHandler( handler.Handler ):
         game_code = params[ 'game_code' ]
 
         # Update pblist in memcache
-        pblist = self.get_pblist( user.username, no_refresh=True )
-        if pblist is None:
-            return
-        if pblist == self.OVER_QUOTA_ERROR:
-            self.update_cache_pblist( user.username, None )
+        cached_pblists = self.get_cached_pblists( user.username )
+        if cached_pblists is None:
             return
 
-        for pb in pblist:
-            if( pb['game'] == game ):
-                pb['num_runs'] += 1
-                pblist.sort( key=itemgetter('game') )
-                pblist.sort( key=itemgetter('num_runs'), reverse=True )
-                for i, info in enumerate( pb['infolist'] ):
-                    if( info['category'] == category ):
-                        pb['infolist'][i] = self.get_runinfo( user.username, 
-                                                              game, category )
-                        if pb['infolist'][i] == self.OVER_QUOTA_ERROR:
-                            pblist = None
-                        else:
-                            pb['infolist'].sort( key=itemgetter('category') )
-                            pb['infolist'].sort( key=itemgetter('num_runs'),
-                                                 reverse=True )
-                        self.update_cache_pblist( user.username, pblist )
-                        return
+        for page_num, res in cached_pblists.iteritems( ):
+            pblist = res['pblist']
+            for pb in pblist:
+                if( pb['game'] == game ):
+                    pb['num_runs'] += 1
+                    for i, info in enumerate( pb['infolist'] ):
+                        if( info['category'] == category ):
+                            pb['infolist'][i] = self.get_runinfo(
+                                user.username, game, category,
+                                self.PB_PAGE_LIMIT )
+                            if( pb['infolist'][i] is None or
+                                pb['infolist'][i] == self.OVER_QUOTA_ERROR ):
+                                cached_pblists = None
+                            else:
+                                pb['infolist'].sort(
+                                    key=itemgetter('category') )
+                                pb['infolist'].sort(
+                                    key=itemgetter('num_runs'),
+                                    reverse=True )
+                            self.update_cache_pblist( user.username,
+                                                      cached_pblists )
+                            return
 
-                # User has run this game, but not this category.
-                # Add the run to the pblist and update memcache.
-                runinfo = self.get_runinfo( user.username, game, category )
-                if runinfo == self.OVER_QUOTA_ERROR:
-                    pblist = None
-                else:
-                    pb['infolist'].append( runinfo )
-                    pb['infolist'].sort( key=itemgetter('category') )
-                    pb['infolist'].sort( key=itemgetter('num_runs') )
-                self.update_cache_pblist( user.username, pblist )
-                return
+                    # User has run this game, but not this category.
+                    # Add the run to the pblist and update memcache.
+                    runinfo = self.get_runinfo( user.username, game, category,
+                                                self.PB_PAGE_LIMIT )
+                    if runinfo is None or runinfo == self.OVER_QUOTA_ERROR:
+                        cached_pblists = None
+                    else:
+                        pb['infolist'].append( runinfo )
+                        pb['infolist'].sort( key=itemgetter('category') )
+                        pb['infolist'].sort( key=itemgetter('num_runs') )
+                    self.update_cache_pblist( user.username, cached_pblists )
+                    return
 
         # No run for this username, game combination.
         # So, add the run to this username's pblist and update memcache
-        runinfo = self.get_runinfo( user.username, game, category )
-        if runinfo == self.OVER_QUOTA_ERROR:
-            pblist = None
+        runinfo = self.get_runinfo( user.username, game, category,
+                                    self.PB_PAGE_LIMIT )
+        if runinfo is None or runinfo == self.OVER_QUOTA_ERROR:
+            cached_pblists = None
         else:
-            pblist.append( dict( game = game, 
-                                 game_code = game_code,
-                                 num_runs = 1,
-                                 infolist = [ runinfo ] ) )
-            pblist.sort( key=itemgetter('game') )
-            pblist.sort( key=itemgetter('num_runs'), reverse=True )
-        self.update_cache_pblist( user.username, pblist )
+            res = cached_pblists.get( 1 )
+            if res is not None:
+                pblist = res['pblist']
+                pblist.append( dict( game = game, 
+                                     game_code = game_code,
+                                     num_runs = 1,
+                                     infolist = [ runinfo ] ) )
+                pblist.sort( key=itemgetter('game') )
+        self.update_cache_pblist( user.username, cached_pblists )
 
     def update_pblist_delete( self, user, old_run ):
-        # Update pblist with the removal to the old run
-        pblist = self.get_pblist( user.username, no_refresh=True )
-        if pblist is None:
-            return
-        if pblist == self.OVER_QUOTA_ERROR:
-            self.update_cache_pblist( user.username, None )
+        # Update pblist with the removal of the old run
+        cached_pblists = self.get_cached_pblists( user.username )
+        if cached_pblists is None:
             return
 
-        for i, pb in enumerate( pblist ):
-            if( pb['game'] == old_run['game'] ):
-                pb['num_runs'] -= 1
-                for j, info in enumerate( pb['infolist'] ):
-                    if( info['category'] == old_run['category'] ):
-                        runinfo = self.get_runinfo( user.username, 
-                                                    old_run['game'], 
-                                                    old_run['category'] )
-                        if runinfo == self.OVER_QUOTA_ERROR:
-                            self.update_cache_pblist( user.username, None )
+        for page_num, res in cached_pblists.iteritems( ):
+            pblist = res['pblist']
+            for i, pb in enumerate( pblist ):
+                if( pb['game'] == old_run['game'] ):
+                    pb['num_runs'] -= 1
+                    for j, info in enumerate( pb['infolist'] ):
+                        if( info['category'] == old_run['category'] ):
+                            runinfo = self.get_runinfo( user.username, 
+                                                        old_run['game'], 
+                                                        old_run['category'],
+                                                        self.PB_PAGE_LIMIT )
+                            if( runinfo is None
+                                or runinfo == self.OVER_QUOTA_ERROR ):
+                                self.update_cache_pblist( user.username, None )
+                                return
+                            if runinfo[ 'num_runs' ] > 0:
+                                pb[ 'infolist' ][ j ] = runinfo
+                            else:
+                                # No other runs for game, category combo
+                                del pb[ 'infolist' ][ j ]
+                                if len( pb[ 'infolist' ] ) <= 0:
+                                    del cached_pblists[ page_num ]['pblist'][ i ]
+                            pb['infolist'].sort( key=itemgetter('category') )
+                            pb['infolist'].sort( key=itemgetter('num_runs'),
+                                                 reverse=True )
+                            pblist.sort( key=itemgetter('game') )
+                            pblist.sort( key=itemgetter('num_runs'), 
+                                         reverse=True )
+                            self.update_cache_pblist( user.username,
+                                                      cached_pblists )
                             return
-                        if runinfo[ 'num_runs' ] > 0:
-                            pb[ 'infolist' ][ j ] = runinfo
-                        else:
-                            # No other runs for game, category combo
-                            del pb[ 'infolist' ][ j ]
-                            if len( pb[ 'infolist' ] ) <= 0:
-                                del pblist[ i ]
-                        pb['infolist'].sort( key=itemgetter('category') )
-                        pb['infolist'].sort( key=itemgetter('num_runs'),
-                                             reverse=True )
-                        pblist.sort( key=itemgetter('game') )
-                        pblist.sort( key=itemgetter('num_runs'), 
-                                     reverse=True )
-                        self.update_cache_pblist( user.username, pblist )
-                        return
-                break
-        logging.error( "Failed to correctly update pblist" )
-        self.update_cache_pblist( user.username, None )
+                    logging.error( "Failed to correctly update pblist" )
+                    self.update_cache_pblist( user.username, None )
+                    return
 
     def update_gamepage_put( self, params ):
         # Update gamepage in memcache

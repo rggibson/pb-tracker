@@ -33,8 +33,9 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 
 class Handler(webapp2.RequestHandler):
     PAGE_LIMIT = 50
-    RUNLIST_PAGE_LIMIT = 200
-    GAMEPAGE_PAGE_LIMIT = 500
+    RUNLIST_PAGE_LIMIT = 100
+    GAMEPAGE_PAGE_LIMIT = 100
+    PB_PAGE_LIMIT = 151
     OVER_QUOTA_ERROR = 'OVER_QUOTA_ERROR'
 
     # Writing and rendering utility functions
@@ -247,7 +248,7 @@ class Handler(webapp2.RequestHandler):
     def get_runinfo_memkey( self, username, game, category ):
         return username + ":" + game + ":" + category + ":runinfo"
 
-    def get_runinfo( self, username, game, category, no_refresh=False ):
+    def get_runinfo( self, username, game, category, limit, no_refresh=False ):
         key = self.get_runinfo_memkey( username, game, category )
         runinfo = memcache.get( key )
         if runinfo is None and not no_refresh:
@@ -264,13 +265,15 @@ class Handler(webapp2.RequestHandler):
                 q.filter('game =', game)
                 q.filter('category =', category)
                 q.order('-date') # Cut off old runs
-                for run in q.run( limit = 100000 ):
+                for run in q.run( limit = limit ):
                     num_runs += 1
                     avg_seconds += ( 1.0 / num_runs ) * ( 
                         run.seconds - avg_seconds )
                     if( pb_run is None or run.seconds <= pb_run.seconds ):
                         pb_run = run
 
+                if num_runs >= limit:
+                    return None
                 runinfo = dict( username = username,
                                 username_code = util.get_code( username ),
                                 category = category, 
@@ -308,30 +311,51 @@ class Handler(webapp2.RequestHandler):
             logging.debug( "Updated " + key + " in memcache" )
         else:
             logging.error( "Failed to update " + key + " in memcache" )
+            
+    def get_pblist_cursor_memkey( self, username, page_num ):
+        return username + ":pblist:cursor-page-" + str( page_num )
 
     def get_pblist_memkey( self, username ):
         return username + ":pblist"
 
-    def get_pblist( self, username, no_refresh=False ):
+    # Similar to other stuff, returns a dict with page_num, has_next and 
+    # pblist keys, or OVER_QUOTA_ERROR
+    def get_pblist( self, username, page_num ):
         key = self.get_pblist_memkey( username )
-        pblist = memcache.get( key )
-        if pblist is None and not no_refresh:
+        cached_pblists = memcache.get( key )
+        if cached_pblists is None:
+            cached_pblists = dict( )
+        res = cached_pblists.get( page_num )
+        if res is None:
+            res = dict( page_num=page_num, has_next=False )
             # Not in memcache, so construct the pblist and store in memcache.
             # pblist is a list of dictionaries with 3 indices, 'game', 
             # 'game_code' and 'infolist'.  The infolist is another list of 
             # dictionaries containing all the info for each pb of the game.
             pblist = [ ]
             try:
-                # Use a projection query to get all of the unique game, category
-                # pairs
-                q = db.Query( runs.Runs, projection=('game', 'category'), 
+                # Use a projection query to get all of the unique game,
+                # category pairs
+                q = db.Query( runs.Runs,
+                              projection=['game', 'category'],
                               distinct=True )
                 q.ancestor( runs.key() )
                 q.filter( 'username =', username )
                 q.order( 'game' )
                 q.order( 'category' )
+                c = memcache.get( self.get_pblist_cursor_memkey(
+                    username, page_num ) )
+                if c:
+                    try:
+                        q.with_cursor( start_cursor=c )
+                    except BadRequestError:
+                        res['page_num'] = 1
+                else:
+                    res['page_num'] = 1
                 cur_game = None
-                for run in q.run( limit = 1000 ):
+                cursor_to_save = c
+                runs_queried = 0
+                for run in q.run( ):
                     if run.game != cur_game:
                         # New game
                         pb = dict( game = run.game, 
@@ -339,14 +363,57 @@ class Handler(webapp2.RequestHandler):
                                    num_runs = 0,
                                    infolist = [ ] )
                         pblist.append( pb )
-                        cur_game = run.game                
+                        cur_game = run.game            
 
                     # Add runinfo to pblist
-                    info = self.get_runinfo( username, run.game, run.category )
+                    info = self.get_runinfo(
+                        username, run.game, run.category,
+                        self.PB_PAGE_LIMIT - runs_queried )
                     if info == self.OVER_QUOTA_ERROR:
                         return self.OVER_QUOTA_ERROR
+                    elif info is None:
+                        res['has_next'] = True
+                        if len( pb['infolist'] ) <= 0:
+                            del pblist[ -1 ]
+                        if len( pblist ) <= 0:
+                            # Too many runs for this category
+                            pb = dict(
+                                game = run.game,
+                                game_code = util.get_code( run.game ),
+                                num_runs = 0,
+                                infolist = [ dict( 
+                                    username=username,
+                                    username_code = util.get_code(
+                                        username ),
+                                    category=( 'TOO MANY RUNS FOR '
+                                               + 'CATEGORY: '
+                                               + run.category
+                                               + ' (max is '
+                                               + str( self.PB_PAGE_LIMIT - 1 )
+                                               + ', please delete some runs)' ),
+                                    category_code=util.get_code(
+                                        run.category ),
+                                    pb_seconds=0,
+                                    pb_time=util.seconds_to_timestr( 0 ),
+                                    pb_date=None,
+                                    num_runs=0,
+                                    avg_seconds=0,
+                                    avg_time=util.seconds_to_timestr( 0 ),
+                                    video=None ) ] )
+                            pblist.append( pb )
+                        break
                     pb['infolist'].append( info )
                     pb['num_runs'] += info['num_runs']
+                    runs_queried += info['num_runs']
+                    cursor_to_save = q.cursor( )
+
+                cursor_key = self.get_pblist_cursor_memkey(
+                    username, res['page_num'] + 1 )
+                if memcache.set( cursor_key, cursor_to_save ):
+                    logging.debug( 'Set ' + cursor_key + " in memcache" )
+                else:
+                    logging.warning( 'Failed to set ' + cursor_key
+                                     + ' in memcache' )
             except apiproxy_errors.OverQuotaError, msg:
                 logging.error( msg )
                 return self.OVER_QUOTA_ERROR
@@ -355,20 +422,23 @@ class Handler(webapp2.RequestHandler):
             for pb in pblist:
                 pb['infolist'].sort( key=itemgetter('num_runs'), reverse=True )
 
-            # Sort the games by number of runs
-            pblist.sort( key=itemgetter('num_runs'), reverse=True )
-
-            if memcache.set( key, pblist ):
+            res['pblist'] = pblist
+            cached_pblists[ res['page_num'] ] = res
+            if memcache.set( key, cached_pblists ):
                 logging.debug( "Set " + key + " in memcache" )
             else:
                 logging.warning( "Failed to set " + key + " in memcache" )
-        elif pblist is not None:
+        else:
             logging.debug( "Got " + key + " from memcache" )
-        return pblist
+        return res
 
-    def update_cache_pblist( self, username, pblist ):
+    def get_cached_pblists( self, username ):
         key = self.get_pblist_memkey( username )
-        if memcache.set( key, pblist ):
+        return memcache.get( key )
+
+    def update_cache_pblist( self, username, cached_pblists ):
+        key = self.get_pblist_memkey( username )
+        if memcache.set( key, cached_pblists ):
             logging.debug( "Updated " + key + " in memcache" )
         else:
             logging.error( "Failed to update " + key + " in memcache" )

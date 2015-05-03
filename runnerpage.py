@@ -68,17 +68,18 @@ class RunnerPage( handler.Handler ):
                                  has_prev=(res['page_num'] > 1),
                                  gravatar=gravatar )
                 elif self.format == 'json':
-                    self.render_json( runlist )
+                    self.render_json( res['runlist'] )
             else:
                 # By default, list pbs for this runner
-                pblist = self.get_pblist( username )
-                if pblist == self.OVER_QUOTA_ERROR:
+                res = self.get_pblist( username, page_num )
+                if res == self.OVER_QUOTA_ERROR:
                     self.error( 403 )
                     self.render( "403.html", user=user )
                     return
                 # We are also going to list the best known times for each game.
                 # Let's gather those times here and add them to the pblist
                 # info.
+                pblist = res['pblist']
                 for pb in pblist:
                     game_model = self.get_game_model( pb['game_code'] )
                     if game_model is None:
@@ -109,7 +110,9 @@ class RunnerPage( handler.Handler ):
                 if self.format == 'html':
                     self.render( "runnerpage.html", user=user, runner=runner,
                                  username_code=username_code, pblist=pblist,
-                                 gravatar=gravatar, 
+                                 gravatar=gravatar, page_num=res['page_num'],
+                                 has_next=res['has_next'],
+                                 has_prev=( res['page_num'] > 1 ),
                                  visible_columns=visible_columns )
                 elif self.format == 'json':
                     self.render_json( pblist )
