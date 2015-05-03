@@ -33,9 +33,9 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 
 class Handler(webapp2.RequestHandler):
     PAGE_LIMIT = 50
-    RUNLIST_PAGE_LIMIT = 100
-    GAMEPAGE_PAGE_LIMIT = 100
-    PB_PAGE_LIMIT = 151
+    RUNLIST_PAGE_LIMIT = 75
+    GAMEPAGE_PAGE_LIMIT = 50
+    PB_PAGE_LIMIT = 76
     OVER_QUOTA_ERROR = 'OVER_QUOTA_ERROR'
 
     # Writing and rendering utility functions
@@ -501,8 +501,7 @@ class Handler(webapp2.RequestHandler):
                 # Get 1 run per username
                 q = db.Query( runs.Runs,
                               projection=['username', 'seconds',
-                                          'date', 'video', 'version'],
-                              distinct=True )
+                                          'date', 'video', 'version'] )
                 q.ancestor( runs.key() )
                 q.filter( 'game =', game )
                 q.filter( 'category =', category )
