@@ -189,9 +189,6 @@ class Signup( handler.Handler ):
             # Clear the runnerlist in memcache
             self.update_cache_runnerlist( None )
 
-            # Update runs for runner in memcache
-            self.update_cache_runlist_for_runner( username, [ ] )
-
             self.login( username_code )
             
         else:
