@@ -265,7 +265,7 @@ class Handler(webapp2.RequestHandler):
                 q.filter('game =', game)
                 q.filter('category =', category)
                 q.order('-date') # Cut off old runs
-                for run in q.run( limit = limit ):
+                for run in q.run( limit = max( limit, 0 ) ):
                     num_runs += 1
                     avg_seconds += ( 1.0 / num_runs ) * ( 
                         run.seconds - avg_seconds )
