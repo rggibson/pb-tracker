@@ -98,7 +98,7 @@ class GamePage( handler.Handler ):
                     if runner is not None:
                         run['gravatar_url'] = util.get_gravatar_url( 
                             runner.gravatar, size=20 )
-                if len( d['infolist'] ) <= 0:
+                if len( d['infolist'] ) <= 0 and page_num == 1:
                     # Delete this category for the game model
                     gameinfolist = json.loads( game_model.info )
                     for i, gameinfo in enumerate( gameinfolist ):

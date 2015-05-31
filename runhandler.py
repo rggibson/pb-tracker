@@ -148,7 +148,7 @@ class RunHandler( handler.Handler ):
             logging.error( msg )
         if num_category_runs <= 0:
             # Check if any runs exist now for this game at all
-            num_runs = 0
+            num_runs = 1
             try:
                 q = db.Query( runs.Runs, keys_only=True )
                 q.ancestor( runs.key() )

@@ -537,17 +537,18 @@ class Handler(webapp2.RequestHandler):
                                  version = run.version )
                     d['infolist'].append( info )
                     usernames_seen.add( run.username )
-                c = q.cursor( )
-                cached_cursor = dict( c=c, usernames_seen=usernames_seen )
-                cursor_key = self.get_gamepage_cursor_memkey(
-                    game, category_code, gamepage['page_num'] + 1 )
-                if memcache.set( cursor_key, cached_cursor ):
-                    logging.debug( "Set " + cursor_key + " in memcache" )
-                else:
-                    logging.warning( "Failed to set new " + cursor_key
-                                     + " in memcache" )
                 if num_runs < self.GAMEPAGE_PAGE_LIMIT:
                     gamepage['has_next'] = False
+                else:
+                    c = q.cursor( )
+                    cached_cursor = dict( c=c, usernames_seen=usernames_seen )
+                    cursor_key = self.get_gamepage_cursor_memkey(
+                        game, category_code, gamepage['page_num'] + 1 )
+                    if memcache.set( cursor_key, cached_cursor ):
+                        logging.debug( "Set " + cursor_key + " in memcache" )
+                    else:
+                        logging.warning( "Failed to set new " + cursor_key
+                                         + " in memcache" )
             except apiproxy_errors.OverQuotaError, msg:
                 logging.error( msg )
                 return self.OVER_QUOTA_ERROR
