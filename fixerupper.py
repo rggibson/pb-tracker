@@ -17,11 +17,16 @@ import handler
 import json
 import logging
 
+from google.appengine.api import memcache
 from google.appengine.ext import db
 from google.appengine.runtime import apiproxy_errors
+from google.appengine.ext.db import BadRequestError
 
 class FixerUpper( handler.Handler ):
     def get( self ):
+        QUERY_LIMIT = 2500
+        cursor_key = 'fixerupper-cursor'
+        
         # Make sure it's me
         user = self.get_user( )
         if not user:
@@ -37,20 +42,91 @@ class FixerUpper( handler.Handler ):
             self.render( "404.html", user=user )
             return
 
-        # Convert seconds to float
-        count = 0
+        c = self.request.get( 'c', default_value=None )
+
         try:
-            q = db.Query( runs.Runs )
-            q.ancestor( runs.key() )
-            for run in q.run( limit=1000000 ):
-                count += 1
-                if not isinstance( run.seconds, float ):
-                    run.seconds = float( run.seconds )
-                    run.put( )
-        except apiproxy_errors.OverQuotaError, message:
-            logging.error( message )
-            self.write( "Over quota error caught after "
-                        + str( count ) + "runs:<br>" + message )
+            # Add missing games and categories back in + update num_pbs
+            q = db.Query( runs.Runs, projection=[ 'game', 'category',
+                                                  'username' ],
+                          distinct=True )
+            q.ancestor( runs.key( ) )
+            q.order( 'game' )
+            if c is None:
+                c = memcache.get( cursor_key )
+            if c:
+                try:
+                    q.with_cursor( start_cursor=c )
+                    logging.info( "Fixer upper using cursor " + c )
+                except BadRequestErro:
+                    logging.error( "FixerUpper failed to use cursor" )
+                    pass
+            game_model = None
+            categories = None
+            infolist = None
+            cursor_to_save = c
+            prev_cursor = c
+            num_runs = 0
+            for run in q.run( limit=QUERY_LIMIT ):
+                if game_model is None or game_model.game != run.game:
+                    # New game
+                    if game_model is not None:
+                        # Save previous game model
+                        game_model.info = json.dumps( infolist )
+                        game_model.put( )
+                        self.update_cache_game_model( game_code, game_model )
+                        cursor_to_save = prev_cursor
+
+                    game_code = util.get_code( run.game )
+                    game_model = self.get_game_model( game_code )
+                    if game_model is None:
+                        # Make a new game model
+                        game_model = games.Games( game=run.game,
+                                                  info=json.dumps( [ ] ),
+                                                  num_pbs=0,
+                                                  parent=games.key(),
+                                                  key_name=game_code )      
+                        logging.info( "Fixerupper put new game " + run.game
+                                      + " in datastore." )
+                    categories = game_model.categories( )
+                    infolist = json.loads( game_model.info )
+                    game_model.num_pbs = 0
+
+                game_model.num_pbs += 1
+                if run.category not in categories:
+                    # Add category
+                    infolist.append( dict( category=run.category,
+                                           bk_runner=None,
+                                           bk_seconds=None, bk_datestr=None,
+                                           bk_video=None, bk_updater=None ) )
+                    logging.info( "Fixerupper added category " + run.category
+                                  + " to " + run.game )
+                    categories.append( run.category )
+                prev_cursor = q.cursor( )
+                num_runs += 1
+            if game_model is not None and num_runs < QUERY_LIMIT:
+                # Save last game model
+                game_model.info = json.dumps( infolist )
+                game_model.put( )
+                self.update_cache_game_model( game_code, game_model )
+                cursor_to_save = prev_cursor
+
+            if cursor_to_save == memcache.get( cursor_key ):
+                logging.error( "No games updated by FixerUpper." )
+                if game_model is not None:
+                    logging.error( "Last game was " + game_model.game )
+                self.write( "FixerUpper failed to update any games<br>" )
+                return
+
+            if memcache.set( cursor_key, cursor_to_save ):
+                self.write( "FixerUpper finished and saved cursor "
+                            + cursor_to_save )
+            else:
+                self.write( "FixerUpper finished but failed to save cursor "
+                            + cursor_to_save )
+
+        except apiproxy_errors.OverQuotaError, msg:
+            logging.error( msg )
+            self.write( "FixerUpper failed with over quota error<br>" )
             return
 
-        self.write( "FixerUpper complete!<br>" )
+        self.update_cache_categories( None )

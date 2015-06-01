@@ -63,6 +63,6 @@ app = webapp2.WSGIApplication( [ ('/', front.Front),
                                   cleanup_games_now.CleanupGamesNow),
                                  ('/change-categories', 
                                   change_categories.ChangeCategories),
-#                                 ('/fixerupper', fixerupper.FixerUpper),
+                                 ('/fixerupper', fixerupper.FixerUpper),
                                  ('/' + r'(.*)', Default) ],
                                debug=DEBUG)
