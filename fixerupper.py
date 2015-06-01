@@ -125,8 +125,10 @@ class FixerUpper( handler.Handler ):
                 return
 
             if memcache.set( cursor_key, cursor_to_save ):
-                self.write( "FixerUpper finished and saved cursor "
-                            + cursor_to_save )
+                s = "FixerUpper finished and saved cursor " + cursor_to_save
+                if game_model is not None:
+                    s += "<br>Last game was " + game_model.game
+                self.write( s )
             else:
                 self.write( "FixerUpper finished but failed to save cursor "
                             + cursor_to_save )
