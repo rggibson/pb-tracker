@@ -24,7 +24,7 @@ from google.appengine.ext.db import BadRequestError
 
 class FixerUpper( handler.Handler ):
     def get( self ):
-        QUERY_LIMIT = 2500
+        QUERY_LIMIT = 1000
         cursor_key = 'fixerupper-cursor'
         
         # Make sure it's me
@@ -63,6 +63,8 @@ class FixerUpper( handler.Handler ):
             game_model = None
             categories = None
             infolist = None
+            old_num_pbs = None
+            do_update = None
             cursor_to_save = c
             prev_cursor = c
             num_runs = 0
@@ -72,8 +74,10 @@ class FixerUpper( handler.Handler ):
                     if game_model is not None:
                         # Save previous game model
                         game_model.info = json.dumps( infolist )
-                        game_model.put( )
-                        self.update_cache_game_model( game_code, game_model )
+                        if do_update or game_model.num_pbs != old_num_pbs:
+                            game_model.put( )
+                            self.update_cache_game_model( game_code,
+                                                          game_model )
                         cursor_to_save = prev_cursor
 
                     game_code = util.get_code( run.game )
@@ -89,6 +93,8 @@ class FixerUpper( handler.Handler ):
                                       + " in datastore." )
                     categories = game_model.categories( )
                     infolist = json.loads( game_model.info )
+                    old_num_pbs = game_model.num_pbs
+                    do_update = False
                     game_model.num_pbs = 0
 
                 game_model.num_pbs += 1
@@ -101,6 +107,7 @@ class FixerUpper( handler.Handler ):
                     logging.info( "Fixerupper added category " + run.category
                                   + " to " + run.game )
                     categories.append( run.category )
+                    do_update = True
                 prev_cursor = q.cursor( )
                 num_runs += 1
             if game_model is not None and num_runs < QUERY_LIMIT:
