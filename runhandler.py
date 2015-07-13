@@ -192,116 +192,6 @@ class RunHandler( handler.Handler ):
             self.update_cache_game_model( util.get_code( game_model.game ), 
                                           game_model )
 
-    def update_runinfo_put( self, params ):
-        user = params[ 'user' ]
-        game = params[ 'game' ]
-        category = params[ 'category' ]
-        seconds = params[ 'seconds' ]
-        time = params[ 'time' ]
-        date = params[ 'date' ]
-        video = params[ 'video' ]
-        version = params[ 'version' ]
-
-        # Update runinfo in memcache
-        runinfo = self.get_runinfo( user.username, game, category,
-                                    self.PB_PAGE_LIMIT,
-                                    no_refresh=True )
-        if runinfo is None or runinfo == self.OVER_QUOTA_ERROR:
-            self.update_cache_runinfo( user.username, game, category, None )
-            return
-
-        runinfo['num_runs'] += 1
-        runinfo['avg_seconds'] += ( ( 1.0 / runinfo['num_runs'] ) 
-                                    * ( seconds - runinfo['avg_seconds'] ) )
-        runinfo['avg_time'] = util.seconds_to_timestr( 
-            runinfo['avg_seconds'] )
-        if( runinfo['pb_seconds'] is None 
-            or runinfo['pb_seconds'] > seconds ):
-            # We need to update pb as well
-            runinfo['pb_seconds'] = seconds
-            runinfo['pb_time'] = time
-            runinfo['pb_date'] = date
-            runinfo['video'] = video
-            runinfo['version'] = version
-        self.update_cache_runinfo( user.username, game, category, runinfo )
-
-    def update_runinfo_delete( self, user, old_run ):
-        # Update avg, num runs
-        runinfo = self.get_runinfo( user.username, old_run['game'],
-                                    old_run['category'],
-                                    self.PB_PAGE_LIMIT, no_refresh=True )
-        if runinfo is None or runinfo == self.OVER_QUOTA_ERROR:
-            self.update_cache_runinfo( user.username, old_run['game'],
-                                       old_run['category'], None )
-            return
-
-        if runinfo['num_runs'] <= 0:
-            logging.error( "Failed to update runinfo due to nonpositive "
-                           + "num_runs " + str( runinfo['num_runs'] ) )
-            self.update_cache_runinfo( user.username, old_run['game'],
-                                       old_run['category'], None )
-            return
-
-        if( runinfo['num_runs'] > 1 ):
-            runinfo['avg_seconds'] -= ( 1.0 * old_run['seconds'] 
-                                        / runinfo['num_runs'] )
-            runinfo['num_runs'] -= 1
-            runinfo['avg_seconds'] *= ( 1.0 * ( runinfo['num_runs'] + 1 ) 
-                                        / runinfo['num_runs'] )
-            runinfo['avg_time'] = util.seconds_to_timestr( 
-                runinfo['avg_seconds'] )
-            if( runinfo['pb_seconds'] == old_run['seconds'] ):
-                # We need to replace the pb too
-                try:
-                    q = db.Query( runs.Runs, projection=('seconds', 'date', 
-                                                         'video', 'version') )
-                    q.ancestor( runs.key() )
-                    q.filter( 'username =', user.username )
-                    q.filter( 'game =', old_run['game'] )
-                    q.filter( 'category =', old_run['category'] )
-                    q.order( 'seconds' )
-                    q.order( 'date' )
-                    pb_run = q.get( )
-                    if pb_run:
-                        runinfo['pb_seconds'] = pb_run.seconds
-                        runinfo['pb_time'] = util.seconds_to_timestr( 
-                            pb_run.seconds )
-                        runinfo['pb_date'] = pb_run.date
-                        runinfo['video'] = pb_run.video
-                        runinfo['version'] = pb_run.version
-                    else:
-                        logging.error( "Unable to update runinfo due to no "
-                                       + "new pb found" )
-                        self.update_cache_runinfo( user.username,
-                                                   old_run['game'],
-                                                   old_run['category'], None )
-                        return
-                except apiproxy_errors.OverQuotaError, msg:
-                    logging.error( msg )
-                    self.update_cache_runinfo( user.username, old_run['game'],
-                                               old_run['category'], None )
-                    return
-            self.update_cache_runinfo( user.username, old_run['game'],
-                                       old_run['category'], runinfo )
-        else:
-            # No other runs for game, category combo
-            self.update_cache_runinfo( user.username, old_run['game'],
-                                       old_run['category'], 
-                                       dict( username=user.username,
-                                             username_code=util.get_code(
-                                                 user.username ),
-                                             category=old_run['category'],
-                                             category_code=util.get_code(
-                                                 old_run['category'] ),
-                                             pb_seconds=None,
-                                             pb_time=None,
-                                             pb_date=None,
-                                             num_runs=0,
-                                             avg_seconds=0,
-                                             avg_time='0:00',
-                                             video=None,
-                                             version=None ) )
-
     def update_pblist_put( self, params ):
         user = params[ 'user' ]
         game = params[ 'game' ]
@@ -310,64 +200,49 @@ class RunHandler( handler.Handler ):
         time = params[ 'time' ]
         video = params[ 'video' ]
         game_code = params[ 'game_code' ]
+        date = params[ 'date' ]
+        version = params[ 'version' ]
 
         # Update pblist in memcache
         cached_pblists = self.get_cached_pblists( user.username )
         if cached_pblists is None:
             return
 
+        pb_for_game = None
         for page_num, res in cached_pblists.iteritems( ):
             pblist = res['pblist']
             for pb in pblist:
                 if( pb['game'] == game ):
+                    pb_for_game = pb
                     pb['num_runs'] += 1
                     for i, info in enumerate( pb['infolist'] ):
                         if( info['category'] == category ):
-                            pb['infolist'][i] = self.get_runinfo(
-                                user.username, game, category,
-                                self.PB_PAGE_LIMIT )
-                            if( pb['infolist'][i] is None or
-                                pb['infolist'][i] == self.OVER_QUOTA_ERROR ):
-                                cached_pblists = None
-                            else:
-                                pb['infolist'].sort(
-                                    key=itemgetter('category') )
-                                pb['infolist'].sort(
-                                    key=itemgetter('num_runs'),
-                                    reverse=True )
+                            info['num_runs'] += 1
+                            info['avg_seconds'] += ( ( 1.0 / info['num_runs'] )
+                                                     * ( seconds - info['avg_seconds'] ) )
+                            info['avg_time'] = util.seconds_to_timestr(
+                                info['avg_seconds'], dec_places=0 )
+                            if( info['pb_seconds'] is None
+                                or info['pb_seconds'] > seconds ):
+                                # Update pb
+                                info['pb_seconds'] = seconds
+                                info['pb_time'] = time
+                                info['pb_date'] = date
+                                info['video'] = video
+                                info['version'] = version
+
+                            pb['infolist'].sort( key=itemgetter('category') )
+                            pb['infolist'].sort( key=itemgetter('num_runs'),
+                                                 reverse=True )
                             self.update_cache_pblist( user.username,
                                                       cached_pblists )
                             return
 
-                    # User has run this game, but not this category.
-                    # Add the run to the pblist and update memcache.
-                    runinfo = self.get_runinfo( user.username, game, category,
-                                                self.PB_PAGE_LIMIT )
-                    if runinfo is None or runinfo == self.OVER_QUOTA_ERROR:
-                        cached_pblists = None
-                    else:
-                        pb['infolist'].append( runinfo )
-                        pb['infolist'].sort( key=itemgetter('category') )
-                        pb['infolist'].sort( key=itemgetter('num_runs') )
-                    self.update_cache_pblist( user.username, cached_pblists )
-                    return
-
-        # No run for this username, game combination.
-        # So, add the run to this username's pblist and update memcache
-        runinfo = self.get_runinfo( user.username, game, category,
-                                    self.PB_PAGE_LIMIT )
-        if runinfo is None or runinfo == self.OVER_QUOTA_ERROR:
-            cached_pblists = None
-        else:
-            res = cached_pblists.get( 1 )
-            if res is not None:
-                pblist = res['pblist']
-                pblist.append( dict( game = game, 
-                                     game_code = game_code,
-                                     num_runs = 1,
-                                     infolist = [ runinfo ] ) )
-                pblist.sort( key=itemgetter('game') )
-        self.update_cache_pblist( user.username, cached_pblists )
+        # Couldn't find this game, category combination, so we must nullify
+        # memcache.  We can't just add the run since we may not have all of
+        # the pblist pages in memcache, so we don't know if it is the only
+        # run for this game, category or not.
+        self.update_cache_pblist( user.username, None )
 
     def update_pblist_delete( self, user, old_run ):
         # Update pblist with the removal of the old run
@@ -382,32 +257,62 @@ class RunHandler( handler.Handler ):
                     pb['num_runs'] -= 1
                     for j, info in enumerate( pb['infolist'] ):
                         if( info['category'] == old_run['category'] ):
-                            runinfo = self.get_runinfo( user.username, 
-                                                        old_run['game'], 
-                                                        old_run['category'],
-                                                        self.PB_PAGE_LIMIT )
-                            if( runinfo is None
-                                or runinfo == self.OVER_QUOTA_ERROR ):
-                                self.update_cache_pblist( user.username, None )
-                                return
-                            if runinfo[ 'num_runs' ] > 0:
-                                pb[ 'infolist' ][ j ] = runinfo
-                            else:
+                            if info['num_runs'] <= 1:
                                 # No other runs for game, category combo
                                 del pb[ 'infolist' ][ j ]
                                 if len( pb[ 'infolist' ] ) <= 0:
                                     del cached_pblists[ page_num ]['pblist'][ i ]
+                                self.update_cache_pblist( user.username,
+                                                          cached_pblists )
+                                return
+                            else:
+                                new_avg = ( ( info['avg_seconds']
+                                              * info['num_runs'] )
+                                            - old_run['seconds'] )
+                                info['num_runs'] -= 1
+                                info['avg_seconds'] = ( 1.0 * new_avg
+                                                        / info['num_runs'] )
+                                info['avg_time'] = util.seconds_to_timestr(
+                                    info['avg_seconds'], dec_places=0 )
+                                if info['pb_seconds'] >= old_run['seconds']:
+                                    # Update our PB for this game, category
+                                    q = db.Query( runs.Runs,
+                                                  projection=['seconds',
+                                                              'date',
+                                                              'video',
+                                                              'version'] )
+                                    q.ancestor( runs.key( ) )
+                                    q.filter( 'username =', user.username )
+                                    q.filter( 'game =', old_run['game'] )
+                                    q.filter( 'category =',
+                                              old_run['category'] )
+                                    q.order( 'seconds' )
+                                    for run in q.run( limit = 1 ):
+                                        info['pb_seconds'] = run.seconds
+                                        info['pb_time'] = util.seconds_to_timestr( run.seconds )
+                                        info['pb_date'] = run.date
+                                        info['video'] = run.video
+                                        info['version'] = run.version
+                                        break
+                                    else:
+                                        logging.error( 'Failed to update PB for '
+                                                       + user.username + ', '
+                                                       + old_run['game'] + ', '
+                                                       + old_run['category']
+                                                       + ' on pblist_delete' )
+                                        self.update_cache_pblist(
+                                            user.username, None )
+                                        return
+
+                            pb['infolist'][ j ] = info
                             pb['infolist'].sort( key=itemgetter('category') )
                             pb['infolist'].sort( key=itemgetter('num_runs'),
                                                  reverse=True )
-                            pblist.sort( key=itemgetter('game') )
-                            pblist.sort( key=itemgetter('num_runs'), 
-                                         reverse=True )
                             self.update_cache_pblist( user.username,
                                                       cached_pblists )
                             return
-                    logging.error( "Failed to correctly update pblist" )
-                    self.update_cache_pblist( user.username, None )
+                    # Couldn't find this game, category in memcache, so nothing
+                    # to update
                     return
 
     def update_gamepage_put( self, params ):
@@ -594,7 +499,6 @@ class RunHandler( handler.Handler ):
         self.update_cache_run_by_id( new_run.key().id(), new_run )
         # Must update runinfo before updating pblist, gamepage since these 
         # both rely on runinfo being up to date
-        self.update_runinfo_put( params )
         self.update_pblist_put( params )
         self.update_gamepage_put( params )
         self.update_runlist_for_runner_put( params )
@@ -708,9 +612,6 @@ class RunHandler( handler.Handler ):
         # Update memcache with the removal of the old run and addition of the
         # new run.
         self.update_cache_run_by_id( run_id, new_run )
-        # Must update runinfo before pblist and gamepage as in put_new_run()
-        self.update_runinfo_delete( runner, old_run )
-        self.update_runinfo_put( params )
         self.update_pblist_delete( runner, old_run )
         self.update_pblist_put( params )
         self.update_gamepage_delete( runner, old_run )

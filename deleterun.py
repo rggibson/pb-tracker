@@ -86,9 +86,6 @@ class DeleteRun( runhandler.RunHandler ):
             return
         self.update_games_delete( game_model, run.category, delta_num_pbs )
 
-        # Must update runinfo before pblist and gamepage because pblist and
-        # gamepage rely on accurate runinfo
-        self.update_runinfo_delete( runner, old_run )
         self.update_pblist_delete( runner, old_run )
         self.update_gamepage_delete( runner, old_run )
         self.update_user_has_run_delete( runner, old_run )

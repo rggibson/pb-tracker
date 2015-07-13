@@ -6,12 +6,12 @@
 # non-alphanumeric characters replaced with dashes (see util.get_code).  
 #
 # There are two versions of runner pages.  The default version renders a 
-# table of PBs submitted by the runner, ordered by number of runs.  
+# table of PBs submitted by the runner.
 # The content of this table is aquired through handler.get_pblist() that 
 # returns a list of dictionaries, one for each game.  For each dictionary d, 
 # d['infolist'] is itself another list of dictionaries, one for each category 
-# the runner has run for the given game.  These dictionaries are acquired 
-# through handler.get_runinfo(). The alternative runner page is rendered 
+# the runner has run for the given game.
+# The alternative runner page is rendered 
 # given the query string '?q=view-all' and lists all of the runner's runs, 
 # ordered by run date, acquired through handler.get_runlist_for_runner().  
 # This function returns its own list of dictionaries.

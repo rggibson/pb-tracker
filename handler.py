@@ -35,7 +35,7 @@ class Handler(webapp2.RequestHandler):
     PAGE_LIMIT = 50
     RUNLIST_PAGE_LIMIT = 75
     GAMEPAGE_PAGE_LIMIT = 50
-    PB_PAGE_LIMIT = 76
+    PB_PAGE_LIMIT = 101
     OVER_QUOTA_ERROR = 'OVER_QUOTA_ERROR'
 
     # Writing and rendering utility functions
@@ -245,73 +245,6 @@ class Handler(webapp2.RequestHandler):
             logging.error( "Failed to update run for run_id " 
                            + str( run_id ) + " in memcache" )
 
-    def get_runinfo_memkey( self, username, game, category ):
-        return username + ":" + game + ":" + category + ":runinfo"
-
-    def get_runinfo( self, username, game, category, limit, no_refresh=False ):
-        key = self.get_runinfo_memkey( username, game, category )
-        runinfo = memcache.get( key )
-        if runinfo is None and not no_refresh:
-            # Not in memcache, so construct the runinfo dictionary
-            pb_run = None
-            avg_seconds = 0
-            num_runs = 0
-            try:
-                q = db.Query( runs.Runs, 
-                              projection=('seconds', 'date', 'video',
-                                          'version') )
-                q.ancestor( runs.key() )
-                q.filter('username =', username)
-                q.filter('game =', game)
-                q.filter('category =', category)
-                q.order('-date') # Cut off old runs
-                for run in q.run( limit = max( limit, 0 ) ):
-                    num_runs += 1
-                    avg_seconds += ( 1.0 / num_runs ) * ( 
-                        run.seconds - avg_seconds )
-                    if( pb_run is None or run.seconds <= pb_run.seconds ):
-                        pb_run = run
-
-                if num_runs >= limit:
-                    return None
-                runinfo = dict( username = username,
-                                username_code = util.get_code( username ),
-                                category = category, 
-                                category_code = util.get_code( category ),
-                                pb_seconds = None,
-                                pb_time = None,
-                                pb_date = None,
-                                num_runs = num_runs,
-                                avg_seconds = avg_seconds,
-                                avg_time = util.seconds_to_timestr(
-                                    avg_seconds, dec_places=0),
-                                video = None )
-            except apiproxy_errors.OverQuotaError, msg:
-                logging.error( msg )
-                return self.OVER_QUOTA_ERROR
-            # Set the pb time
-            if pb_run:
-                runinfo['pb_seconds'] = pb_run.seconds
-                runinfo['pb_time'] = util.seconds_to_timestr( pb_run.seconds )
-                runinfo['pb_date'] = pb_run.date
-                runinfo['video'] = pb_run.video
-                runinfo['version'] = pb_run.version
-                
-            if memcache.set( key, runinfo ):
-                logging.debug( "Set " + key + " in memcache" )
-            else:
-                logging.warning( "Failed to set " + key + " in memcache" )
-        elif runinfo is not None:
-            logging.debug( "Got " + key + " from memcache" )
-        return runinfo
-            
-    def update_cache_runinfo( self, username, game, category, runinfo ):
-        key = self.get_runinfo_memkey( username, game, category )
-        if memcache.set( key, runinfo ):
-            logging.debug( "Updated " + key + " in memcache" )
-        else:
-            logging.error( "Failed to update " + key + " in memcache" )
-            
     def get_pblist_cursor_memkey( self, username, page_num ):
         return username + ":pblist:cursor-page-" + str( page_num )
 
@@ -334,15 +267,14 @@ class Handler(webapp2.RequestHandler):
             # dictionaries containing all the info for each pb of the game.
             pblist = [ ]
             try:
-                # Use a projection query to get all of the unique game,
-                # category pairs
                 q = db.Query( runs.Runs,
-                              projection=['game', 'category'],
-                              distinct=True )
+                              projection=['game', 'category', 'seconds',
+                                          'date', 'video', 'version'] )
                 q.ancestor( runs.key() )
                 q.filter( 'username =', username )
                 q.order( 'game' )
                 q.order( 'category' )
+                q.order( 'seconds' )
                 c = memcache.get( self.get_pblist_cursor_memkey(
                     username, page_num ) )
                 if c:
@@ -353,33 +285,67 @@ class Handler(webapp2.RequestHandler):
                 else:
                     res['page_num'] = 1
                 cur_game = None
+                cur_category = None
+                info = None
+                pb = None
                 cursor_to_save = c
+                last_cursor = None
                 runs_queried = 0
-                for run in q.run( ):
+                for run in q.run( limit = self.PB_PAGE_LIMIT ):
                     if run.game != cur_game:
                         # New game
-                        pb = dict( game = run.game, 
+                        pb = dict( game = run.game,
                                    game_code = util.get_code( run.game ),
                                    num_runs = 0,
                                    infolist = [ ] )
                         pblist.append( pb )
-                        cur_game = run.game            
+                        cur_game = run.game
+                        cur_category = None
 
-                    # Add runinfo to pblist
-                    info = self.get_runinfo(
-                        username, run.game, run.category,
-                        self.PB_PAGE_LIMIT - runs_queried )
-                    if info == self.OVER_QUOTA_ERROR:
-                        return self.OVER_QUOTA_ERROR
-                    elif info is None:
-                        res['has_next'] = True
-                        if len( pb['infolist'] ) <= 0:
-                            del pblist[ -1 ]
+                    if run.category != cur_category:
+                        # New category
+                        info = dict( username = username,
+                                     username_code = util.get_code( username ),
+                                     category = run.category,
+                                     category_code = util.get_code(
+                                         run.category ),
+                                     pb_seconds = run.seconds,
+                                     pb_time = util.seconds_to_timestr(
+                                         run.seconds ),
+                                     pb_date = run.date,
+                                     num_runs = 1,
+                                     avg_seconds = run.seconds,
+                                     avg_time = util.seconds_to_timestr(
+                                         run.seconds, dec_places=0 ),
+                                     video = run.video,
+                                     version = run.version )
+                        pb['infolist'].append( info )
+                        cur_category = run.category
+                        if last_cursor is not None:
+                            cursor_to_save = last_cursor
+                    else:
+                        # Repeat game, category
+                        info['num_runs'] += 1
+                        info['avg_seconds'] += ( 1.0 / info['num_runs'] ) * (
+                            run.seconds - info['avg_seconds'] )
+                        info['avg_time'] = util.seconds_to_timestr(
+                            info['avg_seconds'], dec_places=0 )
+                    pb['num_runs'] += 1
+                    runs_queried += 1
+                    last_cursor = q.cursor( )
+                
+                if runs_queried >= self.PB_PAGE_LIMIT:
+                    res['has_next'] = True
+
+                    # Last category found is possibly incomplete, so remove
+                    del pblist[ -1 ]['infolist'][ -1 ]
+                    if len( pblist[ -1 ]['infolist'] ) <= 0:
+                        del pblist[ -1 ]
                         if len( pblist ) <= 0:
-                            # Too many runs for this category
+                            # Too many runs for this game, category
                             pb = dict(
-                                game = run.game,
-                                game_code = util.get_code( run.game ),
+                                game = cur_game,
+                                game_code = util.get_code( cur_game ),
                                 num_runs = 0,
                                 infolist = [ dict( 
                                     username=username,
@@ -387,12 +353,12 @@ class Handler(webapp2.RequestHandler):
                                         username ),
                                     category=( 'TOO MANY RUNS FOR '
                                                + 'CATEGORY: '
-                                               + run.category
+                                               + cur_category
                                                + ' (max is '
                                                + str( self.PB_PAGE_LIMIT - 1 )
                                                + ', please delete some runs)' ),
                                     category_code=util.get_code(
-                                        run.category ),
+                                        cur_category ),
                                     pb_seconds=0,
                                     pb_time=util.seconds_to_timestr( 0 ),
                                     pb_date=None,
@@ -401,11 +367,6 @@ class Handler(webapp2.RequestHandler):
                                     avg_time=util.seconds_to_timestr( 0 ),
                                     video=None ) ] )
                             pblist.append( pb )
-                        break
-                    pb['infolist'].append( info )
-                    pb['num_runs'] += info['num_runs']
-                    runs_queried += info['num_runs']
-                    cursor_to_save = q.cursor( )
 
                 cursor_key = self.get_pblist_cursor_memkey(
                     username, res['page_num'] + 1 )
