@@ -33,9 +33,10 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 
 class Handler(webapp2.RequestHandler):
     PAGE_LIMIT = 50
-    RUNLIST_PAGE_LIMIT = 75
+    RUNLIST_PAGE_LIMIT = 100
     GAMEPAGE_PAGE_LIMIT = 50
     PB_PAGE_LIMIT = 101
+    PB_PAGE_SHOW_ALL_LIMIT = 10000
     OVER_QUOTA_ERROR = 'OVER_QUOTA_ERROR'
 
     # Writing and rendering utility functions
@@ -252,20 +253,38 @@ class Handler(webapp2.RequestHandler):
         return username + ":pblist"
 
     # Similar to other stuff, returns a dict with page_num, has_next and 
-    # pblist keys, or OVER_QUOTA_ERROR
-    def get_pblist( self, username, page_num ):
+    # pblist keys, or OVER_QUOTA_ERROR.  In addition, we also have a show_all
+    # key that tells us if this page was generated with show_all set to True
+    def get_pblist( self, username, page_num, show_all ):
         key = self.get_pblist_memkey( username )
         cached_pblists = memcache.get( key )
         if cached_pblists is None:
             cached_pblists = dict( )
         res = cached_pblists.get( page_num )
-        if res is None:
-            res = dict( page_num=page_num, has_next=False )
-            # Not in memcache, so construct the pblist and store in memcache.
-            # pblist is a list of dictionaries with 3 indices, 'game', 
-            # 'game_code' and 'infolist'.  The infolist is another list of 
-            # dictionaries containing all the info for each pb of the game.
+        if res is None or ( show_all and not res['show_all'] ):
             pblist = [ ]
+            c = None
+            if res is None:
+                res = dict( page_num=page_num, has_next=False,
+                            show_all=show_all )
+                # Not in memcache, so construct the pblist and store in
+                # memcache.
+                # pblist is a list of dictionaries with 3 indices, 'game', 
+                # 'game_code' and 'infolist'.  The infolist is another list of 
+                # dictionaries containing all the info for each pb of the game.
+                c = memcache.get( self.get_pblist_cursor_memkey(
+                    username, page_num ) )
+            else:
+                # Need to update this page to a show_all
+                res['show_all'] = show_all
+                res['has_next'] = False
+                res['page_num'] = page_num
+                if page_num == 1:
+                    # Can try to start from normal page 2
+                    pblist = res['pblist']
+                    c = memcache.get( self.get_pblist_cursor_memkey(
+                        username, page_num + 1 ) )
+                        
             try:
                 q = db.Query( runs.Runs,
                               projection=['game', 'category', 'seconds',
@@ -275,23 +294,29 @@ class Handler(webapp2.RequestHandler):
                 q.order( 'game' )
                 q.order( 'category' )
                 q.order( 'seconds' )
-                c = memcache.get( self.get_pblist_cursor_memkey(
-                    username, page_num ) )
                 if c:
                     try:
                         q.with_cursor( start_cursor=c )
                     except BadRequestError:
                         res['page_num'] = 1
+                        pblist = [ ]
                 else:
                     res['page_num'] = 1
+                    pblist = [ ]
                 cur_game = None
+                pb = None
+                if len( pblist ) > 0:
+                    cur_game = pblist[ -1 ]['game']
+                    pb = pblist[ -1 ]
                 cur_category = None
                 info = None
-                pb = None
                 cursor_to_save = c
                 last_cursor = None
                 runs_queried = 0
-                for run in q.run( limit = self.PB_PAGE_LIMIT ):
+                limit = self.PB_PAGE_LIMIT
+                if show_all:
+                    limit = self.PB_PAGE_SHOW_ALL_LIMIT
+                for run in q.run( limit=limit ):
                     if run.game != cur_game:
                         # New game
                         pb = dict( game = run.game,
@@ -334,7 +359,12 @@ class Handler(webapp2.RequestHandler):
                     runs_queried += 1
                     last_cursor = q.cursor( )
                 
-                if runs_queried >= self.PB_PAGE_LIMIT:
+                if runs_queried < limit:
+                    # Made it to the end
+                    cursor_to_save = q.cursor( )
+                    if res['page_num'] == 1:
+                        res['show_all'] = True
+                else:
                     res['has_next'] = True
 
                     # Last category found is possibly incomplete, so remove
@@ -367,6 +397,30 @@ class Handler(webapp2.RequestHandler):
                                     avg_time=util.seconds_to_timestr( 0 ),
                                     video=None ) ] )
                             pblist.append( pb )
+                    if res['show_all']:
+                        # Over limit even with show all
+                        res['has_next'] = False
+                        pb = dict( game='TOO MANY RUNS TO SHOW ALL',
+                                   game_code='???',
+                                   num_runs=0,
+                                   infolist=[ dict(
+                                       username=username,
+                                       username_code = util.get_code(
+                                           username ),
+                                       category=( 'MAX IS ' + str(
+                                           self.PB_PAGE_SHOW_ALL_LIMIT )
+                                                  + ', PLEASE DELETE '
+                                                  + 'SOME RUNS' ),
+                                       category_code='???',
+                                       pb_seconds=0,
+                                       pb_time=util.seconds_to_timestr( 0 ),
+                                       pb_date=None,
+                                       num_runs=0,
+                                       avg_seconds=0,
+                                       avg_time=util.seconds_to_timestr( 0 ),
+                                       video=None ) ] )
+                        res['pblist'] = [ pb ]
+                        return res
 
                 cursor_key = self.get_pblist_cursor_memkey(
                     username, res['page_num'] + 1 )

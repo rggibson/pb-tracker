@@ -31,13 +31,18 @@ class RunnerPage( handler.Handler ):
             if user == self.OVER_QUOTA_ERROR:
                 user = None
             q = self.request.get( 'q', default_value=None )
-
-            # Grab the page num
-            page_num = self.request.get( 'page', default_value=1 )
-            try:
-                page_num = int( page_num )
-            except ValueError:
-                page_num = 1
+            t = self.request.get( 't', default_value=None )
+            show_all = False
+            page_num = 1
+            if t == 'show-all':
+                show_all = True
+            else:
+                # Grab the page num
+                page_num = self.request.get( 'page', default_value=1 )
+                try:
+                    page_num = int( page_num )
+                except ValueError:
+                    page_num = 1
 
             # Make sure the runner exists
             runner = self.get_runner( username_code )
@@ -71,7 +76,7 @@ class RunnerPage( handler.Handler ):
                     self.render_json( res['runlist'] )
             else:
                 # By default, list pbs for this runner
-                res = self.get_pblist( username, page_num )
+                res = self.get_pblist( username, page_num, show_all )
                 if res == self.OVER_QUOTA_ERROR:
                     self.error( 403 )
                     self.render( "403.html", user=user )
@@ -113,7 +118,8 @@ class RunnerPage( handler.Handler ):
                                  gravatar=gravatar, page_num=res['page_num'],
                                  has_next=res['has_next'],
                                  has_prev=( res['page_num'] > 1 ),
-                                 visible_columns=visible_columns )
+                                 visible_columns=visible_columns,
+                                 show_all=res['show_all'] )
                 elif self.format == 'json':
                     self.render_json( pblist )
 

@@ -208,12 +208,10 @@ class RunHandler( handler.Handler ):
         if cached_pblists is None:
             return
 
-        pb_for_game = None
         for page_num, res in cached_pblists.iteritems( ):
             pblist = res['pblist']
             for pb in pblist:
                 if( pb['game'] == game ):
-                    pb_for_game = pb
                     pb['num_runs'] += 1
                     for i, info in enumerate( pb['infolist'] ):
                         if( info['category'] == category ):
@@ -237,6 +235,51 @@ class RunHandler( handler.Handler ):
                             self.update_cache_pblist( user.username,
                                                       cached_pblists )
                             return
+                    if res['show_all']:
+                        # Found the game, but not the category and we are
+                        # showing all runs.  Add the run.
+                        info = dict( username=user.username,
+                                     username_code=util.get_code(
+                                         user.username ),
+                                     category=category,
+                                     category_code=util.get_code( category ),
+                                     pb_seconds=seconds,
+                                     pb_time=time,
+                                     pb_date=date,
+                                     num_runs=1,
+                                     avg_seconds=seconds,
+                                     avg_time=time,
+                                     video=video,
+                                     version=version )
+                        pb['infolist'].append( info )
+                        pb['infolist'].sort( key=itemgetter('category') )
+                        pb['infolist'].sort( key=itemgetter('num_runs'),
+                                             reverse=True )
+                        self.update_cache_pblist( user.username,
+                                                  cached_pblists )
+                        return
+            if res['show_all']:
+                # Could not find the game and we are showing all runs. Add
+                # the game/run.
+                info = dict( username=user.username,
+                             username_code=util.get_code( user.username ),
+                             category=category,
+                             category_code=util.get_code( category ),
+                             pb_seconds=seconds,
+                             pb_time=time,
+                             pb_date=date,
+                             num_runs=1,
+                             avg_seconds=seconds,
+                             avg_time=time,
+                             video=video,
+                             version=version )
+                pb = dict( game=game,
+                           game_code=util.get_code( game ),
+                           num_runs=1,
+                           infolist=[ info ] )
+                pblist.append( pb )
+                self.update_cache_pblist( user.username, cached_pblists )
+                return
 
         # Couldn't find this game, category combination, so we must nullify
         # memcache.  We can't just add the run since we may not have all of
