@@ -41,6 +41,10 @@ class Submit( runhandler.RunHandler ):
 
             params = dict( user=user )
 
+            # Have to take the code of the game code because of percent
+            # encoded plusses
+            game_code = util.get_code( game_code )
+
             game_model = self.get_game_model( game_code )
             if game_model is None:
                 self.error( 404 )
@@ -115,6 +119,10 @@ class Submit( runhandler.RunHandler ):
         else:
             is_bkt = False
         run_id = self.request.get( 'edit' )
+
+        # Have to take the code of the game code because of percent
+        # encoded plusses
+        game_code = util.get_code( game_code )
 
         params = dict( user = user, game_code = game_code,
                        category = category, 
