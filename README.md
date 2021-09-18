@@ -1,7 +1,7 @@
 PB Tracker
 ==========
 
-[PB Tracker](http://www.pbtracker.net) is a web app for tracking [speedrunning](http://en.wikipedia.org/wiki/Speedrun) times and personal bests (PBs).  Users can browse individual runners and games, and view runs submitted for each runner and game respectively.  In addition, users may signup for their own account, submit their own runs and view / maintain their own individual runner page.
+[PB Tracker](http://pb-tracker.appspot.com) is a web app for tracking [speedrunning](http://en.wikipedia.org/wiki/Speedrun) times and personal bests (PBs).  Users can browse individual runners and games, and view runs submitted for each runner and game respectively.  In addition, users may signup for their own account, submit their own runs and view / maintain their own individual runner page.
 
 Technical Overview
 ------------------
